@@ -1,7 +1,7 @@
 #ifndef DUMMYMODS
 #define DUMMYMODS
 
-#include "modBase.h"
+#include "../modBase.h"
 
 namespace modclasses
 {

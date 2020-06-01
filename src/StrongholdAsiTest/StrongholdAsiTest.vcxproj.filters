@@ -36,60 +36,60 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="addressBase.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="strongVersions.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="modtypes.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="modBase.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleUtil.h">
+    <ClInclude Include="Misc\copiedFunc.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="Misc\framework.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="Misc\pch.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="copiedFunc.h">
+    <ClInclude Include="Misc\SimpleUtil.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="versionGetter.h">
+    <ClInclude Include="Modclasses\addressBase.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
-    <ClInclude Include="dummyMods.h">
+    <ClInclude Include="Modclasses\modBase.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\modtypes.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\strongVersions.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\versionGetter.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\dummyStuff\dummyMods.h">
       <Filter>Headerdateien\ModClasses\TestStuff</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="modLoader.h">
-      <Filter>Headerdateien\ModCore</Filter>
+    <ClCompile Include="Misc\copiedFunctions.cpp">
+      <Filter>Quelldateien\Misc</Filter>
     </ClCompile>
-    <ClCompile Include="addressBase.cpp">
+    <ClCompile Include="Misc\pch.cpp">
+      <Filter>Quelldateien\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Misc\SimpleUtil.cpp">
+      <Filter>Quelldateien\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="Modclasses\addressBase.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="Modcore\modLoader.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Modcore\dllmain.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
-    <ClCompile Include="copiedFunctions.cpp">
-      <Filter>Quelldateien\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="pch.cpp">
-      <Filter>Quelldateien\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleUtil.cpp">
-      <Filter>Quelldateien\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="modLoader.cpp">
+    <ClCompile Include="Modcore\modConstructors.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
-    <ClCompile Include="modConstructors.cpp">
+    <ClCompile Include="Modcore\modLoader.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
   </ItemGroup>

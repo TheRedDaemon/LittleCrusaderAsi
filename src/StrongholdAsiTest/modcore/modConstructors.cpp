@@ -1,11 +1,11 @@
 
 // all modTypes include (will (hoefully?) be many one day)
-#include "addressBase.h" 
-#include "versionGetter.h"
+#include "../modclasses/addressBase.h" 
+#include "../Modclasses/versionGetter.h"
 //#include ...
 
 // dummy:
-#include "dummyMods.h"
+#include "../modclasses/dummyStuff/dummyMods.h"
 
 #include <string>
 

@@ -167,31 +167,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="addressBase.h" />
-    <ClInclude Include="copiedFunc.h" />
-    <ClInclude Include="dummyMods.h" />
-    <ClInclude Include="framework.h" />
-    <ClInclude Include="modBase.h" />
-    <ClInclude Include="modtypes.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="SimpleUtil.h" />
-    <ClInclude Include="versionGetter.h" />
-    <ClInclude Include="strongVersions.h" />
+    <ClInclude Include="Modclasses\addressBase.h" />
+    <ClInclude Include="Misc\copiedFunc.h" />
+    <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
+    <ClInclude Include="Misc\framework.h" />
+    <ClInclude Include="Modclasses\modBase.h" />
+    <ClInclude Include="Modclasses\modtypes.h" />
+    <ClInclude Include="Misc\pch.h" />
+    <ClInclude Include="Misc\SimpleUtil.h" />
+    <ClInclude Include="Modclasses\versionGetter.h" />
+    <ClInclude Include="Modclasses\strongVersions.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="addressBase.cpp" />
-    <ClCompile Include="copiedFunctions.cpp" />
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="modConstructors.cpp" />
-    <ClCompile Include="modLoader.cpp" />
-    <ClCompile Include="modLoader.h" />
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="Modclasses\addressBase.cpp" />
+    <ClCompile Include="Misc\copiedFunctions.cpp" />
+    <ClCompile Include="Modcore\dllmain.cpp" />
+    <ClCompile Include="Modcore\modConstructors.cpp" />
+    <ClCompile Include="Modcore\modLoader.cpp" />
+    <ClCompile Include="Modcore\modLoader.h" />
+    <ClCompile Include="Misc\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SimpleUtil.cpp" />
+    <ClCompile Include="Misc\SimpleUtil.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

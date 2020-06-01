@@ -5,8 +5,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "modBase.h"
-#include "modTypes.h"
+#include "../modclasses/modBase.h"
+#include "../modclasses/modTypes.h"
 
 namespace modcore
 {
