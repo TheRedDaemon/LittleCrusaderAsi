@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Quelldateien">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Headerdateien">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Ressourcendateien">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Headerdateien\ModClasses">
+      <UniqueIdentifier>{49e8109a-c7ff-4309-a428-f1362e4c5b0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\ModCore">
+      <UniqueIdentifier>{099bf45f-55bc-4667-b61e-2b2d4b3d5c28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\Misc">
+      <UniqueIdentifier>{e8fb7236-8069-49fc-a30b-073639c2b9dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\ModClasses">
+      <UniqueIdentifier>{3ca5d587-8661-44ee-948c-b587af9f3a08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\ModCore">
+      <UniqueIdentifier>{bcb6a1d7-e7d1-431d-ae06-fa140ceb7fe0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\Misc">
+      <UniqueIdentifier>{ea73ac00-18cc-4800-b614-1eb2b214eca6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\ModClasses\TestStuff">
+      <UniqueIdentifier>{549dfd88-8d09-4700-a84e-375872b0af4f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="addressBase.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="strongVersions.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="modtypes.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="modBase.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleUtil.h">
+      <Filter>Headerdateien\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Headerdateien\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Headerdateien\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="copiedFunc.h">
+      <Filter>Headerdateien\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="versionGetter.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="dummyMods.h">
+      <Filter>Headerdateien\ModClasses\TestStuff</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="modLoader.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="addressBase.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="copiedFunctions.cpp">
+      <Filter>Quelldateien\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Quelldateien\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleUtil.cpp">
+      <Filter>Quelldateien\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="modLoader.cpp">
+      <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="modConstructors.cpp">
+      <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
