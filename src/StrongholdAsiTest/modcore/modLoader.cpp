@@ -2,6 +2,7 @@
 #include <string>
 
 #include "modLoader.h"
+#include "logUtility.h"
 
 namespace modcore
 {

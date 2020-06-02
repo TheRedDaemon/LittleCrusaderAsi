@@ -34,6 +34,9 @@
     <Filter Include="Headerdateien\ModClasses\TestStuff">
       <UniqueIdentifier>{549dfd88-8d09-4700-a84e-375872b0af4f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies">
+      <UniqueIdentifier>{7c332237-6347-4ef1-a6a0-96539c19d5bb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Misc\copiedFunc.h">
@@ -66,6 +69,12 @@
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h">
       <Filter>Headerdateien\ModClasses\TestStuff</Filter>
     </ClInclude>
+    <ClInclude Include="modcore\logUtility.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\logger\easylogging++.h">
+      <Filter>dependencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -91,6 +100,12 @@
     </ClCompile>
     <ClCompile Include="Modcore\modLoader.cpp">
       <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="modcore\logUtility.cpp">
+      <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\logger\easylogging++.cc">
+      <Filter>dependencies</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
