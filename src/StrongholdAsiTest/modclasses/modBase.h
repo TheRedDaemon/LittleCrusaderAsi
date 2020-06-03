@@ -6,8 +6,16 @@
 
 #include "modtypes.h"
 
+// logging
+#include "../dependencies/logger/easylogging++.h"
+#include "../modcore/logUtility.h" // used to mark that log needs to be copied at the end
+
+// json
+#include "../dependencies/jsonParser/json.hpp"
+
 namespace modclasses
 {
+  using Json = nlohmann::json;
 
   // base class for all mod impl
   class ModBase

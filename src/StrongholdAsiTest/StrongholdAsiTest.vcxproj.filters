@@ -75,6 +75,9 @@
     <ClInclude Include="dependencies\logger\easylogging++.h">
       <Filter>dependencies</Filter>
     </ClInclude>
+    <ClInclude Include="dependencies\jsonParser\json.hpp">
+      <Filter>dependencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">

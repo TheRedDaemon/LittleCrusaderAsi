@@ -15,7 +15,7 @@ namespace modcore
 {
   namespace MC = modclasses;
 
-  const std::shared_ptr<Mod> ModLoader::createMod(MT modType, const bool& config /*, some basic object, a json node maybe */)
+  const std::shared_ptr<Mod> ModLoader::createMod(MT modType, const Json &config)
   {
     // using giant switch statement
     switch (modType)

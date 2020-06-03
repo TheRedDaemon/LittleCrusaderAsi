@@ -8,8 +8,12 @@
 #include "../modclasses/modBase.h"
 #include "../modclasses/modTypes.h"
 
+// json
+#include "../dependencies/jsonParser/json.hpp"
+
 namespace modcore
 {
+  using Json = nlohmann::json;
   using Mod = modclasses::ModBase;
   using MT = modclasses::ModType;
 
@@ -33,13 +37,13 @@ namespace modcore
   
   private:
 
-    void fillAndOrderModVector(const std::unordered_map<MT, bool /*object carrying needed config data*/> &modConfigs);
+    void fillAndOrderModVector(const std::unordered_map<MT, Json> &modConfigs);
     void fulfillDependencies( // for recursive fill
-      const std::unordered_map<MT, bool /* what ever will be required, bool is just fill*/> &modConfigs,
+      const std::unordered_map<MT, Json> &modConfigs,
       std::unordered_map<MT, std::shared_ptr<Mod>> &modSortMap,
-      MT neededMod, const bool &config /* dummy will be ref*/);
+      MT neededMod, const Json &config);
 
-    const std::shared_ptr<Mod> createMod(MT modType, const bool &config /* some basic object, a json node maybe */);
+    const std::shared_ptr<Mod> createMod(MT modType, const Json &config);
   };
 }
 

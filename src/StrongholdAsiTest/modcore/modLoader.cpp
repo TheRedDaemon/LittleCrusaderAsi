@@ -9,22 +9,37 @@ namespace modcore
   ModLoader::ModLoader()
   {
     // will load config and what ever is required at the start
-    //... nothing here the moment
+    std::unordered_map<MT, Json> modConfigs{};
+    try
+    {
+      std::ifstream configStream("modConfig.json"); // reading config from file
+      Json modConfig = Json::parse(configStream);
 
-    // create, fill and order mods based one dependency
-    // dummy map:
-    std::unordered_map<MT, bool /* what ever will be required, bool is just fill*/> modConfigs{
-      {MT::TEST1, false}  // if dep on Test2 is added in Test1 -> should create cyclic ref
-    };
-    // dummy map
+      for (auto& pair : modConfig.items())
+      {
+        Json key = pair.key();
+        modConfigs[key] = pair.value();
+      }
+    }
+    catch (Json::parse_error& o_O) {
+      LOG(ERROR) << "Config parse error: " << o_O.what();
+      throw;
+    }
+    catch (std::exception& o_O) {
+      LOG(ERROR) << "Error during config load: " << o_O.what();
+      throw;
+    }
+    LOG(INFO) << "Configuration loaded.";
 
     fillAndOrderModVector(modConfigs);
+    LOG(INFO) << "Mods loaded.";
 
     // end by calling initialze on every mod:
     for (size_t i = 0; i < loadedMods.size(); i++)
     {
       loadedMods.at(i)->initialize();
     }
+    LOG(INFO) << "Mods initialized.";
   }
 
   // will run backwards over mods and call cleanUp
@@ -37,6 +52,7 @@ namespace modcore
     {
       loadedMods.at(i)->cleanUp();
     }
+    LOG(INFO) << "Cleaned up mods.";
   }
 
   // using struct to have a sort object
@@ -49,7 +65,7 @@ namespace modcore
     bool done{ false };
   };
 
-  void ModLoader::fillAndOrderModVector(const std::unordered_map<MT, bool /* what ever will be required, bool is just fill*/> &modConfigs)
+  void ModLoader::fillAndOrderModVector(const std::unordered_map<MT, Json> &modConfigs)
   {
     //std::unordered_map<MT, std::vector<std::shared_ptr<Mod>>> modSortMap{};
     std::unordered_map<MT, std::shared_ptr<Mod>> modSortMap{};
@@ -62,9 +78,9 @@ namespace modcore
   }
 
   void ModLoader::fulfillDependencies(
-    const std::unordered_map<MT, bool /* what ever will be required, bool is just fill*/> &modConfigs,
+    const std::unordered_map<MT, Json> &modConfigs,
     std::unordered_map<MT, std::shared_ptr<Mod>> &modSortMap,
-    MT neededMod, const bool &config /* dummy will be ref*/)
+    MT neededMod, const Json &config)
   {
 
     if (modSortMap.find(neededMod) != modSortMap.end())
@@ -96,7 +112,7 @@ namespace modcore
           else
           {
             // trying to call build in stuff (without external config?)
-            fulfillDependencies(modConfigs, modSortMap, dep, false /* dummy */);
+            fulfillDependencies(modConfigs, modSortMap, dep, nullptr);
           }
 
           neededDep.push_back(modSortMap[dep]);
