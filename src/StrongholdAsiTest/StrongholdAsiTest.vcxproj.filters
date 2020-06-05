@@ -110,5 +110,8 @@
     <ClCompile Include="dependencies\logger\easylogging++.cc">
       <Filter>dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="modclasses\versionGetter.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -22,11 +22,9 @@ namespace modcore
     {
       case MT::ADDRESS_BASE:
         return std::make_shared<MC::AddressBase>();
-
       case MT::VERSION_GET:
-      case MT::ADDRESS_RESOLVER:
-      case MT::KEYBOARD_HANDLER:
-      case MT::EVENT_HANDLER:
+        return std::make_shared<MC::VersionGetter>();
+
 
 
       // dummy:
@@ -35,6 +33,9 @@ namespace modcore
       case MT::TEST2:
         return std::make_shared<MC::Test2>();
 
+      case MT::ADDRESS_RESOLVER:
+      case MT::KEYBOARD_HANDLER:
+      case MT::EVENT_HANDLER:
       default:
         throw std::exception(("Received a not handled ModType with id: " + std::to_string(static_cast<int>(modType))).c_str());
     }

@@ -15,7 +15,7 @@ namespace modclasses
 
     ModType getModType() const override
     {
-      return ModType::VERSION_GET;
+      return ModType::ADDRESS_BASE;
     }
 
     std::vector<ModType> getDependencies() const override
@@ -24,7 +24,7 @@ namespace modclasses
     }
 
     // has no dependencies, maybe -> however, might require stuff from the dllmain?
-    void giveDependencies(const std::vector<std::weak_ptr<ModBase>>) override {};
+    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override {};
 
     bool initialize() override;
 

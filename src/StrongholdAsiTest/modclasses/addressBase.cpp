@@ -16,6 +16,11 @@ namespace modclasses
     if (addressBase != 0x0) // assuming base address never 0x0
     {
       initialized = true;
+      LOG(INFO) << "AddressBase initialized.";
+    }
+    else
+    {
+      LOG(WARNING) << "AddressBase was not initialized.";
     }
 
     return initialized;

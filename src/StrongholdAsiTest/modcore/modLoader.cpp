@@ -101,7 +101,7 @@ namespace modcore
       std::vector<MT> deps{ nextMod->getDependencies() };
       if (!deps.empty())
       {
-        std::vector<std::weak_ptr<Mod>> neededDep{};
+        std::vector<std::shared_ptr<Mod>> neededDep{};
 
         for (MT dep : deps)
         {

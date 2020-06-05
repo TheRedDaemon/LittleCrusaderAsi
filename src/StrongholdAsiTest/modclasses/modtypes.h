@@ -29,6 +29,7 @@ namespace modclasses
   // used to parse string to enum
   NLOHMANN_JSON_SERIALIZE_ENUM(ModType, {
     {ModType::NONE, nullptr},
+    {ModType::VERSION_GET, "versionGetter"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

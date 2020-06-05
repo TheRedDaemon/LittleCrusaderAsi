@@ -48,7 +48,8 @@ namespace modclasses
     virtual std::vector<ModType> getDependencies() const = 0;
 
     // give required dependencies, but as generalized vector
-    virtual void giveDependencies(const std::vector<std::weak_ptr<ModBase>>) = 0;
+    // shared ptr for better casting, however, better use weak_ptr in the classes
+    virtual void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) = 0;
 
     // actual getting addresses, preparing everything
     // if dependencies or init fails, leave "initialized" to false and return false
