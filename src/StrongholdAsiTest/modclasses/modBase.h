@@ -4,7 +4,10 @@
 #include <vector>
 #include <memory>
 
-#include "modtypes.h"
+#include "IntSafe.h" // for DWORD
+#include "enumheaders/modtypes.h"
+#include "enumheaders/addressEnums.h"
+#include "enumheaders/strongVersions.h"
 
 // logging
 #include "../dependencies/logger/easylogging++.h"

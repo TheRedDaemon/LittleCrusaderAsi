@@ -75,4 +75,11 @@ namespace modclasses
 
     return initialized;
   }
+  
+  // NONE will be extreme 41
+  // also critical, who knows for what the version string could be used... also, for potential tests
+  const std::vector<AddressRequest> VersionGetter::usedAddresses{
+    {Address::VERSION_STRING, {{Version::NONE, 9}, {Version::V1P41, 5}}, AddressRisk::CRITICAL},
+    {Address::VERSION_NUMBER, {{Version::NONE, 1}}, AddressRisk::CRITICAL}
+  };
 }

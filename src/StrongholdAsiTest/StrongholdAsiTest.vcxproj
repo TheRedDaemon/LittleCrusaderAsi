@@ -176,20 +176,24 @@
     <ClInclude Include="dependencies\logger\easylogging++.h" />
     <ClInclude Include="Modclasses\addressBase.h" />
     <ClInclude Include="Misc\copiedFunc.h" />
+    <ClInclude Include="modclasses\addressResolver.h" />
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
     <ClInclude Include="Misc\framework.h" />
+    <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="Modclasses\modBase.h" />
-    <ClInclude Include="Modclasses\modtypes.h" />
+    <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
     <ClInclude Include="Misc\pch.h" />
     <ClInclude Include="Misc\SimpleUtil.h" />
-    <ClInclude Include="Modclasses\versionGetter.h" />
-    <ClInclude Include="Modclasses\strongVersions.h" />
+    <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
+    <ClInclude Include="modclasses\versionGetter.h" />
     <ClInclude Include="modcore\logUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\logger\easylogging++.cc" />
     <ClCompile Include="Modclasses\addressBase.cpp" />
     <ClCompile Include="Misc\copiedFunctions.cpp" />
+    <ClCompile Include="modclasses\addressKeeper.cpp" />
+    <ClCompile Include="modclasses\addressResolver.cpp" />
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
     <ClCompile Include="Modcore\modConstructors.cpp" />

@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 #include "../modclasses/modBase.h"
-#include "../modclasses/modTypes.h"
+#include "../modclasses/enumheaders/modTypes.h"
 
 // json
 #include "../dependencies/jsonParser/json.hpp"

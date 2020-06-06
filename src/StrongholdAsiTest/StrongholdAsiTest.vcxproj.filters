@@ -37,6 +37,9 @@
     <Filter Include="dependencies">
       <UniqueIdentifier>{7c332237-6347-4ef1-a6a0-96539c19d5bb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headerdateien\ModClasses\EnumHeaders">
+      <UniqueIdentifier>{05cf2cd9-20fd-4592-a8c4-02a65e39c517}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Misc\copiedFunc.h">
@@ -57,15 +60,6 @@
     <ClInclude Include="Modclasses\modBase.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
-    <ClInclude Include="Modclasses\modtypes.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="Modclasses\strongVersions.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
-    <ClInclude Include="Modclasses\versionGetter.h">
-      <Filter>Headerdateien\ModClasses</Filter>
-    </ClInclude>
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h">
       <Filter>Headerdateien\ModClasses\TestStuff</Filter>
     </ClInclude>
@@ -77,6 +71,21 @@
     </ClInclude>
     <ClInclude Include="dependencies\jsonParser\json.hpp">
       <Filter>dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="modclasses\versionGetter.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="modclasses\addressResolver.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\enumheaders\strongVersions.h">
+      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="Modclasses\enumheaders\modtypes.h">
+      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="modclasses\enumheaders\addressEnums.h">
+      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,6 +120,12 @@
       <Filter>dependencies</Filter>
     </ClCompile>
     <ClCompile Include="modclasses\versionGetter.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\addressKeeper.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\addressResolver.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
   </ItemGroup>

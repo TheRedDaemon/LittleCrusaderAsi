@@ -1,10 +1,9 @@
 #ifndef VERSIONGETTER
 #define VERSIONGETTER
 
-#include "IntSafe.h" // for DWORD
 #include "modBase.h"
-#include "strongVersions.h"
 #include "addressBase.h"
+#include "addressResolver.h"   // to send request object
 
 namespace modclasses
 {
@@ -23,6 +22,9 @@ namespace modclasses
 
     const DWORD relVersion41String{ 0x1A1FDC }; // 9 byte string (using 10)
     const DWORD relVersion41Number{ 0x24EEC }; // 1 byte
+
+    // needed to give the address resolver the right infos
+    static const std::vector<AddressRequest> usedAddresses;
 
     Version version{ Version::NONE };
 
@@ -54,8 +56,11 @@ namespace modclasses
       return version;
     }
 
-    // function that returns whatever the address resolver need for an object
-    //std::vector<"object"> getUsedAddresses(); // might even need some sort of smartPointer etc., however, maybe these objects are unique
+    // might even need some sort of smartPointer etc., however, maybe these objects are unique
+    const std::vector<AddressRequest>& returnUsedAddresses()
+    {
+      return usedAddresses;
+    }
 
     /**misc**/
 
