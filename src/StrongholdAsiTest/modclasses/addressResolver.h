@@ -1,6 +1,7 @@
 #ifndef ADDRESSRESOLVER
 #define ADDRESSRESOLVER
 
+#include <unordered_set>
 #include "IntSafe.h" // for DWORD
 #include "modBase.h"
 #include "addressBase.h"
@@ -11,11 +12,21 @@ namespace modclasses
   // used to express how critical the use of the address is
   enum class AddressRisk
   {
+    NONE,             // for config -> doesn't change default value
     SAFE,	            // no problem if others use this (only read maybe, might produce garbage if others change them, but not break)
     WARNING,          // likely modifing a value, might not need special handling for now
     FUNCTION_WARNING, // special instance to mark function code that is not called anymore by some actions if a mod is activated, but is still called by other
     CRITICAL          // changes overall flow / redirects functions etc. and has a good chance of breaking things, also to be used for code that is "killed" by changes and is not accessed anymore
   };
+
+  // used to parse string to enum
+  NLOHMANN_JSON_SERIALIZE_ENUM(AddressRisk, {
+    {AddressRisk::NONE, nullptr},
+    {AddressRisk::SAFE, "safe"},
+    {AddressRisk::WARNING, "warning"},
+    {AddressRisk::FUNCTION_WARNING, "function warning"},
+    {AddressRisk::CRITICAL, "critical"}
+  })
 
   // add definition for address request struct
   // at best defined as static (const) vector and then delivered by address
@@ -44,9 +55,13 @@ namespace modclasses
 
     // a little redundant... maybe remove later, or always call functions
     std::weak_ptr<AddressBase> addrBase{};
-    std::weak_ptr<AddressBase> verGet{};
+    std::weak_ptr<VersionGetter> verGet{};
     Version version{ Version::NONE };
     DWORD addressBase{ 0x0 };
+
+    // TODO: likely inefficient and slow, so maybe change to a better approach latter
+    std::map<DWORD, std::vector<AddressRequest*>> conflictCheckerMap; // maybe think of better way?
+    std::unordered_map<ModType, std::unordered_set<Address>> approvedAddresses;
 
   public:
 
@@ -72,6 +87,7 @@ namespace modclasses
 
     // returns true if all addresses were registered, else false
     // nature of conflicts is logged
+    // AddressRequests need to be persistent for the lifetime of the class, since currently pointers are used to store references
     const bool requestAddresses(const std::vector<AddressRequest> &addrReq, const ModBase &requestingMod);
     // NOTE to impl -> remember that the changes to the check sets only should take effect or be persistent if no conflict or address reject occures
     
