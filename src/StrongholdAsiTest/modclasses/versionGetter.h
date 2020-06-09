@@ -24,7 +24,7 @@ namespace modclasses
     const DWORD relVersion41Number{ 0x24EEC }; // 1 byte
 
     // needed to give the address resolver the right infos
-    static const std::vector<AddressRequest> usedAddresses;
+    static std::vector<AddressRequest> usedAddresses;
 
     Version version{ Version::NONE };
 
@@ -53,11 +53,15 @@ namespace modclasses
     // return version (will be received 
     const Version getCurrentStrongholdVersion() const
     {
-      return version;
+      if (initialized)
+      {
+        return version;
+      }
+      throw std::exception("VersionGetter wasn't successfully initialized, but \"getCurrentStrongholdVersion\" was still called.");
     }
 
     // might even need some sort of smartPointer etc., however, maybe these objects are unique
-    const std::vector<AddressRequest>& returnUsedAddresses()
+    std::vector<AddressRequest>& returnUsedAddresses()
     {
       return usedAddresses;
     }

@@ -29,7 +29,7 @@ namespace modclasses
   })
 
   // add definition for address request struct
-  // at best defined as static (const) vector and then delivered by address
+  // at best defined as static vector and then delivered by address
   struct AddressRequest
   {
     // the mod address
@@ -43,6 +43,8 @@ namespace modclasses
     // likely has the biggest overhead...
 
     // the risk level of usage
+    // critical is the highest allowes conflict level
+    // currently no intention to allow to accesses marked with conflict
     AddressRisk addressRisk;
   };
 
@@ -60,8 +62,7 @@ namespace modclasses
     DWORD addressBase{ 0x0 };
 
     // TODO: likely inefficient and slow, so maybe change to a better approach latter
-    std::map<DWORD, std::vector<AddressRequest*>> conflictCheckerMap; // maybe think of better way?
-    std::unordered_map<ModType, std::unordered_set<Address>> approvedAddresses;
+    std::map<DWORD, std::unordered_map<ModType, AddressRequest*>> addressSortContainer{};
 
   public:
 
@@ -88,9 +89,9 @@ namespace modclasses
     // returns true if all addresses were registered, else false
     // nature of conflicts is logged
     // AddressRequests need to be persistent for the lifetime of the class, since currently pointers are used to store references
-    const bool requestAddresses(const std::vector<AddressRequest> &addrReq, const ModBase &requestingMod);
+    const bool requestAddresses(std::vector<AddressRequest> &addrReq, const ModBase &requestingMod);
     // NOTE to impl -> remember that the changes to the check sets only should take effect or be persistent if no conflict or address reject occures
-    
+
     // receives the address type and the mod class that requests
     // returns a pointer of type 'T' to the requested address
     // NOTE: the template value is made to a pointer so request a int pointer like 'getAddressPointer<int>' and not 'getAddressPointer<*int>'
@@ -108,6 +109,19 @@ namespace modclasses
   private:
 
     const DWORD getAddress(const Address memAddr);
+
+    // for intern resolve
+    const bool checkIfAddressRiskViolated(AddressRisk newRisk, AddressRisk oldRisk);
+    const std::pair<DWORD, DWORD> getStartAndEndAddress(const AddressRequest& req);
+
+    // returns a tuple with:
+    // first:   bool -> if it violates the risk level
+    // second:  DWORD -> addresses to add the new AddressRequest to
+    // third:   vector of std::pair<ModType, AddressRequest*> -> Addresses to add to the start point of the new address
+    // fourth:  vector of std::pair<ModType, AddressRequest*> -> Addresses to add to the end point of the new address
+    const std::tuple<bool, std::vector<DWORD>, std::vector<std::pair<ModType, AddressRequest*>>, std::vector<std::pair<ModType, AddressRequest*>>> checkRiskAndOverlaps(
+      const ModType newToAddType, const AddressRequest &newToAddReq, std::pair<DWORD, DWORD> newAddrStartEnd, std::unordered_map<ModType, AddressRequest*> &reqInPlace);
+
   };
 }
 

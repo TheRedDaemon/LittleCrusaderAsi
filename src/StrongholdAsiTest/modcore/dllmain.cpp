@@ -46,7 +46,7 @@ static void copyLogOnError()
   {
     std::filesystem::copy_file("plugins/" + filename, "plugins/" + timeStream.str() + "_error_" + filename);
   }
-  catch (std::exception&)
+  catch (const std::exception&)
   {
     
     // NOTE: if it breaks during int, something breaks
@@ -58,7 +58,7 @@ static void copyLogOnError()
     {
       std::filesystem::copy_file(path + "/plugins/" + filename, path + "/plugins/" + timeStream.str() + "_error_" + filename);
     }
-    catch (std::exception& o_O)
+    catch (const std::exception& o_O)
     {
       LOG(ERROR) << o_O.what() << "Not even additional handling allowed copy...";
     }
@@ -88,7 +88,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
       {
         modLoader = std::make_unique<modcore::ModLoader>();
       }
-      catch (std::exception& o_O)
+      catch (const std::exception& o_O)
       {
         LOG(ERROR) << "An exception has occured: " << o_O.what() << " (The application might be left unstable.)";
         modcore::enableErrorLog();
@@ -115,7 +115,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
           copyLogOnError();
         }
       }
-      catch (std::exception& o_O)
+      catch (const std::exception& o_O)
       {
         LOG(ERROR) << "An exception has occured: " << o_O.what() << " (The application might be left unstable.)";
         copyLogOnError();

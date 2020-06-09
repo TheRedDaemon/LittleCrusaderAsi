@@ -21,11 +21,11 @@ namespace modcore
         modConfigs[key] = pair.value();
       }
     }
-    catch (Json::parse_error& o_O) {
+    catch (const Json::parse_error& o_O) {
       LOG(ERROR) << "Config parse error: " << o_O.what();
       throw;
     }
-    catch (std::exception& o_O) {
+    catch (const std::exception& o_O) {
       LOG(ERROR) << "Error during config load: " << o_O.what();
       throw;
     }
