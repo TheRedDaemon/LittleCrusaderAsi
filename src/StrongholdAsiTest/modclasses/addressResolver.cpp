@@ -87,7 +87,13 @@ namespace modclasses
       {
         if (const auto& modIt = (modAddrIt->second).find(requestingMod.getModType()); modIt != (modAddrIt->second).end())
         {
-          if ((modIt->second).address == memAddr)
+          bool allowed{ false };
+          for (const auto& reg : (modIt->second))
+          {
+            allowed = allowed || reg->address == memAddr;
+          }
+
+          if (allowed)
           {
             return reinterpret_cast<T*>(addressBase + address);
           }
@@ -114,7 +120,7 @@ namespace modclasses
       case AddressRisk::SAFE:
         violated = true;  // all overlaps are rejected
         break;
-      
+
       case AddressRisk::WARNING:
         violated = (oldRisk != AddressRisk::SAFE && newRisk != AddressRisk::SAFE);
         break;
@@ -123,11 +129,11 @@ namespace modclasses
         violated = ((oldRisk == AddressRisk::FUNCTION_WARNING || oldRisk == AddressRisk::CRITICAL) &&
           (newRisk == AddressRisk::FUNCTION_WARNING || newRisk == AddressRisk::CRITICAL));
         break;
-      
+
       case AddressRisk::CRITICAL:
         violated = (oldRisk == AddressRisk::CRITICAL && newRisk == AddressRisk::CRITICAL);
         break;
-      
+
       default:
         throw std::exception("The chosen ConflictLevel was NONE or not handled. This should never happen.");
     }
@@ -151,35 +157,68 @@ namespace modclasses
     return std::pair<DWORD, DWORD>(startAddress, endAddress);
   }
 
-  // if the thing fills more an more, will likely produce a ton of redundant returns
-  // TODO: maybe add a structure to reduce these returns (maybe not call this function if already stuff of this req added?)
-  const std::tuple<bool, std::vector<DWORD>, std::vector<std::pair<ModType, AddressRequest*>>, std::vector<std::pair<ModType, AddressRequest*>>> AddressResolver::checkRiskAndOverlaps(
-    const ModType newToAddType, const AddressRequest &newToAddReq, std::pair<DWORD, DWORD> newAddrStartEnd, std::unordered_map<ModType, AddressRequest*> &reqInPlace)
+  // fills addressesWhereToAddRequest, addToNewAddressStart and addToNewAddressEnd
+  // also return a bool that says "true" if the risk level was violated
+  // TODO?: the unordered_maps are still redundantly filled, any worthwhile check possible?
+  // NOTE: length 1 addresses and start/end overlaps will create an overhead that needs to be filtered in the return
+  const bool AddressResolver::checkRiskAndOverlaps(
+    const ModType newToAddType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
+    const std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
+    std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressEnd)
   {
     bool riskToHigh{ false };
     size_t i{ 0 };
     while (!riskToHigh && i < reqInPlace.size())
     {
-      const auto& otherReq = std::next(reqInPlace.begin(), i);
+      const auto& otherReqSet = std::next(reqInPlace.begin(), i);
 
-      if (otherReq->first != newToAddType)  // prevent multi add
+      size_t j{ 0 };
+      while (!riskToHigh && j < (otherReqSet->second).size())
       {
-        const std::pair<DWORD, DWORD> otherRange{ getStartAndEndAddress(*(otherReq->second)) };
+        const auto& otherReq = *std::next((otherReqSet->second).begin(), j);
+
+        const std::pair<DWORD, DWORD> otherRange{ getStartAndEndAddress(*otherReq) };
         bool overlap{ newAddrStartEnd.first <= otherRange.second || newAddrStartEnd.second >= otherRange.first };
 
         if (overlap)
         {
-          riskToHigh = checkIfAddressRiskViolated(newToAddReq.addressRisk, (otherReq->second)->addressRisk);
+          riskToHigh = checkIfAddressRiskViolated(newToAddReq.addressRisk, otherReq->addressRisk);
 
-          // TODO: more stuff, check which side has how overlap, then define how to what comes where
-          // handle if start and end address identic in both old and new
-          // new start inside + new end inside -> add request pointer old to new start and new end
-          // new start inside + new end outside -> add request pointer old to new start and new request pointer to old end
-          // new start outside + new end inside -> add request pointer old to new end and new request pointer to old start
-          // new start outside + new end outside -> add new request pointer to old start and old end
+          if (!riskToHigh)
+          {
+            bool startInside{ newAddrStartEnd.first > otherRange.first }; // if both firsts are the same, treat them as outside -> add to already there
+            bool endInside{ newAddrStartEnd.second < otherRange.second }; // if both ends are the same, treat them as outside -> add to already there
+
+            // NOTE: 1 length addresses and start/end overlaps will create an overhead, that needs to be filtered in the return
+
+            if (startInside && endInside) // new start inside + new end inside -> add request pointer old to new start and new end
+            {
+              addToNewAddressStart[otherReqSet->first].insert(otherReq);
+              addToNewAddressEnd[otherReqSet->first].insert(otherReq);
+            }
+            else if (startInside && !endInside) // new start inside + new end outside -> add request pointer old to new start and new request pointer to old end
+            {
+              addToNewAddressStart[otherReqSet->first].insert(otherReq);
+              addressesWhereToAddRequest.insert(otherRange.second);
+            }
+            else if (!startInside && endInside) // new start outside + new end inside -> add request pointer old to new end and new request pointer to old start
+            {
+              addressesWhereToAddRequest.insert(otherRange.first);
+              addToNewAddressEnd[otherReqSet->first].insert(otherReq);
+            }
+            else // (!startInside && !endInside) // new start outside + new end outside -> add new request pointer to old start and old end
+            {
+              addressesWhereToAddRequest.insert(otherRange.first);
+              addressesWhereToAddRequest.insert(otherRange.second);
+            }
+          }
         }
+        ++j;
       }
+      ++i;
     }
+
+    return riskToHigh;
   }
 
   const bool AddressResolver::requestAddresses(std::vector<AddressRequest> &addrReq, const ModBase &requestingMod)
@@ -188,7 +227,8 @@ namespace modclasses
     {
 
       // save ref to unordered address map, to remove in error case
-      std::vector<std::unordered_map<ModType, AddressRequest*>*> addedAddresses;
+      std::vector<std::unordered_map<ModType, std::unordered_set<AddressRequest*>>*> addedAddresses; // used to identify maps
+      std::unordered_set<AddressRequest*> addedRequests; // used to only delete newly requested addresses
 
       // TODO
       size_t i{ 0 };
@@ -197,7 +237,11 @@ namespace modclasses
       {
         AddressRequest& req = addrReq[i];
         std::pair<DWORD, DWORD> addrStartEnd;
-        
+
+        std::unordered_set<DWORD> addressesWhereToAddRequest;
+        std::unordered_map<ModType, std::unordered_set<AddressRequest*>> addToAddressStart;
+        std::unordered_map<ModType, std::unordered_set<AddressRequest*>> addToAddressEnd;
+
         try
         {
           addrStartEnd = getStartAndEndAddress(req);
@@ -208,43 +252,72 @@ namespace modclasses
           conflict = true;
         }
 
-        // only start
-        if (addrStartEnd.second == 0x0)
+        if (!conflict)
         {
-          //search if already in
-          if (const auto& addrIt = addressSortContainer.find(addrStartEnd.first); addrIt != addressSortContainer.end())
-          {
-            addrIt;
-          }
-          else
-          {
-            auto& addrCon = addressSortContainer[addrStartEnd.first];
-            addrCon[requestingMod.getModType()] = &req;
 
-            // if an overlap exists, it needs to be either the next node itself, or another, that should have left the note, therefore we take the next
-            // we created it, so the address needs to be there
-            if (const auto& nextIt = std::next(addressSortContainer.find(addrStartEnd.first)); nextIt != addressSortContainer.end())
+          // TODO -> check iteration
+          // only start
+          if (addrStartEnd.second == 0x0)
+          {
+            //search if already in
+            if (const auto& addrIt = addressSortContainer.find(addrStartEnd.first); addrIt != addressSortContainer.end())
             {
-              for (const auto& otherReq : nextIt->second)
-              {
-
-              }
+              addrIt;
             }
+            else
+            {
+              auto& addrCon = addressSortContainer[addrStartEnd.first];
+              addrCon[requestingMod.getModType()] = &req;
 
-            addedAddresses.push_back(&addrCon);  // add as ref in case of delete
+              // if an overlap exists, it needs to be either the next node itself, or another, that should have left the note, therefore we take the next
+              // we created it, so the address needs to be there
+              if (const auto& nextIt = std::next(addressSortContainer.find(addrStartEnd.first)); nextIt != addressSortContainer.end())
+              {
+                for (const auto& otherReq : nextIt->second)
+                {
+
+                }
+              }
+
+              addedAddresses.push_back(&addrCon);  // add as ref in case of delete
+            }
           }
         }
+        
 
         ++i;
       }
 
       // run over all addresses that where added in the request
-      // remove all
       if (conflict)
       {
         for (auto mapOfMods : addedAddresses)
         {
-          mapOfMods->erase(requestingMod.getModType());
+          bool allIn{ true };
+          std::vector<AddressRequest*> toRemove;
+          for (const auto& addr : mapOfMods->at(requestingMod.getModType()))
+          {
+            bool in{ addedRequests.find(addr) != addedRequests.end() };
+
+            if (in)
+            {
+              toRemove.push_back(addr);
+            }
+
+            allIn = allIn && in;
+          }
+
+          if (allIn)
+          {
+            mapOfMods->erase(requestingMod.getModType());
+          }
+          else
+          {
+            for (const auto rem : toRemove)
+            {
+              mapOfMods->at(requestingMod.getModType()).erase(rem);
+            }
+          }
         }
 
         LOG(WARNING) << "Failed granting access of addresses to mod with id '" << std::to_string(static_cast<int>(requestingMod.getModType())) << "'.";

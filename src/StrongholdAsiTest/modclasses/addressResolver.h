@@ -62,7 +62,7 @@ namespace modclasses
     DWORD addressBase{ 0x0 };
 
     // TODO: likely inefficient and slow, so maybe change to a better approach latter
-    std::map<DWORD, std::unordered_map<ModType, AddressRequest*>> addressSortContainer{};
+    std::map<DWORD, std::unordered_map<ModType, std::unordered_set<AddressRequest*>>> addressSortContainer{};
 
   public:
 
@@ -114,14 +114,12 @@ namespace modclasses
     const bool checkIfAddressRiskViolated(AddressRisk newRisk, AddressRisk oldRisk);
     const std::pair<DWORD, DWORD> getStartAndEndAddress(const AddressRequest& req);
 
-    // returns a tuple with:
-    // first:   bool -> if it violates the risk level
-    // second:  DWORD -> addresses to add the new AddressRequest to
-    // third:   vector of std::pair<ModType, AddressRequest*> -> Addresses to add to the start point of the new address
-    // fourth:  vector of std::pair<ModType, AddressRequest*> -> Addresses to add to the end point of the new address
-    const std::tuple<bool, std::vector<DWORD>, std::vector<std::pair<ModType, AddressRequest*>>, std::vector<std::pair<ModType, AddressRequest*>>> checkRiskAndOverlaps(
-      const ModType newToAddType, const AddressRequest &newToAddReq, std::pair<DWORD, DWORD> newAddrStartEnd, std::unordered_map<ModType, AddressRequest*> &reqInPlace);
-
+    // fills addressesWhereToAddRequest, addToNewAddressStart and addToNewAddressEnd
+    // also return a bool that says "true" if the risk level was violated
+    const bool checkRiskAndOverlaps(
+      const ModType newToAddType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
+      const std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
+      std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressEnd);
   };
 }
 
