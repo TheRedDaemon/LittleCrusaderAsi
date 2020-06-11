@@ -51,6 +51,7 @@ namespace modclasses
           "V1.%d.1-E", 41))
         {
           version = Version::V1P41P1SE;
+          LOG(INFO) << "Detected Stronghold Extreme 1.41.1-E.";
         }
         // 41
         else if (isThisVersion(
@@ -59,6 +60,7 @@ namespace modclasses
           "V1.%d", 41))
         {
           version = Version::V1P41;
+          LOG(INFO) << "Detected Stronghold 1.41.";
         }
       }
     }

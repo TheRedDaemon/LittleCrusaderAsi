@@ -196,7 +196,7 @@ namespace modclasses
         const std::pair<DWORD, DWORD> otherRange{ getStartAndEndAddress(**otherReq) };
         bool overlap{ !(newAddrStartEnd.first > otherRange.second || newAddrStartEnd.second < otherRange.first) };
 
-        if (overlap)
+        if (overlap && &newToAddReq != (*otherReq)) // only test for conflict if different requests (just shows that there are some issues)
         {
           riskToHigh = checkIfAddressRiskViolated(newToAddReq.addressRisk, (*otherReq)->addressRisk);
 

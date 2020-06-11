@@ -55,6 +55,8 @@ namespace modclasses
     const bool requestAddresses(std::vector<AddressRequest> &addrReq, const ModBase &requestingMod);
     // NOTE to impl -> remember that the changes to the check sets only should take effect or be persistent if no conflict or address reject occures
 
+    // maybe TODO?: should it be possible to give addresses free, if a mod fails after obtaining them (maybe setting AddressRisk of them to safe)?
+
     // receives the address type and the mod class that requests
     // returns a pointer of type 'T' to the requested address
     // NOTE: the template value is made to a pointer so request a int pointer like 'getAddressPointer<int>' and not 'getAddressPointer<*int>'
