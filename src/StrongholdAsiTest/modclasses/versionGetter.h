@@ -3,7 +3,7 @@
 
 #include "modBase.h"
 #include "addressBase.h"
-#include "addressResolver.h"   // to send request object
+#include "enumheaders/addrResolverEnumAndStruct.h" // to send request object
 
 namespace modclasses
 {

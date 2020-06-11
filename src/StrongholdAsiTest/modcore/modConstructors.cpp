@@ -2,6 +2,7 @@
 // all modTypes include (will (hoefully?) be many one day)
 #include "../modclasses/addressBase.h" 
 #include "../Modclasses/versionGetter.h"
+#include "../Modclasses/addressResolver.h"
 //#include ...
 
 // dummy:
@@ -24,7 +25,8 @@ namespace modcore
         return std::make_shared<MC::AddressBase>();
       case MT::VERSION_GET:
         return std::make_shared<MC::VersionGetter>();
-
+      case MT::ADDRESS_RESOLVER:
+        return std::make_shared<MC::AddressResolver>(config);
 
 
       // dummy:
@@ -33,7 +35,6 @@ namespace modcore
       case MT::TEST2:
         return std::make_shared<MC::Test2>();
 
-      case MT::ADDRESS_RESOLVER:
       case MT::KEYBOARD_HANDLER:
       case MT::EVENT_HANDLER:
       default:

@@ -30,6 +30,7 @@ namespace modclasses
   NLOHMANN_JSON_SERIALIZE_ENUM(ModType, {
     {ModType::NONE, nullptr},
     {ModType::VERSION_GET, "versionGetter"},
+    {ModType::ADDRESS_RESOLVER, "addressResolver"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

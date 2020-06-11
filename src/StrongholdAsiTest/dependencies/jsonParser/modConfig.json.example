@@ -1,10 +1,5 @@
 {
-    "test1": {
-        "someNumber": 0.3,
-        "someText": "test"
-    },
-    "test2": {
-        "someNumber": 0.5,
-        "someText": "testAlso"
+    "addressResolver": {
+        "rejectLevel": "warning"
     }
 }

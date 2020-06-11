@@ -180,6 +180,7 @@
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
     <ClInclude Include="Misc\framework.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
+    <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
     <ClInclude Include="Modclasses\modBase.h" />
     <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
     <ClInclude Include="Misc\pch.h" />

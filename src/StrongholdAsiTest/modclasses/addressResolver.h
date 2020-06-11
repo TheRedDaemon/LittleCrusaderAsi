@@ -7,47 +7,10 @@
 #include "addressBase.h"
 #include "versionGetter.h"
 
+#include "enumheaders/addrResolverEnumAndStruct.h"
+
 namespace modclasses
 {
-  // used to express how critical the use of the address is
-  enum class AddressRisk
-  {
-    NONE,             // for config -> doesn't change default value
-    SAFE,	            // no problem if others use this (only read maybe, might produce garbage if others change them, but not break)
-    WARNING,          // likely modifing a value, might not need special handling for now
-    FUNCTION_WARNING, // special instance to mark function code that is not called anymore by some actions if a mod is activated, but is still called by other
-    CRITICAL          // changes overall flow / redirects functions etc. and has a good chance of breaking things, also to be used for code that is "killed" by changes and is not accessed anymore
-  };
-
-  // used to parse string to enum
-  NLOHMANN_JSON_SERIALIZE_ENUM(AddressRisk, {
-    {AddressRisk::NONE, nullptr},
-    {AddressRisk::SAFE, "safe"},
-    {AddressRisk::WARNING, "warning"},
-    {AddressRisk::FUNCTION_WARNING, "function warning"},
-    {AddressRisk::CRITICAL, "critical"}
-  })
-
-  // add definition for address request struct
-  // at best defined as static vector and then delivered by address
-  struct AddressRequest
-  {
-    // the mod address
-    Address address;
-    
-    // number of addressed bytes including the main address (example: 4 -> 0x1 to 0x4)
-    // Version as key, by default Version::NONE is used
-    // if adaptions are needed, add the lengths for other versions, it will be checked if the current running version has special treatment
-    // use that for exceptions, for default use Version::NONE
-    std::unordered_map <Version, size_t> length;
-    // likely has the biggest overhead...
-
-    // the risk level of usage
-    // critical is the highest allowes conflict level
-    // currently no intention to allow to accesses marked with conflict
-    AddressRisk addressRisk;
-  };
-
   class AddressResolver : public ModBase
   {
   private:
@@ -82,7 +45,7 @@ namespace modclasses
     /**con- and destructor**/
 
     // will get a config how to treat address overlaps
-    AddressResolver(Json config);
+    AddressResolver(const Json &config);
 
     /**additional functions for others**/
 
@@ -117,7 +80,7 @@ namespace modclasses
     // fills addressesWhereToAddRequest, addToNewAddressStart and addToNewAddressEnd
     // also return a bool that says "true" if the risk level was violated
     const bool checkRiskAndOverlaps(
-      const ModType newToAddType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
+      const ModType requestModType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
       const std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
       std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressEnd);
   };
