@@ -3,6 +3,7 @@
 #include "../modclasses/addressBase.h" 
 #include "../Modclasses/versionGetter.h"
 #include "../Modclasses/addressResolver.h"
+#include "../modclasses/keyboardHandler.h"
 //#include ...
 
 // dummy:
@@ -27,7 +28,8 @@ namespace modcore
         return std::make_shared<MC::VersionGetter>();
       case MT::ADDRESS_RESOLVER:
         return std::make_shared<MC::AddressResolver>(config);
-
+      case MT::KEYBOARD_HANDLER:
+        return std::make_shared<MC::KeyboardHandler>(config);
 
       // dummy:
       case MT::TEST1:
@@ -35,7 +37,6 @@ namespace modcore
       case MT::TEST2:
         return std::make_shared<MC::Test2>();
 
-      case MT::KEYBOARD_HANDLER:
       case MT::EVENT_HANDLER:
       default:
         throw std::exception(("Received a not handled ModType with id: " + std::to_string(static_cast<int>(modType))).c_str());

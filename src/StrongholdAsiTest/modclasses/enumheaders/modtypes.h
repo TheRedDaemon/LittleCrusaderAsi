@@ -31,6 +31,7 @@ namespace modclasses
     {ModType::NONE, nullptr},
     {ModType::VERSION_GET, "versionGetter"},
     {ModType::ADDRESS_RESOLVER, "addressResolver"},
+    {ModType::KEYBOARD_HANDLER, "keyboard"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

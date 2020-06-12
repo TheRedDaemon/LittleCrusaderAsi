@@ -15,7 +15,6 @@ namespace modclasses
   {
   private:
 
-    // TODO: make changeable using config
     AddressRisk conflictLevel{ AddressRisk::CRITICAL }; // level on which a address request is rejected if another of this type or higher is already present
 
     // a little redundant... maybe remove later, or always call functions
