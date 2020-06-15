@@ -1,9 +1,9 @@
 
-// all modTypes include (will (hoefully?) be many one day)
+// all modTypes include (will (hopefully?) be many one day)
 #include "../modclasses/addressBase.h" 
 #include "../Modclasses/versionGetter.h"
 #include "../Modclasses/addressResolver.h"
-#include "../modclasses/keyboardHandler.h"
+#include "../modclasses/keyboardInterceptor.h"
 //#include ...
 
 // dummy:
@@ -28,8 +28,8 @@ namespace modcore
         return std::make_shared<MC::VersionGetter>();
       case MT::ADDRESS_RESOLVER:
         return std::make_shared<MC::AddressResolver>(config);
-      case MT::KEYBOARD_HANDLER:
-        return std::make_shared<MC::KeyboardHandler>(config);
+      case MT::KEYBOARD_INTERCEPTOR:
+        return std::make_shared<MC::KeyboardInterceptor>(config);
 
       // dummy:
       case MT::TEST1:

@@ -2,7 +2,7 @@
 #define MODTYPES  // header gard without seperator to avoid problems with enums with the same name
 
 // json
-#include "../dependencies/jsonParser/json.hpp"
+#include "../../dependencies/jsonParser/json.hpp"
 
 namespace modclasses 
 {
@@ -14,7 +14,7 @@ namespace modclasses
     ADDRESS_BASE,         // no dependency, gets at least the base class
     VERSION_GET,       // uses own set of addresses to determine version, requires ADDRESS_BASE
     ADDRESS_RESOLVER,     // gets version from the VERSION_GETTER, other modules should request use of addresses, requires ADDRESS_BASE and VERSION_GETTER
-    KEYBOARD_HANDLER,     // planned module for handling keyboard stuff
+    KEYBOARD_INTERCEPTOR,     // planned module for handling keyboard stuff
     EVENT_HANDLER,         // planned module for handling events, by intercepting functions and execute others before giving control back to system
     
     
@@ -31,7 +31,7 @@ namespace modclasses
     {ModType::NONE, nullptr},
     {ModType::VERSION_GET, "versionGetter"},
     {ModType::ADDRESS_RESOLVER, "addressResolver"},
-    {ModType::KEYBOARD_HANDLER, "keyboard"},
+    {ModType::KEYBOARD_INTERCEPTOR, "keyboardInterceptor"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

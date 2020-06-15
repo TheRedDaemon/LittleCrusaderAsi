@@ -1,26 +1,26 @@
 
-#include "keyboardHandler.h"
+#include "keyboardInterceptor.h"
 
 namespace modclasses
 {
 
   // pointer for static function
-  static KeyboardHandler *handlerPointer{ nullptr };
+  static KeyboardInterceptor *handlerPointer{ nullptr };
 
   // static hook function
-  LRESULT CALLBACK KeyboardHandler::hookForKeyInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
+  LRESULT CALLBACK KeyboardInterceptor::hookForKeyInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
     return handlerPointer->keyIntercepter(code, wParam, lParam);
   }
 
   // Non-static part starts here:
 
-  KeyboardHandler::KeyboardHandler(const Json &config)
+  KeyboardInterceptor::KeyboardInterceptor(const Json &config)
   {
     // load key config and prepare
   }
 
-  KeyboardHandler::~KeyboardHandler()
+  KeyboardInterceptor::~KeyboardInterceptor()
   {
     if (keyboardHook)
     {
@@ -34,7 +34,7 @@ namespace modclasses
     }
   }
 
-  bool KeyboardHandler::initialize()
+  bool KeyboardInterceptor::initialize()
   {
     if (!handlerPointer)
     {
@@ -47,21 +47,21 @@ namespace modclasses
       if (keyboardHook)
       {
         initialized = true;
-        LOG(INFO) << "KeyboardHandler initialized.";
+        LOG(INFO) << "KeyboardInterceptor initialized.";
       }
       else
       {
-        LOG(ERROR) << "KeyboardHandler was unable to place keyboard hook.";
+        LOG(ERROR) << "KeyboardInterceptor was unable to place keyboard hook.";
       }
     }
     else
     {
-      LOG(ERROR) << "KeyboardHandler needs to place a windows hook and uses a singleton. Creating another KeyboardHandler is not allowed.";
+      LOG(ERROR) << "KeyboardInterceptor needs to place a windows hook and uses a singleton. Creating another KeyboardInterceptor is not allowed.";
     }
 
     if (!initialized)
     {
-      LOG(WARNING) << "KeyboardHandler was not initialized.";
+      LOG(WARNING) << "KeyboardInterceptor was not initialized.";
     }
 
     return initialized;
@@ -73,27 +73,24 @@ namespace modclasses
 
     if (keyUp)
     {
-      LOG(INFO) << "up";
       SendMessage(window, WM_KEYUP, vkey, 1);
     }
     else
     {
       if (!repeat)
       {
-        LOG(INFO) << "down";
         SendMessage(window, WM_KEYDOWN, vkey, 0);
       }
 
       if (letter)
       {
-        LOG(INFO) << "letter";
         SendMessage(window, WM_CHAR, letter, 1);
       }
     }
   }
 
   // member function to handle it
-  LRESULT CALLBACK KeyboardHandler::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
+  LRESULT CALLBACK KeyboardInterceptor::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
     bool stopKey{ false };
 
@@ -106,43 +103,55 @@ namespace modclasses
     {
       // if message removed in case of action -> slow if many
       // in case of NO_REMOVE: not
-      // I really wonder why? maybe the peak is actualy for this and I intercept it twice, because it runs in the same thread?
+      // I really wonder why? maybe the peek is actually for this and I intercept it twice, because it runs in the same thread?
       // maybe because it is no further processed?
       case HC_NOREMOVE: // HC_ACTION:
       {
+        bool keyUp{ lParam & 0x80000000 ? true : false };
+        bool keyHold{ lParam & 0x40000000 ? true : false };
 
         if (!window)
         {
           window = GetActiveWindow();
         }
 
-        if (window)
+        // todo: need a much better structure to handle input and input variants
+
+        // activation key uses only press
+        if (wParam == activationKey && !(keyUp || keyHold))
         {
-          // for filtering: (but remember, filtering here might create problems with the way stronghold handles keys, so careful
-          // https://stackoverflow.com/questions/40599162/vsto-windows-hook-keydown-event-called-10-times
-          // source: Game Hacking: Developing Autonomous Bots for Online Games -> Google Books
-
-          // for debug
-          //char keyName[15];
-          //GetKeyNameText(lParam, keyName, 15);
-          //LOG(INFO) << "Key used: " << keyName;
-
-          bool keyUp{ lParam & 0x80000000 ? true : false };
-          bool keyHold{ lParam & 0x40000000 ? true : false };
-
-          // SendMessage seems to work
-          if (wParam == 0x41)
+          interceptorActive = !interceptorActive;
+          stopKey = true;
+        }
+        else if (interceptorActive)
+        {
+          if (window)
           {
-            sendKey(window, keyUp, keyHold, VK_LEFT, 'a');
-            stopKey = true;
-          }
+            // for filtering: (but remember, filtering here might create problems with the way stronghold handles keys, so careful
+            // https://stackoverflow.com/questions/40599162/vsto-windows-hook-keydown-event-called-10-times
+            // source: Game Hacking: Developing Autonomous Bots for Online Games -> Google Books
 
-          if (wParam == VK_LEFT)
-          {
-            sendKey(window, keyUp, keyHold, 0x41, 0);
-            stopKey = true;
+            // for debug
+            //char keyName[15];
+            //GetKeyNameText(lParam, keyName, 15);
+            //LOG(INFO) << "Key used: " << keyName;
+
+
+            // SendMessage seems to work
+            if (wParam == 0x41)
+            {
+              sendKey(window, keyUp, keyHold, VK_LEFT, 'a');
+              stopKey = true;
+            }
+
+            if (wParam == VK_LEFT)
+            {
+              sendKey(window, keyUp, keyHold, 0x41, 0);
+              stopKey = true;
+            }
           }
         }
+
         break;
       }
 

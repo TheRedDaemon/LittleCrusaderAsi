@@ -90,7 +90,10 @@
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h">
       <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
     </ClInclude>
-    <ClInclude Include="modclasses\keyboardHandler.h">
+    <ClInclude Include="modclasses\enumheaders\keyboardEnums.h">
+      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="modclasses\keyboardInterceptor.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
   </ItemGroup>
@@ -134,7 +137,7 @@
     <ClCompile Include="modclasses\addressResolver.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
-    <ClCompile Include="modclasses\keyboardHandler.cpp">
+    <ClCompile Include="modclasses\keyboardInterceptor.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
   </ItemGroup>
