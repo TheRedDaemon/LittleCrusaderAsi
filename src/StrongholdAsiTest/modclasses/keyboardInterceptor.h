@@ -2,7 +2,7 @@
 #define KEYBOARDINTERCEPTOR
 
 #include "modBase.h"
-#include "enumheaders/keyboardEnums.h"
+#include "enumheaders/keyboardEnumsAndUtil.h"
 
 namespace modclasses
 {
@@ -23,15 +23,23 @@ namespace modclasses
     bool interceptorActive{ false };
 
     // the basis should be, that one registers a function, or another key, for a key or a combination
-    // maybe two maps, one for change keys, one for functions?
-    // other question would be -> enums for key structures?
-    // also -> key like alt, crtl as state changer, or as full combination key?
-    // also -> key up/down different calls? -> gues not? or for later?
-
-    // map to remember modification keys and status, or set to insert and remove (an array might be more performand, hm?)
-    // map to remember key mappings
-    // (key -> own struct -> check if modifiers fullfilled -> sorted list, 2 modifiers to non)
     // if some fits, do something -> important to prepare structure during config load
+
+    // will hold all actions, the other map will only use the pointers
+    std::vector<KAction> actionContainer{};
+
+    // keep added modifiers (including NONE) for single keys and the status
+    // will be run over and checked if changeable/assignable key pressed
+    std::map<VK, bool> modifierStatus{ {VK::NONE, true} };  // none will always be true
+
+    // 3 level tree structure, lookup might be a little slow for single keys, but should be fast enough for key presses
+    // order -> assinable key -> first modifier -> second modifier
+    // null will lead to next null:
+    // - no key -> ignored
+    // - no fitting modfier -> use single use mod (decend two levels and execute)
+    // - no second modfier -> use one modifer mod (decend one level and execute)
+    // NOTE: the check order for the modifiers will be the natural order of their values, left to right, shift/control/alt
+    std::unordered_map<VK, std::unordered_map<VK, std::unordered_map<VK, KAction*>>> keyboardAction;
 
   public:
     

@@ -67,28 +67,6 @@ namespace modclasses
     return initialized;
   }
 
-  static void sendKey(HWND window, bool keyUp, bool repeat, WORD vkey, char letter)
-  {
-    // for now ignoring lparam
-
-    if (keyUp)
-    {
-      SendMessage(window, WM_KEYUP, vkey, 1);
-    }
-    else
-    {
-      if (!repeat)
-      {
-        SendMessage(window, WM_KEYDOWN, vkey, 0);
-      }
-
-      if (letter)
-      {
-        SendMessage(window, WM_CHAR, letter, 1);
-      }
-    }
-  }
-
   // member function to handle it
   LRESULT CALLBACK KeyboardInterceptor::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
@@ -135,18 +113,30 @@ namespace modclasses
             //char keyName[15];
             //GetKeyNameText(lParam, keyName, 15);
             //LOG(INFO) << "Key used: " << keyName;
+            //LOG(INFO) << "Key used: " << std::bitset<32>(lParam);
+            LOG(INFO) << "Key used: " << wParam;
+
+            // experiment left, right
+            if (lParam & 0x01000000 ? true : false)
+            {
+              LOG(INFO) << "right";
+            }
+            else
+            {
+              LOG(INFO) << "left";
+            }
 
 
             // SendMessage seems to work
             if (wParam == 0x41)
             {
-              sendKey(window, keyUp, keyHold, VK_LEFT, 'a');
+              //sendKey(window, keyUp, keyHold, VK_LEFT, 'a');
               stopKey = true;
             }
 
             if (wParam == VK_LEFT)
             {
-              sendKey(window, keyUp, keyHold, 0x41, 0);
+              //sendKey(window, keyUp, keyHold, 0x41, 0);
               stopKey = true;
             }
           }

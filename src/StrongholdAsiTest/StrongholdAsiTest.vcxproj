@@ -181,7 +181,7 @@
     <ClInclude Include="Misc\framework.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
-    <ClInclude Include="modclasses\enumheaders\keyboardEnums.h" />
+    <ClInclude Include="modclasses\enumheaders\keyboardEnumsAndUtil.h" />
     <ClInclude Include="modclasses\keyboardInterceptor.h" />
     <ClInclude Include="Modclasses\modBase.h" />
     <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
@@ -197,6 +197,7 @@
     <ClCompile Include="Misc\copiedFunctions.cpp" />
     <ClCompile Include="modclasses\addressKeeper.cpp" />
     <ClCompile Include="modclasses\addressResolver.cpp" />
+    <ClCompile Include="modclasses\enumheaders\keyboardUtil.cpp" />
     <ClCompile Include="modclasses\keyboardInterceptor.cpp" />
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
