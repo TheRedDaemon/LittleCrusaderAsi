@@ -4,6 +4,8 @@
 #include <unordered_set>
 #include <Windows.h>
 
+# include "modtypes.h"
+
 // json
 #include "../../dependencies/jsonParser/json.hpp"
 
@@ -188,24 +190,44 @@ namespace modclasses
     namespace
     {
       // keys are allowed to modify input, but not be modified
-      // note wParam send the general key, however, using "lParam & 0x01000000 ? true : false" on can find out, if it is the right or the left key
+      // note wParam send the general key, however, using "lParam & 0x01000000 ? true : false" one can find out, if it is the right or the left key
       // the general key will be used to detect the key, and then will be resolved to the side
-      // to get a general "shift" result, just add both left and right shift
+      // to get a general "shift" result, just add both left and right shift combination
       // also note, the altGr key is control + right alt, not only right alt
-      // also, the lookup will use the order l/r and shift/control/alt
+      // also, the lookup will use the order r/l and alt/control/shift, which is an implementation result
+      // (check map is traversed in reverse natural order, so that NONE is at the end)
       const std::unordered_set<VirtualKey> modificationKeys{
         VK::LEFT_SHIFT, VK::RIGHT_SHIFT, VK::LEFT_MENU, VK::RIGHT_MENU, VK::LEFT_CONTROL, VK::RIGHT_CONTROL
       };
 
       //  these keys can be changed, but also be assigned to functions etc. // TODO: fill
       const std::unordered_set<VirtualKey> changeableKeys{
+        VK::PAUSE, VK::SPACE, VK::LEFT, VK::UP, VK::RIGHT, VK::DOWN,
+        VK::ZERO, VK::ONE, VK::TWO, VK::THREE, VK::FOUR, VK::FIVE, VK::SIX, VK::SEVEN, VK::EIGHT, VK::NINE,
+        VK::A, VK::B, VK::C, VK::D, VK::E, VK::F, VK::G, VK::H, VK::I, VK::J, VK::K, VK::L, VK::M, VK::N,
+        VK::O, VK::P, VK::Q, VK::R, VK::S, VK::T, VK::U, VK::V, VK::W, VK::X, VK::Y, VK::Z,
 
+        // numpad keys need test if they register as such... (left, right etc. was also reported as numpad key)
+        VK::NUMPAD0, VK::NUMPAD1, VK::NUMPAD2, VK::NUMPAD3, VK::NUMPAD4, VK::NUMPAD5, VK::NUMPAD6, VK::NUMPAD7, VK::NUMPAD8, VK::NUMPAD9,
+
+        // also needs test
+        VK::MULTIPLY, VK::ADD, VK::SEPERATOR, VK::SUBTRACT, VK::DECIMAL, VK::DIVIDE,
+
+        // I assume these will work
+        VK::F1, VK::F2, VK::F3, VK::F4, VK::F5, VK::F6, VK::F7, VK::F8, VK::F9, VK::F10, VK::F11, VK::F12,
+
+        // also need tests
+        VK::OEM_PLUS, VK::OEM_COMMA,  VK::OEM_MINUS, VK::OEM_PERIOD
+
+        // there are likely some not as easy accessible
       };
 
       //  these keys are allowed to activate the key interceptor (and maybe later other stuff?)
       const std::unordered_set<VirtualKey> activationKeys{
         VK::HOME, VK::DELETE_KEY, VK::PAGE_UP, VK::PAGE_DOWN
       };
+
+      // NOTE: which keys can be used for what is still subject of change
     }
 
     inline const bool isModificationKey(const VK key)
@@ -223,7 +245,9 @@ namespace modclasses
       return activationKeys.find(key) != activationKeys.end();
     }
 
+    
     /*************************************************************************/
+
 
     class KeyAction
     {
@@ -265,14 +289,15 @@ namespace modclasses
     class KeyFunction : public KeyAction
     {
     private:
-      
-      const std::function<void(const HWND, const bool, const bool)> funcToUse;
+
+      std::function<void(const HWND, const bool, const bool)> funcToUse;
 
     public:
 
       void doAction(const HWND window, const bool keyUp, const bool repeat) const override;
 
-      KeyFunction(std::function<void(const HWND, const bool, const bool)> funcToExecute):funcToUse{ funcToExecute }{}
+      KeyFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute):funcToUse{ funcToExecute }{}
+
       // prevent copy and assign (not sure how necessary)
       KeyFunction(const KeyFunction &keyAction) = delete;
       virtual KeyFunction& operator=(const KeyFunction &keyAction) final = delete;

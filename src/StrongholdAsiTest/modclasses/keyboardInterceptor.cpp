@@ -67,6 +67,58 @@ namespace modclasses
     return initialized;
   }
 
+  const bool KeyboardInterceptor::registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey, KAction* actionPointer)
+  {
+    // checks if mainkey and modifierOne are not NONE and valid keys, then if modifierTwo has a valid value
+    if (keyboard::isChangeableKey(mainkey) && keyboard::isModificationKey(modifierOne) && (modifierTwo == VK::NONE || keyboard::isModificationKey(modifierTwo)))
+    {
+      auto& lastLevel = keyboardAction[mainkey][modifierOne];
+      if (lastLevel.find(modifierTwo) == lastLevel.end())
+      {
+        lastLevel[modifierTwo] = actionPointer;
+        modifierStatus.try_emplace(modifierOne, false);
+        modifierStatus.try_emplace(modifierTwo, false);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  const std::vector<bool> KeyboardInterceptor::registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                                                const std::vector<std::array<VK, 3>> &keyCombinations)
+  {
+    std::vector<bool> workingKeyCombinations(keyCombinations.size(), false);
+
+    if (funcToExecute)
+    {
+      std::unique_ptr<KAction> newFunc = std::make_unique<KFunction>(funcToExecute);
+      bool onPlaced{ false };
+
+      for (size_t i = 0; i < keyCombinations.size(); i++)
+      {
+        const std::array<VK, 3>& keys = keyCombinations.at(i);
+
+        bool success = registerKey(keys.at(0), keys.at(1), keys.at(2), newFunc.get());
+        onPlaced = onPlaced || success;
+        workingKeyCombinations[i] = success;
+      }
+
+      if (onPlaced)
+      {
+        actionContainer.push_back(std::move(newFunc));
+      }
+    }
+    else
+    {
+      LOG(WARNING) << "KeyboardIntercepter: No valid function for key function add provided.";
+    }
+
+    // will mostly stay silent, use return to throw or log
+    // TODO: maybe some debug logs would be practical...?
+    return workingKeyCombinations;
+  }
+    
+
   // member function to handle it
   LRESULT CALLBACK KeyboardInterceptor::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
