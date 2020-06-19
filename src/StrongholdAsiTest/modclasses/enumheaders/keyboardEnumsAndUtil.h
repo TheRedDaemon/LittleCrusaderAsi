@@ -47,7 +47,7 @@ namespace modclasses
       SELECT = 0x29,
       PRINT = 0x2A,
       EXECUTE = 0x2B,
-      PRINT_SCREEN = 0x2C,
+      PRINT_SCREEN = 0x2C, // german keys: Druck
       INSERT = 0x2D,
       DELETE_KEY = 0x2E,
       HELP = 0x2F,
@@ -87,7 +87,7 @@ namespace modclasses
       X = 0x58,
       Y = 0x59,
       Z = 0x5A,
-      LEFT_WINDOWS_KEY = 0x5B,
+      LEFT_WINDOWS_KEY = 0x5B, // reported as additional key, but as left (not general), so right should report also as such
       RIGHT_WINDOWS_KEY = 0x5C,
       APPLICATIONS_KEY = 0x5D,
       SLEEP = 0x5F,
@@ -101,12 +101,12 @@ namespace modclasses
       NUMPAD7 = 0x67,
       NUMPAD8 = 0x68,
       NUMPAD9 = 0x69,
-      MULTIPLY = 0x6A,
-      ADD = 0x6B,
-      SEPERATOR = 0x6C,
-      SUBTRACT = 0x6D,
-      DECIMAL = 0x6E,
-      DIVIDE = 0x6F,
+      MULTIPLY = 0x6A, // num
+      ADD = 0x6B, // num
+      SEPERATOR = 0x6C, // num
+      SUBTRACT = 0x6D,  // num
+      DECIMAL = 0x6E, // german keys: num comma
+      DIVIDE = 0x6F, // num
       F1 = 0x70,
       F2 = 0x71,
       F3 = 0x72,
@@ -137,8 +137,8 @@ namespace modclasses
       RIGHT_SHIFT = 0xA1,
       LEFT_CONTROL = 0xA2,
       RIGHT_CONTROL = 0xA3,
-      LEFT_MENU = 0xA4, // left alt
-      RIGHT_MENU = 0xA5, // right alt
+      LEFT_MENU = 0xA4, // left alt (reported as alt addititional key flag)
+      RIGHT_MENU = 0xA5, // right alt (german keyboard reports as ctrl + alt(with addititional key flag)
       BROWSER_BACK = 0xA6,
       BROWSER_FORWARD = 0xA7,
       BROWSER_REFRESH = 0xA8,
@@ -157,19 +157,19 @@ namespace modclasses
       SELECT_MEDIA = 0xB5,
       LAUNCH_APP1 = 0xB6,
       LAUNCH_APP2 = 0xB7,
-      OEM1 = 0xBA,
-      OEM_PLUS = 0xB8,
+      OEM1 = 0xBA,  // german keys: ü
+      OEM_PLUS = 0xBB,  // non num versions
       OEM_COMMA = 0xBC,
       OEM_MINUS = 0xBD,
       OEM_PERIOD = 0xBE,
-      OEM2 = 0xBF,
-      OEM3 = 0xC0,
-      OEM4 = 0xDB,
-      OEM5 = 0xDC,
-      OEM6 = 0xDD,
-      OEM7 = 0xDE,
+      OEM2 = 0xBF,  // german keys: #
+      OEM3 = 0xC0,  // german keys: ö
+      OEM4 = 0xDB,  // german keys: ß
+      OEM5 = 0xDC,  // german keys: ZIRKUMFLEX
+      OEM6 = 0xDD,  // german keys: ´
+      OEM7 = 0xDE,  // german keys: ä
       OEM8 = 0xDF,
-      OEM102 = 0xE2,
+      OEM102 = 0xE2, //  german keys: <
       PROCESS = 0xE5,
       PACKET = 0xE7,
       ATTN = 0xF6,
@@ -182,13 +182,179 @@ namespace modclasses
       OEM_CLEAR = 0xFE
     };
 
-    // used to parse string to enum // TODO:fill
+
+    using VK = VirtualKey;
+
+    // used to parse string to enum
     NLOHMANN_JSON_SERIALIZE_ENUM(VK, {
-      {VK::NONE, nullptr}
+      {VK::NONE, nullptr},
+      {VK::LEFT_MOUSE_BUTTON, "lmb"},
+      {VK::RIGHT_MOUSE_BUTTON, "rmb"},
+      {VK::CANCEL, "cancel"},
+      {VK::MIDDLE_MOUSE_BUTTON, "mmb"},
+      {VK::EXTRA_MOUSE_BUTTON1, "extramb1"},
+      {VK::EXTRA_MOUSE_BUTTON2, "extramb2"},
+      {VK::BACKSPACE, "backspace"},
+      {VK::TAB, "tab"},
+      {VK::CLEAR, "clear"},
+      {VK::ENTER, "enter"},
+      {VK::SHIFT, "shift"},
+      {VK::CONTROL, "ctrl"},
+      {VK::ALT, "alt"}, // also menu
+      {VK::PAUSE, "pause"},
+      {VK::CAPSLOCK, "caps"},
+      {VK::ESCAPE, "esc"},
+      {VK::SPACE, "space"},
+      {VK::PAGE_UP, "pdup"},
+      {VK::PAGE_DOWN, "pddown"},
+      {VK::END, "end"},
+      {VK::HOME, "home"},
+      {VK::LEFT, "left"},
+      {VK::UP, "up"},
+      {VK::RIGHT, "right"},
+      {VK::DOWN, "down"},
+      {VK::SELECT, "select"},
+      {VK::PRINT, "print"},
+      {VK::EXECUTE, "execute"},
+      {VK::PRINT_SCREEN, "printscreen"},
+      {VK::INSERT, "insert"},
+      {VK::DELETE_KEY, "delete"},
+      {VK::HELP, "help"},
+      {VK::ZERO, "0"},
+      {VK::ONE, "1"},
+      {VK::TWO, "2"},
+      {VK::THREE, "3"},
+      {VK::FOUR, "4"},
+      {VK::FIVE, "5"},
+      {VK::SIX, "6"},
+      {VK::SEVEN, "7"},
+      {VK::EIGHT, "8"},
+      {VK::NINE, "9"},
+      {VK::A, "a"},
+      {VK::B, "b"},
+      {VK::C, "c"},
+      {VK::D, "d"},
+      {VK::E, "e"},
+      {VK::F, "f"},
+      {VK::G, "g"},
+      {VK::H, "h"},
+      {VK::I, "i"},
+      {VK::J, "j"},
+      {VK::K, "k"},
+      {VK::L, "l"},
+      {VK::M, "m"},
+      {VK::N, "n"},
+      {VK::O, "o"},
+      {VK::P, "p"},
+      {VK::Q, "q"},
+      {VK::R, "r"},
+      {VK::S, "s"},
+      {VK::T, "t"},
+      {VK::U, "u"},
+      {VK::V, "v"},
+      {VK::W, "w"},
+      {VK::X, "x"},
+      {VK::Y, "y"},
+      {VK::Z, "z"},
+      {VK::LEFT_WINDOWS_KEY, "winleft"},
+      {VK::RIGHT_WINDOWS_KEY, "winright"},
+      {VK::APPLICATIONS_KEY, "applications"},
+      {VK::SLEEP, "sleep"},
+      {VK::NUMPAD0, "num0"},
+      {VK::NUMPAD1, "num1"},
+      {VK::NUMPAD2, "num2"},
+      {VK::NUMPAD3, "num3"},
+      {VK::NUMPAD4, "num4"},
+      {VK::NUMPAD5, "num5"},
+      {VK::NUMPAD6, "num6"},
+      {VK::NUMPAD7, "num7"},
+      {VK::NUMPAD8, "num8"},
+      {VK::NUMPAD9, "num9"},
+      {VK::MULTIPLY, "nummul"},
+      {VK::ADD, "numadd"},
+      {VK::SEPERATOR, "numsep"},
+      {VK::SUBTRACT, "numsup"},
+      {VK::DECIMAL, "numdec"},
+      {VK::DIVIDE, "numdiv"},
+      {VK::F1, "f1"},
+      {VK::F2, "f2"},
+      {VK::F3, "f3"},
+      {VK::F4, "f4"},
+      {VK::F5, "f5"},
+      {VK::F6, "f6"},
+      {VK::F7, "f7"},
+      {VK::F8, "f8"},
+      {VK::F9, "f9"},
+      {VK::F10, "f10"},
+      {VK::F11, "f11"},
+      {VK::F12, "f12"},
+      {VK::F13, "f13"},
+      {VK::F14, "f14"},
+      {VK::F15, "f15"},
+      {VK::F16, "f16"},
+      {VK::F17, "f17"},
+      {VK::F18, "f18"},
+      {VK::F19, "f19"},
+      {VK::F20, "f20"},
+      {VK::F21, "f21"},
+      {VK::F22, "f22"},
+      {VK::F23, "f23"},
+      {VK::F24, "f24"},
+      {VK::NUMLOCK, "numlock"},
+      {VK::SCROLL_LOCK, "scrolllock"},
+      {VK::LEFT_SHIFT, "leftshift"},
+      {VK::RIGHT_SHIFT, "rightshift"},
+      {VK::LEFT_CONTROL, "leftctrl"},
+      {VK::RIGHT_CONTROL, "rightctrl"},
+      {VK::LEFT_MENU, "leftalt"}, // left alt
+      {VK::RIGHT_MENU, "rightalt"}, // right alt
+      {VK::BROWSER_BACK, "browserback"},
+      {VK::BROWSER_FORWARD, "browserforward"},
+      {VK::BROWSER_REFRESH, "browserrefresh"},
+      {VK::BROWSER_STOP, "browserstop"},
+      {VK::BROWSER_SEARCH, "browsersearch"},
+      {VK::BROWSER_FAVORITES, "browserfavorites"},
+      {VK::BROWSER_HOME, "browserhome"},
+      {VK::VOLUME_MUTE, "volumemute"},
+      {VK::VOLUME_DOWN, "volumedown"},
+      {VK::VOLUME_UP, "volumeup"},
+      {VK::NEXT_TRACK, "nexttrack"},
+      {VK::PREVIOUS_TRACK, "prevtrack"},
+      {VK::STOP_MEDIA, "stopmedia"},
+      {VK::PLAY_PAUSE, "playpause"},
+      {VK::LAUNCH_MAIL, "launchmail"},
+      {VK::SELECT_MEDIA, "selectmedia"},
+      {VK::LAUNCH_APP1, "launchapp1"},
+      {VK::LAUNCH_APP2, "launchapp2"},
+      {VK::OEM1, "oem1"},
+      {VK::OEM_PLUS, "oemplus"},
+      {VK::OEM_COMMA, "oemcomma"},
+      {VK::OEM_MINUS, "oemminus"},
+      {VK::OEM_PERIOD, "oemperiod"},
+      {VK::OEM2, "oem2"},
+      {VK::OEM3, "oem3"},
+      {VK::OEM4, "oem4"},
+      {VK::OEM5, "oem5"},
+      {VK::OEM6, "oem6"},
+      {VK::OEM7, "oem7"},
+      {VK::OEM8, "oem8"},
+      {VK::OEM102, "oem102"},
+      {VK::PROCESS, "process"},
+      {VK::PACKET, "packet"},
+      {VK::ATTN, "attn"},
+      {VK::CRSEL, "crsel"},
+      {VK::EXSEL, "exsel"},
+      {VK::ERASEEOF, "eraseeof"},
+      {VK::PLAY, "play"},
+      {VK::ZOOM, "zoom"},
+      {VK::PA1, "pa1"},
+      {VK::OEM_CLEAR, "oemclear" }
     })
 
     namespace
     {
+      using VK = keyboard::VirtualKey;
+
       // keys are allowed to modify input, but not be modified
       // note wParam send the general key, however, using "lParam & 0x01000000 ? true : false" one can find out, if it is the right or the left key
       // the general key will be used to detect the key, and then will be resolved to the side
@@ -207,16 +373,16 @@ namespace modclasses
         VK::A, VK::B, VK::C, VK::D, VK::E, VK::F, VK::G, VK::H, VK::I, VK::J, VK::K, VK::L, VK::M, VK::N,
         VK::O, VK::P, VK::Q, VK::R, VK::S, VK::T, VK::U, VK::V, VK::W, VK::X, VK::Y, VK::Z,
 
-        // numpad keys need test if they register as such... (left, right etc. was also reported as numpad key)
+        // numpad keys
         VK::NUMPAD0, VK::NUMPAD1, VK::NUMPAD2, VK::NUMPAD3, VK::NUMPAD4, VK::NUMPAD5, VK::NUMPAD6, VK::NUMPAD7, VK::NUMPAD8, VK::NUMPAD9,
 
-        // also needs test
+        // all numpad operators
         VK::MULTIPLY, VK::ADD, VK::SEPERATOR, VK::SUBTRACT, VK::DECIMAL, VK::DIVIDE,
 
         // I assume these will work
         VK::F1, VK::F2, VK::F3, VK::F4, VK::F5, VK::F6, VK::F7, VK::F8, VK::F9, VK::F10, VK::F11, VK::F12,
 
-        // also need tests
+        // are equal to the german keys (not num versions)
         VK::OEM_PLUS, VK::OEM_COMMA,  VK::OEM_MINUS, VK::OEM_PERIOD
 
         // there are likely some not as easy accessible

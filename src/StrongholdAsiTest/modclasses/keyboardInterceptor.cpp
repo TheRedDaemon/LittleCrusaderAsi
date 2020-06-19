@@ -7,18 +7,23 @@ namespace modclasses
   // pointer for static function
   static KeyboardInterceptor *handlerPointer{ nullptr };
 
+
   // static hook function
   LRESULT CALLBACK KeyboardInterceptor::hookForKeyInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
     return handlerPointer->keyIntercepter(code, wParam, lParam);
   }
 
+
   // Non-static part starts here:
+
 
   KeyboardInterceptor::KeyboardInterceptor(const Json &config)
   {
     // load key config and prepare
+    // TODO
   }
+
 
   KeyboardInterceptor::~KeyboardInterceptor()
   {
@@ -33,6 +38,7 @@ namespace modclasses
       }
     }
   }
+
 
   bool KeyboardInterceptor::initialize()
   {
@@ -67,10 +73,11 @@ namespace modclasses
     return initialized;
   }
 
+
   const bool KeyboardInterceptor::registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey, KAction* actionPointer)
   {
     // checks if mainkey and modifierOne are not NONE and valid keys, then if modifierTwo has a valid value
-    if (keyboard::isChangeableKey(mainkey) && keyboard::isModificationKey(modifierOne) && (modifierTwo == VK::NONE || keyboard::isModificationKey(modifierTwo)))
+    if (isChangeableKey(mainkey) && isModificationKey(modifierOne) && (modifierTwo == VK::NONE || isModificationKey(modifierTwo)))
     {
       auto& lastLevel = keyboardAction[mainkey][modifierOne];
       if (lastLevel.find(modifierTwo) == lastLevel.end())
@@ -83,6 +90,7 @@ namespace modclasses
     }
     return false;
   }
+
 
   const std::vector<bool> KeyboardInterceptor::registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
                                                                 const std::vector<std::array<VK, 3>> &keyCombinations)
@@ -117,9 +125,114 @@ namespace modclasses
     // TODO: maybe some debug logs would be practical...?
     return workingKeyCombinations;
   }
-    
+
+
+  const bool KeyboardInterceptor::resolveKey(const VK key, const LPARAM lParam)
+  {
+    bool keyUp{ lParam & 0x80000000 ? true : false };
+    bool keyHold{ lParam & 0x40000000 ? true : false };
+
+    // for debug
+    //char keyName[30];
+    //GetKeyNameText(lParam, keyName, 30);
+    //LOG(INFO) << "Key used: " << std::bitset<32>(lParam);
+    //LOG(INFO) << "Key used: " << keyName << " " << key;
+
+    // current approach doesn't allow to mix the keys -> every single one has to be either change or modifier keys
+
+    // check switchkeys
+    if (isActivationKey(key))
+    {
+      if (key == activationKey && !(keyUp || keyHold))
+      {
+        interceptorActive = !interceptorActive;
+        return true;
+      }
+    }
+    else if (isModificationKey(key))  // modifiers are always tracked
+    {
+      if (modifierStatus.find(key) != modifierStatus.end() && !keyHold)
+      {
+        modifierStatus[key] = !keyUp;
+      }
+    }
+    else if (interceptorActive && isChangeableKey(key))
+    {
+      // TODO: TEST
+      KAction* actionToPerform{ nullptr };
+
+      // check if key even has modification
+      // NOTE: pretty ugly, but at least returns fast, I guess...
+      if (const auto& keyIt = keyboardAction.find(key); keyIt != keyboardAction.end())
+      {
+
+        // check first modifier
+        auto modOneIt{ keyIt->second.begin() };
+        const auto& modOneEnd{ keyIt->second.end() };
+        while (!actionToPerform && modOneIt != modOneEnd)
+        {
+          if (modifierStatus[modOneIt->first])  // assuming already telled that it exits
+          {
+
+            // check second modifier
+            auto modTwoIt{ modOneIt->second.begin() };
+            const auto& modTwoEnd{ modOneIt->second.end() };
+            while (!actionToPerform && modTwoIt != modTwoEnd)
+            {
+              // no shift + shift (NOTE: although, left + right will pass)
+              // (also None has an extra check to allow NONE + NONE + Key stuff, every key change will actually fall in this category)
+              if (modifierStatus[modTwoIt->first] && (modTwoIt->first == VK::NONE || modOneIt->first != modTwoIt->first))
+              {
+                actionToPerform = modTwoIt->second;
+              }
+
+              modTwoIt = std::next(modTwoIt);
+            }
+          }
+
+          modOneIt = std::next(modOneIt);
+        }
+      }
+
+      if (actionToPerform)
+      {
+        // check if other key action used, then change (also includes new "start" for this action
+        if (const auto& currIt = currentlyUsedKeys.find(key); currIt != currentlyUsedKeys.end() && currIt->second != actionToPerform)
+        {
+          currIt->second->doAction(window, true, false);  // release other key
+          
+          // NOTE: we will see if this works (maybe it doesn't and I will never notice?)
+          actionToPerform->doAction(window, false, false); // execute first other action
+          currentlyUsedKeys[key] = actionToPerform;
+        }
+        else
+        {
+          // execute if non other active and add to/remove from watch map
+          actionToPerform->doAction(window, keyUp, keyHold);
+          if (keyUp)
+          {
+            currentlyUsedKeys.erase(key);
+          }
+          else
+          {
+            currentlyUsedKeys[key] = actionToPerform;
+          }
+        }
+
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   // member function to handle it
+  // Notes: if only returns 1, only code 3 (no remove) is delivered -> no keystrokes at all
+  // test following -> it runs slow, only if a real keystroke is removed? -> true
+  // trying the same stuff with noremove (and remove it) -> seem to be no slow down
+  // NOTE: the current asumption is also, that the interceptor works sequential, if this it thread based, everything will fall into pieces
+  // however, since debug this freezes stronghold... I guess it is? -> it seems to be resolved in the main thread
   LRESULT CALLBACK KeyboardInterceptor::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
     bool stopKey{ false };
@@ -131,67 +244,24 @@ namespace modclasses
 
     switch (code)
     {
-      // if message removed in case of action -> slow if many
+      // if message removed in case of HC_Action -> slow if many
       // in case of NO_REMOVE: not
       // I really wonder why? maybe the peek is actually for this and I intercept it twice, because it runs in the same thread?
       // maybe because it is no further processed?
       case HC_NOREMOVE: // HC_ACTION:
       {
-        bool keyUp{ lParam & 0x80000000 ? true : false };
-        bool keyHold{ lParam & 0x40000000 ? true : false };
-
         if (!window)
         {
           window = GetActiveWindow();
         }
 
-        // todo: need a much better structure to handle input and input variants
+        // for filtering: (but remember, filtering here might create problems with the way stronghold handles keys, so careful
+        // https://stackoverflow.com/questions/40599162/vsto-windows-hook-keydown-event-called-10-times
+        // source: Game Hacking: Developing Autonomous Bots for Online Games -> Google Books
 
-        // activation key uses only press
-        if (wParam == activationKey && !(keyUp || keyHold))
+        if (window) // two tests to make sure it only executes if GetActiveWindow() found something
         {
-          interceptorActive = !interceptorActive;
-          stopKey = true;
-        }
-        else if (interceptorActive)
-        {
-          if (window)
-          {
-            // for filtering: (but remember, filtering here might create problems with the way stronghold handles keys, so careful
-            // https://stackoverflow.com/questions/40599162/vsto-windows-hook-keydown-event-called-10-times
-            // source: Game Hacking: Developing Autonomous Bots for Online Games -> Google Books
-
-            // for debug
-            //char keyName[15];
-            //GetKeyNameText(lParam, keyName, 15);
-            //LOG(INFO) << "Key used: " << keyName;
-            //LOG(INFO) << "Key used: " << std::bitset<32>(lParam);
-            LOG(INFO) << "Key used: " << wParam;
-
-            // experiment left, right
-            if (lParam & 0x01000000 ? true : false)
-            {
-              LOG(INFO) << "right";
-            }
-            else
-            {
-              LOG(INFO) << "left";
-            }
-
-
-            // SendMessage seems to work
-            if (wParam == 0x41)
-            {
-              //sendKey(window, keyUp, keyHold, VK_LEFT, 'a');
-              stopKey = true;
-            }
-
-            if (wParam == VK_LEFT)
-            {
-              //sendKey(window, keyUp, keyHold, 0x41, 0);
-              stopKey = true;
-            }
-          }
+          stopKey = resolveKey(generalToExtendedKey(wParam, lParam), lParam);
         }
 
         break;
@@ -203,11 +273,24 @@ namespace modclasses
 
     return stopKey ? 1 : CallNextHookEx(nullptr, code, wParam, lParam);
   }
+
+
+  const VK KeyboardInterceptor::generalToExtendedKey(const WPARAM wParam, const LPARAM lParam)
+  {
+    bool keyExtended{ lParam & 0x01000000 ? true : false }; // extended keys are also the right hand shift and alt keys etc.
+
+    switch (wParam)
+    {
+      case VK::ALT:
+        return keyExtended ? VK::RIGHT_MENU : VK::LEFT_MENU;
+      case VK::SHIFT:
+        return keyExtended ? VK::RIGHT_SHIFT : VK::LEFT_SHIFT;
+      case VK::CONTROL:
+        return keyExtended ? VK::RIGHT_CONTROL : VK::LEFT_CONTROL;
+      default:
+        return static_cast<VK>(wParam); // overflow possible? -> likely no support for bigger utf keys, hmm?
+    }
+  }
 }
-// (source for input handling (not this) https://stackoverflow.com/a/19802769)
-
-// Notes: if only returns 1, only code 3 (no remove) is delivered -> no keystrokes at all
-// test following -> it runs slow, only if a real keystroke is removed? -> true
-// trying the same stuff with noremove (and remove it) -> seem to be no slow down
-
-// NOTE: Event Handler has precedence -> knowing when the game runs is crucial, only then one can switch between behaviours....
+// (more sources for input handling (not this) https://stackoverflow.com/a/19802769)
+// NOTE: Event Handler would be practical -> knowing when the game runs is crucial, only then one can switch between behaviours without input

@@ -39,8 +39,8 @@ namespace modclasses
     // likely has the biggest overhead...
 
     // the risk level of usage
-    // critical is the highest allowes conflict level
-    // currently no intention to allow to accesses marked with conflict
+    // critical is the highest allowed conflict level
+    // currently no intention to allow overlaps marked with conflict
     AddressRisk addressRisk;
   };
 }
