@@ -14,14 +14,69 @@ namespace modclasses
     return handlerPointer->keyIntercepter(code, wParam, lParam);
   }
 
-
+  /*******************************************************/
   // Non-static part starts here:
-
+  /*******************************************************/
 
   KeyboardInterceptor::KeyboardInterceptor(const Json &config)
   {
-    // load key config and prepare
-    // TODO
+    // TODO? maybe add try catch? (maybe also to other config resolves? might otherwise break the system to easy?)
+    // TODO: more Tests!
+
+    // load key config and prepare, doing even the add here
+    auto confIt = config.find("activationKey");
+    if (confIt != config.end())
+    {
+      VK possibleActivationKey{ confIt.value().get<VK>() };
+
+      if (isActivationKey(possibleActivationKey))
+      {
+        activationKey = possibleActivationKey;
+      }
+    }
+
+    confIt = config.find("keyRedefines");
+    if (confIt != config.end())
+    {
+      std::array<bool, 3> allowedKeyComb{ true, false, false };
+
+      for (auto& keyKombination : confIt.value().items())
+      {
+        // don't know if easier way to parse from string back to enum
+        Json key;
+        key["key"] = keyKombination.key();
+        VK toModify{ key["key"].get<VK>() };
+
+        if (isChangeableKey(toModify))
+        {
+          auto& currentKeyCombis = keyKombination.value();
+          std::vector<std::array<VK, 3>> vkCombinations{ resolveKeyConfig(currentKeyCombis) };
+
+          std::unique_ptr<KAction> newChange = std::make_unique<KChange>(toModify);
+          bool onePlaced{ false };
+
+          for (const auto& combi : vkCombinations)
+          {
+            bool success{ registerKey(combi[0], combi[1], combi[2], newChange.get(), allowedKeyComb) };
+            if (!success)
+            {
+              // maybe more output which one? problem: I translate all, so I don't have the single key combi here
+              LOG(WARNING) << "KeyboardInterceptor config: Failed adding one combination for key: " << keyKombination.key();
+            }
+            onePlaced = onePlaced || success;
+          }
+
+          if (onePlaced)
+          {
+            actionContainer.push_back(std::move(newChange));
+          }
+        }
+        else
+        {
+          LOG(WARNING) << "KeyboardInterceptor config: No changeable key to replace: " << keyKombination.key();
+        }
+      }
+    }
   }
 
 
@@ -48,8 +103,6 @@ namespace modclasses
 
       keyboardHook = SetWindowsHookEx(WH_KEYBOARD, hookForKeyInterceptor, 0, GetCurrentThreadId());
 
-      // there might be far more to do here
-
       if (keyboardHook)
       {
         initialized = true;
@@ -74,10 +127,39 @@ namespace modclasses
   }
 
 
-  const bool KeyboardInterceptor::registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey, KAction* actionPointer)
+  const bool KeyboardInterceptor::registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey,
+                                              KAction* actionPointer, std::array<bool, 3> &allowedKeyComb)
   {
+    // check if allowed
+    bool addKeys{true};
+    int valid_keys{ 0 };
+
+    addKeys = addKeys && isChangeableKey(mainkey);
+    if (addKeys)
+    {
+      ++valid_keys;
+
+      if (modifierOne != VK::NONE)
+      {
+        addKeys = addKeys && isModificationKey(modifierOne);
+        if (addKeys)
+        {
+          ++valid_keys;
+
+          if (modifierTwo != VK::NONE)
+          {
+            addKeys = addKeys && isModificationKey(modifierTwo);
+            if (addKeys)
+            {
+              ++valid_keys;
+            }
+          }
+        }
+      }
+    }
+
     // checks if mainkey and modifierOne are not NONE and valid keys, then if modifierTwo has a valid value
-    if (isChangeableKey(mainkey) && isModificationKey(modifierOne) && (modifierTwo == VK::NONE || isModificationKey(modifierTwo)))
+    if (addKeys && allowedKeyComb.at(valid_keys - 1))  // if main key invalid, add keys should be false, and so -1 should never be parsed
     {
       auto& lastLevel = keyboardAction[mainkey][modifierOne];
       if (lastLevel.find(modifierTwo) == lastLevel.end())
@@ -96,22 +178,23 @@ namespace modclasses
                                                                 const std::vector<std::array<VK, 3>> &keyCombinations)
   {
     std::vector<bool> workingKeyCombinations(keyCombinations.size(), false);
+    std::array<bool, 3> allowedKeyComb{false, true, true};
 
     if (funcToExecute)
     {
       std::unique_ptr<KAction> newFunc = std::make_unique<KFunction>(funcToExecute);
-      bool onPlaced{ false };
+      bool onePlaced{ false };
 
       for (size_t i = 0; i < keyCombinations.size(); i++)
       {
         const std::array<VK, 3>& keys = keyCombinations.at(i);
 
-        bool success = registerKey(keys.at(0), keys.at(1), keys.at(2), newFunc.get());
-        onPlaced = onPlaced || success;
+        bool success = registerKey(keys.at(0), keys.at(1), keys.at(2), newFunc.get(), allowedKeyComb);
+        onePlaced = onePlaced || success;
         workingKeyCombinations[i] = success;
       }
 
-      if (onPlaced)
+      if (onePlaced)
       {
         actionContainer.push_back(std::move(newFunc));
       }
@@ -124,6 +207,14 @@ namespace modclasses
     // will mostly stay silent, use return to throw or log
     // TODO: maybe some debug logs would be practical...?
     return workingKeyCombinations;
+  }
+
+
+  const std::vector<bool> KeyboardInterceptor::registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                                                const Json &keyCombinations)
+  {
+    std::vector<std::array<VK, 3>> keyCombArray{ resolveKeyConfig(keyCombinations) };
+    return registerFunction(funcToExecute, keyCombArray);
   }
 
 
@@ -290,6 +381,64 @@ namespace modclasses
       default:
         return static_cast<VK>(wParam); // overflow possible? -> likely no support for bigger utf keys, hmm?
     }
+  }
+
+
+  const std::vector<std::array<VK, 3>> KeyboardInterceptor::resolveKeyConfig(const Json &keyCombinations)
+  {
+    std::vector<std::array<VK, 3>> kombinations{};
+
+    try
+    {
+      for (auto& keyKombination : keyCombinations.items())
+      {
+        auto& currentKombi = keyKombination.value();
+        std::array<VK, 3> keys{ VK::NONE, VK::NONE, VK::NONE };
+        bool ableToUse{ true };
+        size_t keyCount{ currentKombi.size() };
+
+        if (keyCount > 0 && keyCount < 4)
+        {
+          // get change/assign key
+          keys[2] = currentKombi[keyCount - 1].get<VK>();
+          ableToUse = ableToUse && keys[2] != VK::NONE;
+
+          // get modfier
+          if (keyCount > 1)
+          {
+            keys[0] = currentKombi[0].get<VK>();
+            ableToUse = ableToUse && keys[0] != VK::NONE;
+
+            // get modfier two
+            if (keyCount > 2)
+            {
+              keys[1] = currentKombi[1].get<VK>();
+              ableToUse = ableToUse && keys[1] != VK::NONE;
+            }
+          }
+        }
+        else
+        {
+          ableToUse = false;
+        }
+
+        if (ableToUse)
+        {
+          kombinations.push_back(keys);
+        }
+        else
+        {
+          kombinations.push_back({ VK::NONE, VK::NONE, VK::NONE });
+          LOG(WARNING) << "Unable to parse key kombination: " << currentKombi;
+        }
+      }
+    }
+    catch (const std::exception& o_O)
+    {
+      LOG(ERROR) << "Error during key config resolve: " << o_O.what();
+    }
+
+    return kombinations;
   }
 }
 // (more sources for input handling (not this) https://stackoverflow.com/a/19802769)

@@ -1,5 +1,16 @@
 {
     "addressResolver": {
         "rejectLevel": "warning"
+    },
+    "keyboardInterceptor":{
+        "activationKey": "pgdown",
+        "keyRedefines":{
+            "numadd":[
+                ["oemplus"]
+            ],
+            "numsup":[
+                ["oemminus"]
+            ]
+        }
     }
 }

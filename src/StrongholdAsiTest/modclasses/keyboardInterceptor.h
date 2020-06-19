@@ -89,6 +89,10 @@ namespace modclasses
     const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
                                              const std::vector<std::array<VK, 3>> &keyCombinations);
 
+    // same as other registred function, but takes value array of key combinations as json
+    const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                             const Json &keyCombinations);
+
     // needs function to add keyboard strokes to use
 
     /**misc**/
@@ -99,8 +103,15 @@ namespace modclasses
 
   private:
 
+    // receives the json object of one key config and turns it into an vector with the key combinations
+    // doesn't check if valid positions, however, if structure not valid, returns an array of VK::NONE
+    const std::vector<std::array<VK, 3>> resolveKeyConfig(const Json &keyCombinations);
+
     // returns true if key successfully registered
-    const bool registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey, KAction* actionPointer);
+    // allowedKeyComb tells the resolver which version are allowed
+    // -> 0: only key allowed, 1: modifier + key, 2: modifier + modifier + key
+    const bool registerKey(const VK modifierOne, const VK modifierTwo, const VK mainkey,
+                           KAction* actionPointer, std::array<bool, 3> &allowedKeyComb);
 
     // used to resolve general to extended keys if key delivers only general
     const VK generalToExtendedKey(const WPARAM wParam, const LPARAM lParam);

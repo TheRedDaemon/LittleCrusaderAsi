@@ -205,8 +205,8 @@ namespace modclasses
       {VK::CAPSLOCK, "caps"},
       {VK::ESCAPE, "esc"},
       {VK::SPACE, "space"},
-      {VK::PAGE_UP, "pdup"},
-      {VK::PAGE_DOWN, "pddown"},
+      {VK::PAGE_UP, "pgup"},
+      {VK::PAGE_DOWN, "pgdown"},
       {VK::END, "end"},
       {VK::HOME, "home"},
       {VK::LEFT, "left"},
@@ -438,13 +438,13 @@ namespace modclasses
     {
     private:
 
-      const WORD keyToUse;
+      const VK keyToUse;
 
     public:
 
       void doAction(const HWND window, const bool keyUp, const bool repeat) const override;
 
-      KeyChange(WORD keySendInstead) :keyToUse{ keySendInstead }{};
+      KeyChange(VK keySendInstead):keyToUse{ keySendInstead }{};
 
       // prevent copy and assign (not sure how necessary)
       KeyChange(const KeyChange &keyAction) = delete;
