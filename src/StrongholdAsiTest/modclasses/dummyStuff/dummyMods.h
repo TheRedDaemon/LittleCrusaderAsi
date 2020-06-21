@@ -13,8 +13,8 @@ namespace modclasses
     std::weak_ptr<AddressResolver> resolver{};
 
     std::vector<AddressRequest> usedAddresses{
-      {Address::VERSION_STRING, {{Version::NONE, 9}, {Version::V1P41, 5}}, AddressRisk::SAFE},
-      {Address::VERSION_NUMBER, {{Version::NONE, 1}}, AddressRisk::CRITICAL}
+      {Address::VERSION_STRING, {{Version::NONE, 9}, {Version::V1P41, 5}}, false, AddressRisk::SAFE},
+      {Address::VERSION_NUMBER, {{Version::NONE, 1}}, false, AddressRisk::CRITICAL}
     };
 
   public:

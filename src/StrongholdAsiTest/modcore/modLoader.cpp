@@ -35,11 +35,15 @@ namespace modcore
     LOG(INFO) << "Mods loaded.";
 
     // end by calling initialze on every mod:
+    int initializedMods{ 0 };
     for (size_t i = 0; i < loadedMods.size(); i++)
     {
-      loadedMods.at(i)->initialize();
+      if (loadedMods.at(i)->initialize())
+      {
+        ++initializedMods;
+      }
     }
-    LOG(INFO) << "Mods initialized.";
+    LOG(INFO) << initializedMods << " of " << loadedMods.size() << " mods initialized.";
   }
 
   // will run backwards over mods and call cleanUp

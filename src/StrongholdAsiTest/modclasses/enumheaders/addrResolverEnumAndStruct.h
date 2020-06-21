@@ -38,6 +38,10 @@ namespace modclasses
     std::unordered_map <Version, size_t> length;
     // likely has the biggest overhead...
 
+    // if true, will change the protection of the memory page that includes the requested memory to execute_readwrite
+    // regardless of earlier protection, using the address and the length
+    bool allowWrite;
+
     // the risk level of usage
     // critical is the highest allowed conflict level
     // currently no intention to allow overlaps marked with conflict

@@ -160,12 +160,12 @@ namespace modclasses
     else
     {
       throw std::exception(("No length value specified for request of address '" + std::to_string(static_cast<int>(req.address)) + "'.").data());
-    }
-    --length; // since length 1 is start address
+    } 
 
-    if (length > 0)
+    // since length 1 is start address
+    if (length - 1 > 0)
     {
-      endAddress = startAddress + length;
+      endAddress = startAddress + length - 1;
     }
     else
     {
@@ -335,6 +335,32 @@ namespace modclasses
             addedAddresses.try_emplace(addrStartEnd.second, &addressSortContainer.at(addrStartEnd.second));
 
             addedRequests.insert(&req); // only one address request is really added per while run
+          }
+        }
+        ++i;
+      }
+
+      // only add write permission after all addresses are succesfully added
+      // even on conflicts, write permissions aren't removed, because one would have to know the page structures to not block others
+      DWORD oldAddressProtection{ 0 };
+      i = 0;  // reset counter
+      while (!conflict && i < addrReq.size())
+      {
+        AddressRequest& req = addrReq[i];
+
+        if (req.allowWrite)
+        {
+          // since the addresses where successfully added, this shouldn't cause an error
+          std::pair<DWORD, DWORD> addrStartEnd = getStartAndEndAddress(req);
+
+          // i assume switch to execute_readwrite (or to copy on write?)
+          if (!VirtualProtect(reinterpret_cast<DWORD*>(addressBase + addrStartEnd.first),
+                              // plus 1, because uses other definition? needs at least length 1 (start end same would be error)
+                              addrStartEnd.second - addrStartEnd.first + 1,
+                              PAGE_EXECUTE_READWRITE, &oldAddressProtection))
+          {
+            LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
+            conflict = true;
           }
         }
         ++i;
