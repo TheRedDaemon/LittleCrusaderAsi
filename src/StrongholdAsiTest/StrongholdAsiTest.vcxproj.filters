@@ -99,6 +99,9 @@
     <ClInclude Include="modclasses\enumheaders\keyboardEnumsAndUtil.h">
       <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
     </ClInclude>
+    <ClInclude Include="modclasses\buildRangeChanger.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -145,6 +148,9 @@
     </ClCompile>
     <ClCompile Include="modclasses\enumheaders\keyboardUtil.cpp">
       <Filter>Quelldateien\ModClasses\enumUtil</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\buildRangeChanger.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

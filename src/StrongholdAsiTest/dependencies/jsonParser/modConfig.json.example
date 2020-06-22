@@ -12,5 +12,14 @@
                 ["oemminus"]
             ]
         }
+    },
+    "buildRangeChanger":{
+        "startState": true,
+        "newRanges":{
+            "400": 40
+        },
+	"keyShortcut":[
+            ["leftshift", "oemplus"]
+        ]
     }
 }

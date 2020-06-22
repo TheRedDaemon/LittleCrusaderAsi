@@ -242,7 +242,7 @@ namespace modclasses
     }
     else if (isModificationKey(key))  // modifiers are always tracked
     {
-      if (modifierStatus.find(key) != modifierStatus.end() && !keyHold)
+      if (modifierStatus.find(key) != modifierStatus.end() && (keyUp || !keyHold))
       {
         modifierStatus[key] = !keyUp;
       }

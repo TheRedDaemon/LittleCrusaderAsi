@@ -4,6 +4,7 @@
 #include "../Modclasses/versionGetter.h"
 #include "../Modclasses/addressResolver.h"
 #include "../modclasses/keyboardInterceptor.h"
+#include "../modclasses/buildRangeChanger.h"
 //#include ...
 
 // dummy:
@@ -30,6 +31,8 @@ namespace modcore
         return std::make_shared<MC::AddressResolver>(config);
       case MT::KEYBOARD_INTERCEPTOR:
         return std::make_shared<MC::KeyboardInterceptor>(config);
+      case MT::BUILD_RANGE_CHANGER:
+        return std::make_shared<MC::BuildRangeChanger>(config);
 
       // dummy:
       case MT::TEST1:

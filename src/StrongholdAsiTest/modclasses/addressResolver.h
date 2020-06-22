@@ -62,7 +62,35 @@ namespace modclasses
     // it might also be better to save this pointer for further use to avoid calls if multiple are needed, memory is in this case likely far cheaper
     // throws an exception if the mod has no registered access to the address
     template <typename T>
-    const T* getAddressPointer(const Address memAddr, const ModBase &requestingMod);
+    T* getAddressPointer(const Address memAddr, const ModBase &requestingMod)
+    {
+      if (initialized)
+      {
+
+        DWORD address{ getAddress(memAddr) };
+        if (const auto& modAddrIt = addressSortContainer.find(address); modAddrIt != addressSortContainer.end())
+        {
+          if (const auto& modIt = (modAddrIt->second).find(requestingMod.getModType()); modIt != (modAddrIt->second).end())
+          {
+            bool allowed{ false };
+            for (const auto& reg : (modIt->second))
+            {
+              allowed = allowed || reg->address == memAddr;
+            }
+
+            if (allowed)
+            {
+              return reinterpret_cast<T*>(addressBase + address);
+            }
+          }
+        }
+
+        throw std::exception(("The address of type with id '" + std::to_string(static_cast<int>(memAddr))
+                              + "' was not approved for mod with id '" + std::to_string(static_cast<int>(requestingMod.getModType())) + "'.").c_str());
+      }
+
+      throw std::exception("AddressResolver wasn't successfully initialized, but \"getAddressPointer\" was still called.");
+    }
 
     /**misc**/
 

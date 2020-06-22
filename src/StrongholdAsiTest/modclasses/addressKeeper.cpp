@@ -34,6 +34,46 @@ namespace modclasses
         break;
 
 
+      // castle build range
+      case Address::BUILDRANGE_CRUSADE_CASTLE_160:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0xFBFD1; // 4 byte
+          case Version::V1P41:
+            return 0xFBC52; // 4 byte
+        }
+        break;
+
+      case Address::BUILDRANGE_CRUSADE_CASTLE_200:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0xFBFD8; // 4 byte
+          case Version::V1P41:
+            return 0xFBC58; // 4 byte
+        }
+        break;
+
+      case Address::BUILDRANGE_CRUSADE_CASTLE_300:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0xFBFDE; // 4 byte
+          case Version::V1P41:
+            return 0xFBC5E; // 4 byte
+        }
+        break;
+
+      case Address::BUILDRANGE_CRUSADE_CASTLE_400:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0xFBFE4; // 4 byte
+          case Version::V1P41:
+            return 0xFBC64; // 4 byte
+        }
+        break;
     }
 
     // if no value was returned, then there seems to be none, throw exception in this case

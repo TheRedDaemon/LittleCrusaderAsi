@@ -16,6 +16,8 @@ namespace modclasses
     ADDRESS_RESOLVER,     // gets version from the VERSION_GETTER, other modules should request use of addresses, requires ADDRESS_BASE and VERSION_GETTER
     KEYBOARD_INTERCEPTOR,     // planned module for handling keyboard stuff
     EVENT_HANDLER,         // planned module for handling events, by intercepting functions and execute others before giving control back to system
+
+    BUILD_RANGE_CHANGER,  // changes the build range, currently on request (and key), but later maybe with timers from the event handler
     
     
     
@@ -32,6 +34,7 @@ namespace modclasses
     {ModType::VERSION_GET, "versionGetter"},
     {ModType::ADDRESS_RESOLVER, "addressResolver"},
     {ModType::KEYBOARD_INTERCEPTOR, "keyboardInterceptor"},
+    {ModType::BUILD_RANGE_CHANGER, "buildRangeChanger"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })
