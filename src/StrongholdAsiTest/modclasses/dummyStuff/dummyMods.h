@@ -24,16 +24,12 @@ namespace modclasses
       return ModType::TEST1;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
     {
-      return { ModType::ADDRESS_RESOLVER };
+      auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+      mapPointer->try_emplace(ModType::ADDRESS_RESOLVER, std::make_unique<DependencyReceiver<AddressResolver>>(&resolver));
+      return mapPointer;
     }
-
-    // has no dependencies, maybe -> however, might require stuff from the dllmain?
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override
-    {
-      resolver = std::static_pointer_cast<AddressResolver>(dep[0]); // safe enough for tests
-    };
 
     bool initialize() override
     {
@@ -56,6 +52,10 @@ namespace modclasses
 
   class Test2 : public ModBase
   {
+  private:
+
+    std::weak_ptr<Test1> test{};
+
   public:
 
     ModType getModType() const override
@@ -63,15 +63,12 @@ namespace modclasses
       return ModType::TEST1;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
     {
-      return { ModType::TEST1 };
+      auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+      mapPointer->try_emplace(ModType::TEST1, std::make_unique<DependencyReceiver<Test1>>(&test));
+      return mapPointer;
     }
-
-    // has no dependencies, maybe -> however, might require stuff from the dllmain?
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override
-    {
-    };
 
     bool initialize() override
     {

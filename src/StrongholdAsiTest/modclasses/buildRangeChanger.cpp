@@ -36,103 +36,82 @@ namespace modclasses
     }
   }
 
-  void BuildRangeChanger::giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep)
+  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> BuildRangeChanger::neededDependencies()
   {
-    if (dep.size() == 2)
-    {
-      for (const auto &mod : dep)
-      {
-        switch (mod->getModType())
-        {
-          case ModType::KEYBOARD_INTERCEPTOR:
-            keyInter = std::static_pointer_cast<KeyboardInterceptor>(mod);
-            break;
-          case ModType::ADDRESS_RESOLVER:
-            addrResolver = std::static_pointer_cast<AddressResolver>(mod);
-            break;
-          default:
-            break;
-        }
-      }
-    }
-
-    if (addrResolver.expired() || keyInter.expired())
-    {
-      LOG(WARNING) << "BuildRangeChanger failed to receive dependency.";
-    }
+    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+    mapPointer->try_emplace(ModType::KEYBOARD_INTERCEPTOR, std::make_unique<DependencyReceiver<KeyboardInterceptor>>(&keyInter));
+    mapPointer->try_emplace(ModType::ADDRESS_RESOLVER, std::make_unique<DependencyReceiver<AddressResolver>>(&addrResolver));
+    return mapPointer;
   }
 
   bool BuildRangeChanger::initialize()
   {
-    if (auto keyInterceptor = keyInter.lock())
+    auto addressResolver = getIfModInit<AddressResolver>(addrResolver);
+    auto keyInterceptor = getIfModInit<KeyboardInterceptor>(keyInter);
+
+    if (addressResolver && keyInterceptor)
     {
-      if (auto addressResolver = addrResolver.lock())
+      // request addresses
+      if (addressResolver->requestAddresses(usedAddresses, *this))
       {
-        if (keyInterceptor->initialisationDone() && addressResolver->initialisationDone())
+        // get addresses and default values
+        for (auto& range : defaultAndNewValues)
         {
-          // request addresses
-          if (addressResolver->requestAddresses(usedAddresses, *this))
+          Address currentAddress{ Address::NONE };
+          switch (range.first)
           {
-            // get addresses and default values
-            for (auto& range : defaultAndNewValues)
-            {
-              Address currentAddress{ Address::NONE };
-              switch (range.first)
-              {
-                case BuildRange::RANGE_160:
-                  currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_160;
-                  break;
+            case BuildRange::RANGE_160:
+              currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_160;
+              break;
 
-                case BuildRange::RANGE_200:
-                  currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_200;
-                  break;
+            case BuildRange::RANGE_200:
+              currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_200;
+              break;
 
-                case BuildRange::RANGE_300:
-                  currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_300;
-                  break;
+            case BuildRange::RANGE_300:
+              currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_300;
+              break;
 
-                case BuildRange::RANGE_400:
-                  currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_400;
-                  break;
-              }
+            case BuildRange::RANGE_400:
+              currentAddress = Address::BUILDRANGE_CRUSADE_CASTLE_400;
+              break;
+          }
 
-              if (currentAddress != Address::NONE)
-              {
-                castleRanges.try_emplace(range.first, addressResolver->getAddressPointer<int32_t>(currentAddress, *this));
-                range.second.first = *castleRanges[range.first];
-              }
-            }
-
-            if (!keyboardShortcut.empty())
-            {
-              // source: https://stackoverflow.com/questions/7582546/using-generic-stdfunction-objects-with-member-functions-in-one-class
-              // one posts said, lambda is prefered, but I don't want to think about how to define currently
-              std::function<void(const HWND, const bool, const bool)> func = 
-                std::bind(&BuildRangeChanger::switchRangeChange, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-              auto registerResult = keyInterceptor->registerFunction(func, keyboardShortcut);
-              bool allRegistered{ true };
-              for (bool ok : registerResult)
-              {
-                allRegistered = allRegistered && ok;
-              }
-
-              if (!allRegistered)
-              {
-                LOG(WARNING) << "BuildRangeChanger: At least one key combination was not registered.";
-              }
-            }
-
-            if (isChanged)
-            {
-              isChanged = false;
-              switchRangeChange(0, false, false);
-            }
-
-            // at this point, it should work
-            initialized = true;
+          if (currentAddress != Address::NONE)
+          {
+            castleRanges.try_emplace(range.first, addressResolver->getAddressPointer<int32_t>(currentAddress, *this));
+            range.second.first = *castleRanges[range.first];
           }
         }
+
+        if (!keyboardShortcut.empty())
+        {
+          // source: https://stackoverflow.com/questions/7582546/using-generic-stdfunction-objects-with-member-functions-in-one-class
+          // one posts said, lambda is prefered, but I don't want to think about how to define currently
+          std::function<void(const HWND, const bool, const bool)> func =
+            std::bind(&BuildRangeChanger::switchRangeChange, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+          auto registerResult = keyInterceptor->registerFunction(func, keyboardShortcut);
+          bool allRegistered{ true };
+          for (bool ok : registerResult)
+          {
+            allRegistered = allRegistered && ok;
+          }
+
+          if (!allRegistered)
+          {
+            LOG(WARNING) << "BuildRangeChanger: At least one key combination was not registered.";
+          }
+        }
+
+        if (isChanged)
+        {
+          isChanged = false;
+          switchRangeChange(0, false, false);
+        }
+
+        // at this point, it should work
+        initialized = true;
       }
     }
 

@@ -37,12 +37,8 @@ namespace modclasses
       return ModType::VERSION_GET;
     }
 
-    std::vector<ModType> getDependencies() const override
-    {
-      return { ModType::ADDRESS_BASE };
-    }
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override;
 
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override;
     bool initialize() override;
 
     /**con- and destructor**/

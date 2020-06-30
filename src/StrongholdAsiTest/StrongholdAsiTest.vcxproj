@@ -96,7 +96,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(Directory)/</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -104,6 +104,7 @@
       <EnableUAC>false</EnableUAC>
       <AssemblyDebug>true</AssemblyDebug>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -137,7 +138,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ObjectFileName>$(IntDir)/%(Directory)/</ObjectFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -191,6 +192,7 @@
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
     <ClInclude Include="modclasses\versionGetter.h" />
     <ClInclude Include="modcore\logUtility.h" />
+    <ClInclude Include="modcore\modLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\logger\easylogging++.cc" />
@@ -204,8 +206,6 @@
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
     <ClCompile Include="Modcore\modConstructors.cpp" />
-    <ClCompile Include="Modcore\modLoader.cpp" />
-    <ClCompile Include="Modcore\modLoader.h" />
     <ClCompile Include="Misc\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -214,6 +214,7 @@
     </ClCompile>
     <ClCompile Include="Misc\SimpleUtil.cpp" />
     <ClCompile Include="modclasses\versionGetter.cpp" />
+    <ClCompile Include="modcore\modLoader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

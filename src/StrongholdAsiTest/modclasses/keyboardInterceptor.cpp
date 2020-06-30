@@ -291,10 +291,12 @@ namespace modclasses
         if (const auto& currIt = currentlyUsedKeys.find(key); currIt != currentlyUsedKeys.end() && currIt->second != actionToPerform)
         {
           currIt->second->doAction(window, true, false);  // release other key
-          
-          // NOTE: we will see if this works (maybe it doesn't and I will never notice?)
-          actionToPerform->doAction(window, false, false); // execute first other action
-          currentlyUsedKeys[key] = actionToPerform;
+
+          if (!keyUp) // will only move action to other kombination if not key up
+          {
+            actionToPerform->doAction(window, false, false); // execute first other action
+            currentlyUsedKeys[key] = actionToPerform;
+          }
         }
         else
         {

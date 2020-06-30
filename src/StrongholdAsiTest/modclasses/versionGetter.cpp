@@ -3,20 +3,11 @@
 
 namespace modclasses
 {
-  void VersionGetter::giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep)
+  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> VersionGetter::neededDependencies()
   {
-    if (dep.size() == 1)
-    {
-      if (dep.at(0)->getModType() == ModType::ADDRESS_BASE)
-      {
-        addrBase = std::static_pointer_cast<AddressBase>(dep.at(0));
-      }
-    }
-
-    if (addrBase.expired())
-    {
-      LOG(WARNING) << "VersionGetter failed to receive dependency.";
-    }
+    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+    mapPointer->try_emplace(ModType::ADDRESS_BASE, std::make_unique<DependencyReceiver<AddressBase>>(&addrBase));
+    return mapPointer;
   }
 
   // version helper
@@ -39,29 +30,28 @@ namespace modclasses
 
   bool VersionGetter::initialize()
   {
-    if (auto addressBase = addrBase.lock())
+    auto addressBaseMod = getIfModInit<AddressBase>(addrBase);
+    
+    if (addressBaseMod)
     {
-      if (addressBase->initialisationDone())
+      // version elif
+      // extreme41
+      if (isThisVersion(
+        (unsigned char*)(addressBaseMod->getBaseAddress() + relExtremeVersion41String),
+        (signed char*)(addressBaseMod->getBaseAddress() + relExtremeVersion41Number),
+        "V1.%d.1-E", 41))
       {
-        // version elif
-        // extreme41
-        if (isThisVersion(
-          (unsigned char*)(addressBase->getBaseAddress() + relExtremeVersion41String),
-          (signed char*)(addressBase->getBaseAddress() + relExtremeVersion41Number),
-          "V1.%d.1-E", 41))
-        {
-          version = Version::V1P41P1SE;
-          LOG(INFO) << "Detected Stronghold Extreme 1.41.1-E.";
-        }
-        // 41
-        else if (isThisVersion(
-          (unsigned char*)(addressBase->getBaseAddress() + relVersion41String),
-          (signed char*)(addressBase->getBaseAddress() + relVersion41Number),
-          "V1.%d", 41))
-        {
-          version = Version::V1P41;
-          LOG(INFO) << "Detected Stronghold 1.41.";
-        }
+        version = Version::V1P41P1SE;
+        LOG(INFO) << "Detected Stronghold Extreme 1.41.1-E.";
+      }
+      // 41
+      else if (isThisVersion(
+        (unsigned char*)(addressBaseMod->getBaseAddress() + relVersion41String),
+        (signed char*)(addressBaseMod->getBaseAddress() + relVersion41Number),
+        "V1.%d", 41))
+      {
+        version = Version::V1P41;
+        LOG(INFO) << "Detected Stronghold 1.41.";
       }
     }
 

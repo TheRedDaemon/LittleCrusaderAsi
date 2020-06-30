@@ -102,6 +102,9 @@
     <ClInclude Include="modclasses\buildRangeChanger.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
+    <ClInclude Include="modcore\modLoader.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -116,16 +119,10 @@
     <ClCompile Include="Modclasses\addressBase.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
-    <ClCompile Include="Modcore\modLoader.h">
-      <Filter>Headerdateien\ModCore</Filter>
-    </ClCompile>
     <ClCompile Include="Modcore\dllmain.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
     <ClCompile Include="Modcore\modConstructors.cpp">
-      <Filter>Quelldateien\ModCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Modcore\modLoader.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
     <ClCompile Include="modcore\logUtility.cpp">
@@ -151,6 +148,9 @@
     </ClCompile>
     <ClCompile Include="modclasses\buildRangeChanger.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="modcore\modLoader.cpp">
+      <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

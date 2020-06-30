@@ -20,9 +20,36 @@ namespace modclasses
 {
   using Json = nlohmann::json;
 
+  class ModBase; // forward declaration, to make allow the dependency container to see ModBase
+
+  // container to wrap differnt modtypes
+  struct DependencyRecContainer
+  {
+    virtual void receiveDep(const std::shared_ptr<ModBase> depPointer) = 0;
+  };
+
+  // container to keep a pointer to the mod weakptr, since this shouldn't go out of scope
+  // the delivered modtype is casted static, since the system should use a map to only deliver the fitting values
+  template<typename T>
+  struct DependencyReceiver : public DependencyRecContainer
+  {
+    std::weak_ptr<T> *weakPointerPointer;
+
+    DependencyReceiver(std::weak_ptr<T> *pointerToWeakPointer) : weakPointerPointer{ pointerToWeakPointer }{}
+
+    void receiveDep(const std::shared_ptr<ModBase> depPointer) override
+    {
+      *weakPointerPointer = std::static_pointer_cast<T>(depPointer);
+    }
+  };
+
   // base class for all mod impl
   class ModBase
   {
+  private:
+
+    // holds depReceiver, will be added on request and then set to null once the dep are done
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> depReceiverPointer{};
   
   protected:
 
@@ -47,12 +74,42 @@ namespace modclasses
     // get type of this mod
     virtual ModType getModType() const = 0;
 
-    // returnes required dependencies
-    virtual std::vector<ModType> getDependencies() const = 0;
+    // new dependency approach -> request and add are handled automatic, the modauthor only needs to provide "neededDependencies"
+    // get by sending key map
+    virtual std::vector<ModType> getDependencies() final
+    {
+      // get receiver object
+      depReceiverPointer = neededDependencies();
 
-    // give required dependencies, but as generalized vector
-    // shared ptr for better casting, however, better use weak_ptr in the classes
-    virtual void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) = 0;
+      std::vector<ModType> neededTypes;
+      neededTypes.reserve(depReceiverPointer->size());
+      
+      for (auto const& type : *depReceiverPointer)
+      {
+        neededTypes.push_back(type.first);
+      }
+
+      return neededTypes;
+    };
+
+    virtual void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) final
+    {
+      for (auto const& depPointer : dep)
+      {
+        if (auto depConIt = depReceiverPointer->find(depPointer->getModType()); depConIt != depReceiverPointer->end())
+        {
+          depConIt->second->receiveDep(depPointer);
+        }
+        else
+        {
+          LOG(WARNING) << "Received dependency for mod with id '" << static_cast<int>(depPointer->getModType())
+            << "' for mod with id '" << static_cast<int>(this->getModType()) << "'. But it wasn't needed.";
+        }
+      }
+
+      // empties object, no longer needed
+      depReceiverPointer.reset();
+    };
 
     // actual getting addresses, preparing everything
     // if dependencies or init fails, leave "initialized" to false and return false
@@ -72,6 +129,32 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     ModBase(const ModBase &base) = delete;
     virtual ModBase& operator=(const ModBase &base) final = delete;
+
+  private:
+
+    // will return 
+    virtual std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() = 0;
+
+  protected:
+
+    // some utility functions
+
+    // needs the ModClass as Template
+    // checks if the mod is there and initialized and returns a sharedPointer
+    // if there is no mod or the mod is not initialized, an empty pointer is returned
+    template<typename T>
+    const std::shared_ptr<T> getIfModInit(const std::weak_ptr<T> &modPointer)
+    {
+      auto sharedModPointer = modPointer.lock();
+      if (sharedModPointer && sharedModPointer->initialisationDone())
+      {
+        return sharedModPointer;
+      }
+      else
+      {
+        return std::shared_ptr<T>{};
+      }
+    }
   };
 }
 

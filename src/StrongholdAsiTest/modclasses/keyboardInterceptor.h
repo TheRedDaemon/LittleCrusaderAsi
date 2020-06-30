@@ -29,9 +29,6 @@ namespace modclasses
     // if the keyboard interceptor is active
     bool interceptorActive{ false };
 
-    // the basis should be, that one registers a function, or another key, for a key or a combination
-    // if some fits, do something -> important to prepare structure during config load
-
     // will hold all actions, the other map will only use the pointers
     std::vector<std::unique_ptr<KAction>> actionContainer{};
 
@@ -64,13 +61,11 @@ namespace modclasses
       return ModType::KEYBOARD_INTERCEPTOR;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
     {
-      return {};
-    }
+      return std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+    };
 
-    // no dep
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override {};
     bool initialize() override;
 
     /**con- and destructor**/

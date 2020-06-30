@@ -50,12 +50,8 @@ namespace modclasses
       return ModType::BUILD_RANGE_CHANGER;
     }
 
-    std::vector<ModType> getDependencies() const override
-    {
-      return { ModType::ADDRESS_RESOLVER, ModType::KEYBOARD_INTERCEPTOR };
-    }
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override;
 
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override;
     bool initialize() override;
 
     /**con- and destructor**/

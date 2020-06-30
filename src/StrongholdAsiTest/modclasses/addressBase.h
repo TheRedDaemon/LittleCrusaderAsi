@@ -18,13 +18,10 @@ namespace modclasses
       return ModType::ADDRESS_BASE;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
     {
-      return {};
-    }
-
-    // has no dependencies, maybe -> however, might require stuff from the dllmain?
-    void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) override {};
+      return std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+    };
 
     bool initialize() override;
 
@@ -33,7 +30,7 @@ namespace modclasses
 
     /**additional functions for others**/
 
-    // return version (will be received 
+    // return address base (will be received)
     const DWORD getBaseAddress() const
     {
       if (initialized)

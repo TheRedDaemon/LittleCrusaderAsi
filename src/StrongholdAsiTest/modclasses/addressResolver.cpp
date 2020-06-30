@@ -18,53 +18,32 @@ namespace modclasses
     }
   }
 
-  void AddressResolver::giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep)
+  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> AddressResolver::neededDependencies()
   {
-    if (dep.size() == 2)
-    {
-      for (const auto &mod : dep)
-      {
-        switch (mod->getModType())
-        {
-          case ModType::ADDRESS_BASE:
-            addrBase = std::static_pointer_cast<AddressBase>(mod);
-            break;
-          case ModType::VERSION_GET:
-            verGet = std::static_pointer_cast<VersionGetter>(mod);
-            break;
-          default:
-            break;
-        }
-      }
-    }
-
-    if (addrBase.expired() || verGet.expired())
-    {
-      LOG(WARNING) << "AddressResolver failed to receive dependencies.";
-    }
+    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
+    mapPointer->try_emplace(ModType::ADDRESS_BASE, std::make_unique<DependencyReceiver<AddressBase>>(&addrBase));
+    mapPointer->try_emplace(ModType::VERSION_GET, std::make_unique<DependencyReceiver<VersionGetter>>(&verGet));
+    return mapPointer;
   }
 
   bool AddressResolver::initialize()
   {
-    if (auto addressBaseRec = addrBase.lock())
-    {
-      if (auto versionGetter = verGet.lock())
-      {
-        if (addressBaseRec->initialisationDone() && versionGetter->initialisationDone())
-        {
-          addressBase = addressBaseRec->getBaseAddress();
-          version = versionGetter->getCurrentStrongholdVersion();
+    auto addressBaseMod = getIfModInit<AddressBase>(addrBase);
+    auto versionGetterMod = getIfModInit<VersionGetter>(verGet);
 
-          initialized = true;
-          if (!requestAddresses(versionGetter->returnUsedAddresses(), *versionGetter))
-          {
-            initialized = false;
-          }
-          else
-          {
-            LOG(INFO) << "AddressResolver initialized.";
-          }
-        }
+    if (addressBaseMod && versionGetterMod)
+    {
+      addressBase = addressBaseMod->getBaseAddress();
+      version = versionGetterMod->getCurrentStrongholdVersion();
+
+      initialized = true;
+      if (!requestAddresses(versionGetterMod->returnUsedAddresses(), *versionGetterMod))
+      {
+        initialized = false;
+      }
+      else
+      {
+        LOG(INFO) << "AddressResolver initialized.";
       }
     }
 
