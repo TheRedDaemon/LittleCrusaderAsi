@@ -48,15 +48,6 @@
     <ClInclude Include="Misc\copiedFunc.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="Misc\framework.h">
-      <Filter>Headerdateien\Misc</Filter>
-    </ClInclude>
-    <ClInclude Include="Misc\pch.h">
-      <Filter>Headerdateien\Misc</Filter>
-    </ClInclude>
-    <ClInclude Include="Misc\SimpleUtil.h">
-      <Filter>Headerdateien\Misc</Filter>
-    </ClInclude>
     <ClInclude Include="Modclasses\addressBase.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
@@ -108,12 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
-      <Filter>Quelldateien\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="Misc\pch.cpp">
-      <Filter>Quelldateien\Misc</Filter>
-    </ClCompile>
-    <ClCompile Include="Misc\SimpleUtil.cpp">
       <Filter>Quelldateien\Misc</Filter>
     </ClCompile>
     <ClCompile Include="Modclasses\addressBase.cpp">

@@ -181,15 +181,12 @@
     <ClInclude Include="modclasses\addressResolver.h" />
     <ClInclude Include="modclasses\buildRangeChanger.h" />
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
-    <ClInclude Include="Misc\framework.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
     <ClInclude Include="modclasses\enumheaders\keyboardEnumsAndUtil.h" />
     <ClInclude Include="modclasses\keyboardInterceptor.h" />
     <ClInclude Include="Modclasses\modBase.h" />
     <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
-    <ClInclude Include="Misc\pch.h" />
-    <ClInclude Include="Misc\SimpleUtil.h" />
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
     <ClInclude Include="modclasses\versionGetter.h" />
     <ClInclude Include="modcore\logUtility.h" />
@@ -207,13 +204,6 @@
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
     <ClCompile Include="Modcore\modConstructors.cpp" />
-    <ClCompile Include="Misc\pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Misc\SimpleUtil.cpp" />
     <ClCompile Include="modclasses\versionGetter.cpp" />
     <ClCompile Include="modcore\modLoader.cpp" />
   </ItemGroup>
