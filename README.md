@@ -32,7 +32,7 @@ First, all now mentioned files need to be placed in the same directory. This mig
 Currently three files are needed:
 
 1. The 'LittleCrusaderAsi.asi' of course.
-2. The 'logger.config', which is the configuration for the logger. Simply using the file [HERE](src/LittleCrusaderAsi/dependencies/logger/logger.config) is enough. For customisation please refer to the easylogging++ documentation (see [Dependencies](###dependencies)).
+2. The 'logger.config', which is the configuration for the logger. Simply using the file [HERE](src/LittleCrusaderAsi/dependencies/logger/logger.config) is enough. For customisation please refer to the easylogging++ documentation (see [Dependencies](#dependencies)).
 3. The actual 'modConfig.json'. This file contains the mod configuration. [THIS]() non valid  json-file will contain examples for every possible adjustments and features.
 
 If the asi-file is missing, it will not work. If the modConfig is missing or invalid the mod will crash with a log. If the logger config is missing, it likely crashes silently.  
