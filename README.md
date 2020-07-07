@@ -15,11 +15,25 @@ For more information on the implementation approach and structure, please take a
 
 ## Installation
 ### Getting LittleCrusaderAsi
-As of now (Juli 2020), no release build is provided.
+Currently (Juli 2020), no release build is provided. The project is written in C++17 and the repository contains a Visual Studio 2017 project. To get a current build, one has to retrieve the repository and build it on their own. At the moment, only the Win32 DEBUG build is somewhat properly configured. However, one must make sure to use the Win32 mode and redefine *Properties->General->Output Directory* and *Properties->Debugging->Command*, since both are currently configured to allow debugging the dll and point therefore in *my* file structure. The debug build produces more then only "LittleCrusaderAsi.asi", but only this file (and two other configuration files) are necessary. More to that later.
+
+### Getting an AsiLoader
+LittleCrusaderAsi relies on an third party tool that loads it into the process. Basically only one tool was tested and works, but more or less two variants are possible:
+
+* Using [Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases) directly. The release will contain a 'dinput8.dll' which needs to be placed in the game root directory. However, it needs to be renamed into a dll the game loads. One that works is 'ddraw.dll'. Other names might be possible, but I did not test them. Now the game will load ASI files placed in game root directory or the folders 'scripts' or 'plugins' if they are created inside the game directory.
+
+* Using [DxWrapper](https://github.com/elishacloud/dxwrapper), which uses code of the Ultimate-ASI-Loader to provide the same feature alongside a ton more, like [Dd7to9](https://github.com/elishacloud/dxwrapper/wiki/DirectDraw-to-Direct3D9-Conversion). The later allows stuff like running the game in window mode (with a few issues, like the cursor not being bound to the window). For the installation, please refer to the DxWrapper documentation. In short it is required that the provided 'ddraw.dll' is being placed in the game root folder alongside 'dxwrapper.dll' and 'dxwrapper.ini'. The asi-loading needs to be activated in the 'dxwrapper.ini'.
+
+Both have also additional features, but if interested, please refer to their documentations.
+
+### Location of files and configuration
 
 ## Current Features
 
 ## Additional Information
+### License
+This repository is licensed using the MIT License.
+
 ### Dependencies
 LittleStrongholdAsi uses third party tools/code.  
 You will find them together with a copy of their licenses under [THIS](src/LittleCrusaderAsi/dependencies) folder.
@@ -28,6 +42,16 @@ Dependency | Used Version
 ------------ | -------------
 [Easylogging++](https://github.com/amrayn/easyloggingpp) | 9.96.7
 [JSON for Modern C++](https://github.com/nlohmann/json) | 3.7.3
+
+### Other Crusader projects
+There are a handful of projects on GitHub for Stronghold (Crusader) 1. So take a look. After all, every development might be helpful for other projects.  
+(Note: Without any claim to comprehensiveness.)
+
+* Was the [UnofficialCrusaderPatch][1] already mentioned? ^^
+* The [Gm1KonverterCrossPlatform](https://github.com/PodeCaradox/Gm1KonverterCrossPlatform) is a tool developed for easier editing of all kinds of Crusader textures and sprites.
+* While the [Sourcehold](https://github.com/sourcehold) project seems to laying dormant at the moment (July 2020), it might still be worth a look.
+  * As an interesting subproject, [sourcehold-maps](https://github.com/sourcehold/sourcehold-maps) tries do analyze how the map files are structured. Who knows what might be possible by only messing with the map files?
+* Any more suggestions? Feel free to add them (as long as they are related to Stronghold at least)!
 
 ### Special Thanks
 Basically everyone involved with and thanked by the [UnofficialCrusaderPatch][1]. So pass the thanks down the thanks tree. ^^  
