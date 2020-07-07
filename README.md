@@ -4,7 +4,7 @@ LittleCrusaderAsi is a modification for Stronghold Crusader 1 inspired by the aw
 
 The LittleCrusaderAsi tries to tackle this issue by using a very common technique when it comes to modding. The modification uses an AsiLoader (see [Installation](#installation)) to load a Dynamic Link Library (dll, just named asi in this approach) into the address space of a program. That allows to execute additional code and modify the software during runtime.
 
-One hope for this project is to one day provide most if not all features of the UnofficialCrusaderPatch, while also allowing for more dynamic changes, like reloading of KI parameters at runtime to make modifications easier.
+One hope for this project is to one day provide most if not all features of the UnofficialCrusaderPatch, while also allowing for more dynamic changes, like reloading of AI parameters at runtime to make modifications easier.
 
 Currently, **only the basic program structure is implemented**, which I hope can be used to extend the mod in a structured (but not restricted) way. The individual features are granted a lot of freedom how to handle issues like missing addresses, so version compatibility is provided on a per feature basis.  
 That being said, as long as no one with other versions then 1.41 and 1.41.1-E digs through the addresses, the mods will mostly be limited to the later. Additionally, the restriction is further defined by the mod being so far created using a German crusader version. As a result:
