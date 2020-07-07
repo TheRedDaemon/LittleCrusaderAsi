@@ -15,18 +15,30 @@ For more information on the implementation approach and structure, please take a
 
 ## Installation
 ### Getting LittleCrusaderAsi
-Currently (Juli 2020), no release build is provided. The project is written in C++17 and the repository contains a Visual Studio 2017 project. To get a current build, one has to retrieve the repository and build it on their own. At the moment, only the Win32 DEBUG build is somewhat properly configured. However, one must make sure to use the Win32 mode and redefine *Properties->General->Output Directory* and *Properties->Debugging->Command*, since both are currently configured to allow debugging the dll and point therefore in *my* file structure. The debug build produces more then only "LittleCrusaderAsi.asi", but only this file (and two other configuration files) are necessary. More to that later.
+Currently (Juli 2020), no release build is provided. The project is written in C++17 and the repository contains a Visual Studio 2017 project. To get a current build, one has to retrieve the repository and build it on their own. At the moment, only the Win32 DEBUG build is somewhat properly configured. However, one must make sure to use the Win32 mode and redefine *Properties->General->Output Directory* and *Properties->Debugging->Command*, since both are currently configured to allow debugging the dll and point therefore in *my* file structure. The debug build produces more then only 'LittleCrusaderAsi.asi', but only this file (and two other configuration files) are necessary. More to that later.
 
 ### Getting an AsiLoader
 LittleCrusaderAsi relies on an third party tool that loads it into the process. Basically only one tool was tested and works, but more or less two variants are possible:
 
-* Using [Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases) directly. The release will contain a 'dinput8.dll' which needs to be placed in the game root directory. However, it needs to be renamed into a dll the game loads. One that works is 'ddraw.dll'. Other names might be possible, but I did not test them. Now the game will load ASI files placed in game root directory or the folders 'scripts' or 'plugins' if they are created inside the game directory.
+* Using [Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases) directly. The release will contain a 'dinput8.dll' which needs to be placed in the game root directory. However, it needs to be renamed into a dll the game loads. One that works is 'ddraw.dll'. Other names might be possible, but I did not test them. Now the game will load ASI files placed in game root directory or the folders 'scripts' or 'plugins', if they are created inside the game directory.
 
 * Using [DxWrapper](https://github.com/elishacloud/dxwrapper), which uses code of the Ultimate-ASI-Loader to provide the same feature alongside a ton more, like [Dd7to9](https://github.com/elishacloud/dxwrapper/wiki/DirectDraw-to-Direct3D9-Conversion). The later allows stuff like running the game in window mode (with a few issues, like the cursor not being bound to the window). For the installation, please refer to the DxWrapper documentation. In short it is required that the provided 'ddraw.dll' is being placed in the game root folder alongside 'dxwrapper.dll' and 'dxwrapper.ini'. The asi-loading needs to be activated in the 'dxwrapper.ini'.
 
 Both have also additional features, but if interested, please refer to their documentations.
 
 ### Location of files and configuration
+First, all now mentioned files need to be placed in the same directory. This might either be the game root, or one of the supported folders 'scripts'/'plugins' (recommended).
+
+Currently three files are needed:
+
+1. The 'LittleCrusaderAsi.asi' of course.
+2. The 'logger.config', which is the configuration for the logger. Simply using the file [HERE](src/LittleCrusaderAsi/dependencies/logger/logger.config) is enough. For customisation please refer to the easylogging++ documentation (see [Dependencies](###dependencies)).
+3. The actual 'modConfig.json'. This file contains the mod configuration. [THIS]() non valid  json-file will contain examples for every possible adjustments and features.
+
+If the asi-file is missing, it will not work. If the modConfig is missing or invalid the mod will crash with a log. If the logger config is missing, it likely crashes silently.  
+Log output is written to a file named 'crusaderAsi.log', which will be overridden on every start and generated in the same folder as the other files. In case of a noticed exception or if requested by a feature, the log will be copied and renamed on exit. Hard crashes (in case of corrupted memory for example) will likely not show up in the log.
+
+At the moment, configuring the modification is kinda clunky. The focus for now is on functionality instead of usability. However, if anyone wants to provide a GUI for generating the configuration json, feel free. ^^
 
 ## Current Features
 
