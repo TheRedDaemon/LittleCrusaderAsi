@@ -18,7 +18,7 @@ For more information on the implementation approach and structure, please take a
 Currently (Juli 2020), no release build is provided. The project is written in C++17 and the repository contains a Visual Studio 2017 project. To get a current build, one has to retrieve the repository and build it on their own. At the moment, only the Win32 DEBUG build is somewhat properly configured. However, one must make sure to use the Win32 mode and redefine *Properties->General->Output Directory* and *Properties->Debugging->Command*, since both are currently configured to allow debugging the dll and point therefore in *my* file structure. The debug build produces more then only 'LittleCrusaderAsi.asi', but only this file (and two other configuration files) are necessary. More to that later.
 
 ### Getting an AsiLoader
-LittleCrusaderAsi relies on an third party tool that loads it into the process. Basically only one tool was tested and works, but more or less two variants are possible:
+LittleCrusaderAsi relies on a third party tool that loads it into the process. Basically only one tool was tested and works, but more or less two variants are possible:
 
 * Using [Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader/releases) directly. The release will contain a 'dinput8.dll' which needs to be placed in the game root directory. However, it needs to be renamed into a dll the game loads. One that works is 'ddraw.dll'. Other names might be possible, but I did not test them. Now the game will load ASI files placed in game root directory or the folders 'scripts' or 'plugins', if they are created inside the game directory.
 
@@ -61,8 +61,8 @@ There are a handful of projects on GitHub for Stronghold (Crusader) 1. So take a
 
 * Was the [UnofficialCrusaderPatch][1] already mentioned? ^^
 * The [Gm1KonverterCrossPlatform](https://github.com/PodeCaradox/Gm1KonverterCrossPlatform) is a tool developed for easier editing of all kinds of Crusader textures and sprites.
-* While the [Sourcehold](https://github.com/sourcehold) project seems to laying dormant at the moment (July 2020), it might still be worth a look.
-  * As an interesting subproject, [sourcehold-maps](https://github.com/sourcehold/sourcehold-maps) tries do analyze how the map files are structured. Who knows what might be possible by only messing with the map files?
+* While the [Sourcehold](https://github.com/sourcehold) main project seems to laying dormant at the moment (July 2020), it might still be worth a look.
+  * As an interesting subproject, [sourcehold-maps](https://github.com/sourcehold/sourcehold-maps) tries do analyze how the map files are structured and is still active (October 2020). Who knows what might be possible by only messing with the map files?
 * Any more suggestions? Feel free to add them (as long as they are related to Stronghold at least)!
 
 ### Special Thanks

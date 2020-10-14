@@ -96,6 +96,9 @@
     <ClInclude Include="modcore\modLoader.h">
       <Filter>Headerdateien\ModCore</Filter>
     </ClInclude>
+    <ClInclude Include="modcore\modKeeper.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">

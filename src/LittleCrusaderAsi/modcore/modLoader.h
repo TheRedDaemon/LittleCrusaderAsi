@@ -8,6 +8,8 @@
 #include "../modclasses/modBase.h"
 #include "../modclasses/enumheaders/modTypes.h"
 
+#include "modKeeper.h"
+
 // json
 #include "../dependencies/jsonParser/json.hpp"
 
@@ -20,7 +22,8 @@ namespace modcore
   class ModLoader final // preventing inheritance, since destructor wont be virtual...
   {
   private:
-    std::vector<std::shared_ptr<Mod>> loadedMods{};
+
+    std::shared_ptr<ModKeeper> modKeeper = std::make_shared<ModKeeper>();
 
   public:
 
@@ -40,7 +43,7 @@ namespace modcore
     void fillAndOrderModVector(const std::unordered_map<MT, Json> &modConfigs);
     void fulfillDependencies( // for recursive fill
       const std::unordered_map<MT, Json> &modConfigs,
-      std::unordered_map<MT, std::shared_ptr<Mod>> &modSortMap,
+      std::unordered_map<MT, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
       MT neededMod, const Json &config);
 
     const std::shared_ptr<Mod> createMod(MT modType, const Json &config);

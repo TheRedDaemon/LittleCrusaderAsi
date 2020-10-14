@@ -9,9 +9,7 @@
 #include "enumheaders/addressEnums.h"
 #include "enumheaders/strongVersions.h"
 
-// logging
-#include "../dependencies/logger/easylogging++.h"
-#include "../modcore/logUtility.h" // used to mark that log needs to be copied at the end
+#include "../modcore/modKeeper.h"
 
 // json
 #include "../dependencies/jsonParser/json.hpp"
@@ -20,36 +18,12 @@ namespace modclasses
 {
   using Json = nlohmann::json;
 
-  class ModBase; // forward declaration, to make allow the dependency container to see ModBase
-
-  // container to wrap differnt modtypes
-  struct DependencyRecContainer
-  {
-    virtual void receiveDep(const std::shared_ptr<ModBase> depPointer) = 0;
-  };
-
-  // container to keep a pointer to the mod weakptr, since this shouldn't go out of scope
-  // the delivered modtype is casted static, since the system should use a map to only deliver the fitting values
-  template<typename T>
-  struct DependencyReceiver : public DependencyRecContainer
-  {
-    std::weak_ptr<T> *weakPointerPointer;
-
-    DependencyReceiver(std::weak_ptr<T> *pointerToWeakPointer) : weakPointerPointer{ pointerToWeakPointer }{}
-
-    void receiveDep(const std::shared_ptr<ModBase> depPointer) override
-    {
-      *weakPointerPointer = std::static_pointer_cast<T>(depPointer);
-    }
-  };
-
   // base class for all mod impl
   class ModBase
   {
   private:
 
-    // holds depReceiver, will be added on request and then set to null once the dep are done
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> depReceiverPointer{};
+    std::weak_ptr<modcore::ModKeeper> keeper{};
   
   protected:
 
@@ -63,7 +37,12 @@ namespace modclasses
     // constr should then be used to extract the relevant infos from this or mark the init as failed if not possible, etc
     // pointer and address stuff needs to be done in "initialize"!
     // config will be send as ref, but will be created in the modloaderConstr and discarded afterwards, so create a lokal copy if needed
-    ModBase(){ }
+    ModBase() {}
+
+    // additional constructor created for mods that have dependencies
+    // use this in your constructor, otherwise receiving mods will not be possible
+    // more info see default constructor
+    ModBase(const std::weak_ptr<modcore::ModKeeper> modKeeper) : keeper{ modKeeper }{}
 
     // simply returns if initialzed
     virtual bool initialisationDone() const final
@@ -74,42 +53,8 @@ namespace modclasses
     // get type of this mod
     virtual ModType getModType() const = 0;
 
-    // new dependency approach -> request and add are handled automatic, the modauthor only needs to provide "neededDependencies"
-    // get by sending key map
-    virtual std::vector<ModType> getDependencies() final
-    {
-      // get receiver object
-      depReceiverPointer = neededDependencies();
-
-      std::vector<ModType> neededTypes;
-      neededTypes.reserve(depReceiverPointer->size());
-      
-      for (auto const& type : *depReceiverPointer)
-      {
-        neededTypes.push_back(type.first);
-      }
-
-      return neededTypes;
-    };
-
-    virtual void giveDependencies(const std::vector<std::shared_ptr<ModBase>> dep) final
-    {
-      for (auto const& depPointer : dep)
-      {
-        if (auto depConIt = depReceiverPointer->find(depPointer->getModType()); depConIt != depReceiverPointer->end())
-        {
-          depConIt->second->receiveDep(depPointer);
-        }
-        else
-        {
-          LOG(WARNING) << "Received dependency for mod with id '" << static_cast<int>(depPointer->getModType())
-            << "' for mod with id '" << static_cast<int>(this->getModType()) << "'. But it wasn't needed.";
-        }
-      }
-
-      // empties object, no longer needed
-      depReceiverPointer.reset();
-    };
+    // requested mods -> dependencies are created before will be available to be used by this mod
+    virtual std::vector<ModType> getDependencies() const = 0;
 
     // actual getting addresses, preparing everything
     // if dependencies or init fails, leave "initialized" to false and return false
@@ -130,30 +75,32 @@ namespace modclasses
     ModBase(const ModBase &base) = delete;
     virtual ModBase& operator=(const ModBase &base) final = delete;
 
-  private:
-
-    // will return 
-    virtual std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() = 0;
-
   protected:
 
     // some utility functions
 
-    // needs the ModClass as Template
-    // checks if the mod is there and initialized and returns a sharedPointer
-    // if there is no mod or the mod is not initialized, an empty pointer is returned
+    // return shared pointer of mod if there, requested, initialized
+    // otherwise the return will be an empty pointer
+    // if the mod should be used further, use a weak pointer to store it in the class
     template<typename T>
-    const std::shared_ptr<T> getIfModInit(const std::weak_ptr<T> &modPointer)
+    const std::shared_ptr<T> getMod()
     {
-      auto sharedModPointer = modPointer.lock();
-      if (sharedModPointer && sharedModPointer->initialisationDone())
+      // double test, but i do not have access to initialisationDone otherwise, or not?
+      auto keeperPointer = keeper.lock();
+      if (keeperPointer)
       {
-        return sharedModPointer;
+        auto modPointer = keeperPointer->getModIfInitAndReq<T>(getModType());
+        if (modPointer && modPointer->initialisationDone())
+        {
+          return modPointer;
+        }
       }
       else
       {
-        return std::shared_ptr<T>{};
+        LOG(WARNING) << "The mod with id '" << static_cast<int>(getModType()) << "' tried to receive a mod but has no keeper.";
       }
+
+      return std::shared_ptr<T>{};
     }
   };
 }

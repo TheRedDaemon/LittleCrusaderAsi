@@ -3,7 +3,7 @@
 
 namespace modclasses
 {
-  BuildRangeChanger::BuildRangeChanger(const Json &config)
+  BuildRangeChanger::BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
   {
     auto confIt = config.find("startState");
     if (confIt != config.end())
@@ -36,18 +36,15 @@ namespace modclasses
     }
   }
 
-  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> BuildRangeChanger::neededDependencies()
+  std::vector<ModType> BuildRangeChanger::getDependencies() const
   {
-    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-    mapPointer->try_emplace(ModType::KEYBOARD_INTERCEPTOR, std::make_unique<DependencyReceiver<KeyboardInterceptor>>(&keyInter));
-    mapPointer->try_emplace(ModType::ADDRESS_RESOLVER, std::make_unique<DependencyReceiver<AddressResolver>>(&addrResolver));
-    return mapPointer;
+    return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER };
   }
 
   bool BuildRangeChanger::initialize()
   {
-    auto addressResolver = getIfModInit<AddressResolver>(addrResolver);
-    auto keyInterceptor = getIfModInit<KeyboardInterceptor>(keyInter);
+    auto addressResolver = getMod<AddressResolver>();
+    auto keyInterceptor = getMod<KeyboardInterceptor>();
 
     if (addressResolver && keyInterceptor)
     {

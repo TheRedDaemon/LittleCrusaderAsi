@@ -19,20 +19,21 @@ namespace modclasses
 
   public:
 
+    Test1(std::weak_ptr<modcore::ModKeeper> modKeeper) : ModBase(modKeeper){};
+
     ModType getModType() const override
     {
       return ModType::TEST1;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
+    std::vector<ModType> getDependencies() const override
     {
-      auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-      mapPointer->try_emplace(ModType::ADDRESS_RESOLVER, std::make_unique<DependencyReceiver<AddressResolver>>(&resolver));
-      return mapPointer;
+      return { ModType::ADDRESS_RESOLVER };
     }
 
     bool initialize() override
     {
+      getMod<AddressResolver>();
       initialized = resolver.lock()->requestAddresses(usedAddresses, *this);
       return initialized;
     };
@@ -60,14 +61,12 @@ namespace modclasses
 
     ModType getModType() const override
     {
-      return ModType::TEST1;
+      return ModType::TEST2;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
+    std::vector<ModType> getDependencies() const override
     {
-      auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-      mapPointer->try_emplace(ModType::TEST1, std::make_unique<DependencyReceiver<Test1>>(&test));
-      return mapPointer;
+      return { ModType::TEST1 };
     }
 
     bool initialize() override

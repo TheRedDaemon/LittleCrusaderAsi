@@ -4,7 +4,7 @@
 namespace modclasses
 {
 
-  AddressResolver::AddressResolver(const Json &config)
+  AddressResolver::AddressResolver(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
   {
     auto confIt = config.find("rejectLevel");
     if (confIt != config.end())
@@ -18,18 +18,15 @@ namespace modclasses
     }
   }
 
-  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> AddressResolver::neededDependencies()
+  std::vector<ModType> AddressResolver::getDependencies() const
   {
-    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-    mapPointer->try_emplace(ModType::ADDRESS_BASE, std::make_unique<DependencyReceiver<AddressBase>>(&addrBase));
-    mapPointer->try_emplace(ModType::VERSION_GET, std::make_unique<DependencyReceiver<VersionGetter>>(&verGet));
-    return mapPointer;
+    return { ModType::ADDRESS_BASE, ModType::VERSION_GET };
   }
 
   bool AddressResolver::initialize()
   {
-    auto addressBaseMod = getIfModInit<AddressBase>(addrBase);
-    auto versionGetterMod = getIfModInit<VersionGetter>(verGet);
+    auto addressBaseMod = getMod<AddressBase>();
+    auto versionGetterMod = getMod<VersionGetter>();
 
     if (addressBaseMod && versionGetterMod)
     {

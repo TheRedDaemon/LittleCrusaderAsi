@@ -28,8 +28,6 @@ namespace modclasses
 
     Version version{ Version::NONE };
 
-    std::weak_ptr<AddressBase> addrBase{};  // is it nullptr?
-
   public:
     
     ModType getModType() const override
@@ -37,12 +35,15 @@ namespace modclasses
       return ModType::VERSION_GET;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override;
+    std::vector<ModType> getDependencies() const override
+    {
+      return { ModType::ADDRESS_BASE };
+    }
 
     bool initialize() override;
 
     /**con- and destructor**/
-    VersionGetter(){ }
+    VersionGetter(const std::weak_ptr<modcore::ModKeeper> modKeeper) : ModBase{ modKeeper }{}
 
     /**additional functions for others**/ 
 

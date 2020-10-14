@@ -61,10 +61,10 @@ namespace modclasses
       return ModType::KEYBOARD_INTERCEPTOR;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override
+    std::vector<ModType> getDependencies() const override
     {
-      return std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-    };
+      return {};
+    }
 
     bool initialize() override;
 

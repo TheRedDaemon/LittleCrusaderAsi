@@ -17,9 +17,6 @@ namespace modclasses
 
     AddressRisk conflictLevel{ AddressRisk::CRITICAL }; // level on which a address request is rejected if another of this type or higher is already present
 
-    // a little redundant... maybe remove later, or always call functions
-    std::weak_ptr<AddressBase> addrBase{};
-    std::weak_ptr<VersionGetter> verGet{};
     Version version{ Version::NONE };
     DWORD addressBase{ 0x0 };
 
@@ -33,14 +30,14 @@ namespace modclasses
       return ModType::ADDRESS_RESOLVER;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override;
+    std::vector<ModType> getDependencies() const override;
 
     bool initialize() override;
 
     /**con- and destructor**/
 
     // will get a config how to treat address overlaps
-    AddressResolver(const Json &config);
+    AddressResolver(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
 
     /**additional functions for others**/
 

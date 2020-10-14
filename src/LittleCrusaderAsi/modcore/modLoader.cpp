@@ -36,14 +36,14 @@ namespace modcore
 
     // end by calling initialze on every mod:
     int initializedMods{ 0 };
-    for (size_t i = 0; i < loadedMods.size(); i++)
+    for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
     {
-      if (loadedMods.at(i)->initialize())
+      if (modKeeper->loadedMods.at(i)->mod->initialize())
       {
         ++initializedMods;
       }
     }
-    LOG(INFO) << initializedMods << " of " << loadedMods.size() << " mods initialized.";
+    LOG(INFO) << initializedMods << " of " << modKeeper->loadedMods.size() << " mods initialized.";
   }
 
   // will run backwards over mods and call cleanUp
@@ -52,27 +52,16 @@ namespace modcore
   {
     // call cleanUp in reverse dependency order (is this reverse order?)
 
-    for (int i = loadedMods.size() - 1; i >= 0; i--)
+    for (int i = modKeeper->loadedMods.size() - 1; i >= 0; i--)
     {
-      loadedMods.at(i)->cleanUp();
+      modKeeper->loadedMods.at(i)->mod->cleanUp();
     }
     LOG(INFO) << "Cleaned up mods.";
   }
 
-  // using struct to have a sort object
-  struct ModSortContainer
-  {
-    std::shared_ptr<Mod> mod;
-    std::vector<MT> dependencies;
-    std::vector<bool> dependenciesFulfilled;
-    int finalPlace;
-    bool done{ false };
-  };
-
   void ModLoader::fillAndOrderModVector(const std::unordered_map<MT, Json> &modConfigs)
   {
-    //std::unordered_map<MT, std::vector<std::shared_ptr<Mod>>> modSortMap{};
-    std::unordered_map<MT, std::shared_ptr<Mod>> modSortMap{};
+    std::unordered_map<MT, std::shared_ptr<ModKeeper::ModContainer>> modSortMap{};
 
     // normaly, the mod will run over all configs and add them 
     for (const auto& config : modConfigs)
@@ -83,13 +72,13 @@ namespace modcore
 
   void ModLoader::fulfillDependencies(
     const std::unordered_map<MT, Json> &modConfigs,
-    std::unordered_map<MT, std::shared_ptr<Mod>> &modSortMap,
+    std::unordered_map<MT, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
     MT neededMod, const Json &config)
   {
 
     if (modSortMap.find(neededMod) != modSortMap.end())
     {
-      if (modSortMap[neededMod] == nullptr)
+      if (!modSortMap[neededMod])
       {
         throw std::exception(("Cylic dependency reference encountered! Dependency with id '"
                               + std::to_string(static_cast<int>(neededMod))
@@ -100,13 +89,12 @@ namespace modcore
     {
       modSortMap[neededMod];  // default constructs shared_ptr to null
 
-      std::shared_ptr<Mod> nextMod{ createMod(neededMod, config) }; // create mod only if needed, otherwise unused creates
+      // create mod only if needed, otherwise unused creates
+      std::shared_ptr<ModKeeper::ModContainer> nextMod = std::make_shared<ModKeeper::ModContainer>(neededMod, createMod(neededMod, config));
 
-      std::vector<MT> deps{ nextMod->getDependencies() };
+      std::vector<MT> deps{ nextMod->mod->getDependencies() };
       if (!deps.empty())
       {
-        std::vector<std::shared_ptr<Mod>> neededDep{};
-
         for (MT dep : deps)
         {
           if (modConfigs.find(dep) != modConfigs.end())
@@ -119,15 +107,14 @@ namespace modcore
             fulfillDependencies(modConfigs, modSortMap, dep, nullptr);
           }
 
-          neededDep.push_back(modSortMap[dep]);
+          // add, that this mad wanted this dependency
+          modSortMap[dep]->modsThatNeedThis.push_back(neededMod);
         }
-
-        nextMod->giveDependencies(neededDep);
       } // if no dependency, it can be added
 
       // at this point, either everything is fulfilled or it broke anyway
       modSortMap[neededMod] = nextMod;
-      loadedMods.push_back(nextMod);
+      modKeeper->loadedMods.push_back(nextMod);
     }
   }
 }

@@ -40,9 +40,6 @@ namespace modclasses
     // can be static, I don't assume changes
     static std::vector<AddressRequest> usedAddresses;
 
-    std::weak_ptr<AddressResolver> addrResolver{};
-    std::weak_ptr<KeyboardInterceptor> keyInter{};
-
   public:
     
     ModType getModType() const override
@@ -50,12 +47,12 @@ namespace modclasses
       return ModType::BUILD_RANGE_CHANGER;
     }
 
-    std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> neededDependencies() override;
+    std::vector<ModType> getDependencies() const override;
 
     bool initialize() override;
 
     /**con- and destructor**/
-    BuildRangeChanger(const Json &config);
+    BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
 
     /**additional functions for others**/
 

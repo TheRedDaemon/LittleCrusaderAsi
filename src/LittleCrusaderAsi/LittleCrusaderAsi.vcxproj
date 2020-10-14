@@ -190,6 +190,7 @@
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
     <ClInclude Include="modclasses\versionGetter.h" />
     <ClInclude Include="modcore\logUtility.h" />
+    <ClInclude Include="modcore\modKeeper.h" />
     <ClInclude Include="modcore\modLoader.h" />
   </ItemGroup>
   <ItemGroup>

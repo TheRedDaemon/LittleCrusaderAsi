@@ -3,12 +3,6 @@
 
 namespace modclasses
 {
-  std::unique_ptr<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>> VersionGetter::neededDependencies()
-  {
-    auto mapPointer = std::make_unique<std::unordered_map<ModType, std::unique_ptr<DependencyRecContainer>>>();
-    mapPointer->try_emplace(ModType::ADDRESS_BASE, std::make_unique<DependencyReceiver<AddressBase>>(&addrBase));
-    return mapPointer;
-  }
 
   // version helper
   static bool isThisVersion(
@@ -30,7 +24,7 @@ namespace modclasses
 
   bool VersionGetter::initialize()
   {
-    auto addressBaseMod = getIfModInit<AddressBase>(addrBase);
+    auto addressBaseMod = getMod<AddressBase>();
     
     if (addressBaseMod)
     {
