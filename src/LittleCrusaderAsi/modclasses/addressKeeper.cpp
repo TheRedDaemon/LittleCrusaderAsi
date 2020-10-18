@@ -3,6 +3,7 @@
 
 namespace modclasses
 {
+  // NOTE: all addresses are relative (current address = base address + one of this addresses)
   // throw error is address not known
   const DWORD AddressResolver::getAddress(const Address memAddr)
   {
@@ -72,6 +73,14 @@ namespace modclasses
             return 0xFBFE4; // 4 byte
           case Version::V1P41:
             return 0xFBC64; // 4 byte
+        }
+        break;
+
+      case Address::AIC_IN_MEMORY:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0x2B39F4C; // 10816 byte (169 int32 * 16)
         }
         break;
     }

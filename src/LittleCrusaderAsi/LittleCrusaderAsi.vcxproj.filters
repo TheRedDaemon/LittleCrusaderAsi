@@ -102,6 +102,9 @@
     <ClInclude Include="modclasses\enumheaders\aiAndPersonalityEnums.h">
       <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
     </ClInclude>
+    <ClInclude Include="modclasses\aicLoad.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -142,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="modcore\modLoader.cpp">
       <Filter>Quelldateien\ModCore</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\aicLoad.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

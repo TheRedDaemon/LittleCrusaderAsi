@@ -18,8 +18,7 @@ namespace modclasses
     EVENT_HANDLER,         // planned module for handling events, by intercepting functions and execute others before giving control back to system
 
     BUILD_RANGE_CHANGER,  // changes the build range, currently on request (and key), but later maybe with timers from the event handler
-    
-    
+    AIC_LOAD,  // allows changing of currently loaded aic values
     
     
     
@@ -35,6 +34,7 @@ namespace modclasses
     {ModType::ADDRESS_RESOLVER, "addressResolver"},
     {ModType::KEYBOARD_INTERCEPTOR, "keyboardInterceptor"},
     {ModType::BUILD_RANGE_CHANGER, "buildRangeChanger"},
+    {ModType::AIC_LOAD, "aicLoad"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

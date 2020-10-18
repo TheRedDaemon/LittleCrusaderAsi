@@ -2,9 +2,10 @@
 // all modTypes include (will (hopefully?) be many one day)
 #include "../modclasses/addressBase.h" 
 #include "../Modclasses/versionGetter.h"
-#include "../Modclasses/addressResolver.h"
+#include "../modclasses/addressResolver.h"
 #include "../modclasses/keyboardInterceptor.h"
 #include "../modclasses/buildRangeChanger.h"
+#include "../modclasses/aicLoad.h"
 //#include ...
 
 // dummy:
@@ -33,6 +34,8 @@ namespace modcore
         return std::make_shared<MC::KeyboardInterceptor>(config);
       case MT::BUILD_RANGE_CHANGER:
         return std::make_shared<MC::BuildRangeChanger>(modKeeper, config);
+      case MT::AIC_LOAD:
+        return std::make_shared<MC::AICLoad>(modKeeper, config);
 
       // dummy:
       case MT::TEST1:

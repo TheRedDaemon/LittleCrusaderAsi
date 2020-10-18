@@ -76,7 +76,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
   {
     case DLL_PROCESS_ATTACH:  // case doesn't open a new scope alone, it needs brackets
     {
-      DisableThreadLibraryCalls(hModule); // normally there are thread attaches/detaches, this removes them
+      // return is not null, so it should have worked, however, still get thread notifications...
+      // for now, Í still leave this here, should the thread event however not be called, test by removing this
+      DisableThreadLibraryCalls(hModule);
 
       // load logger (hoping nothing breaks earlier...)
       initiateLogger();
@@ -99,6 +101,37 @@ BOOL APIENTRY DllMain(HMODULE hModule,
         LOG(ERROR) << "An unexpected exception has occured. (The application might be left unstable.)";
         modcore::enableErrorLog();
       }
+      break;
+    }
+
+    // despite "DisableThreadLibraryCalls", I still receive thread attach messages
+    // maybe it failed? I (think I) should however not create any threads...
+    // However, when the first thread attach message arives, at least some data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
+    // I will use the first as an event handler for now
+    // BUT: I don't know what causes this, the optimium would be stronghold, this would be reliable
+    // This should likely by replaced by something more controlled, like an event handler
+    case DLL_THREAD_ATTACH:
+    {
+      if (modLoader)
+      {
+        try
+        {
+          // ending stuff on detach
+          modLoader->dllThreadAttachEvent();
+        }
+        catch (const std::exception& o_O)
+        {
+          LOG(ERROR) << "An exception has occured: " << o_O.what() << " (The application might be left unstable.)";
+          copyLogOnError();
+        }
+        catch (...)
+        {
+          // do some logging
+          LOG(ERROR) << "An unexpected exception has occured. (The application might be left unstable.)";
+          copyLogOnError();
+        }
+      }
+
       break;
     }
 
@@ -130,5 +163,6 @@ BOOL APIENTRY DllMain(HMODULE hModule,
       break;
     }
   }
+
   return TRUE;
 }

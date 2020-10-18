@@ -46,6 +46,20 @@ namespace modcore
     LOG(INFO) << initializedMods << " of " << modKeeper->loadedMods.size() << " mods initialized.";
   }
 
+  void ModLoader::dllThreadAttachEvent()
+  {
+    if (!firstThreadAttachAfterDllAttachReceived)
+    {
+      firstThreadAttachAfterDllAttachReceived = true;
+
+      // at the first attach event, fire this event to the mods
+      for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
+      {
+        modKeeper->loadedMods.at(i)->mod->firstThreadAttachAfterModAttachEvent();
+      }
+    }
+  }
+
   // will run backwards over mods and call cleanUp
   // destruction will be handled by smart pointers
   ModLoader::~ModLoader()

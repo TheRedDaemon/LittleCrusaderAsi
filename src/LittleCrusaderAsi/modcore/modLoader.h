@@ -24,11 +24,18 @@ namespace modcore
   private:
 
     std::shared_ptr<ModKeeper> modKeeper = std::make_shared<ModKeeper>();
+    bool firstThreadAttachAfterDllAttachReceived{ false };
 
   public:
 
     // config will be send as ref, but will be created in the Constructor and discarded afterwards, so create a lokal copy if needed
     ModLoader();
+
+    // When the first thread attach message arives, at least some data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
+    // I will use the first as an event handler for now
+    // BUT: I don't know what causes this, the optimium would be stronghold, this would be reliable
+    // This should likely by replaced by something more controlled, like an event handler
+    void dllThreadAttachEvent();
 
     ~ModLoader();
 

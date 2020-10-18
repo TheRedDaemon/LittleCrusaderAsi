@@ -22,6 +22,8 @@ namespace modclasses
     BUILDRANGE_CRUSADE_CASTLE_300,  // signed int32 : build range on a 300x300 map (at least during crusader match)
     BUILDRANGE_CRUSADE_CASTLE_400,  // signed int32 : build range on a 400x400 map (at least during crusader match)
 
+    AIC_IN_MEMORY, // signed int32? : after the start of stronghold, the aics are places in memory as an array, orderd by lord
+
   };
 }
 

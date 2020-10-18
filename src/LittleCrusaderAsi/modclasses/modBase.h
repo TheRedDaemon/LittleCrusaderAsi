@@ -56,10 +56,20 @@ namespace modclasses
     // requested mods -> dependencies are created before will be available to be used by this mod
     virtual std::vector<ModType> getDependencies() const = 0;
 
+    // IMPORTANT: initialize happen after the main game code is loaded, but before anything is executed!
+    // if the intention is to access memory that is just beeing written, one must get the load info... (really need an event handler)
     // actual getting addresses, preparing everything
     // if dependencies or init fails, leave "initialized" to false and return false
     // if successful set "initialized" to true and return true
+    // TODO -> it is currently possible to fail but return true. should be changed!!!
     virtual bool initialize() = 0;
+
+    // After the attach of the mod asi, thread attach messages arive.
+    // At least some process data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
+    // This is pretty unsafe, until is found out, what causes this
+    // There is no initialization control!
+    // NOTE: threads that seem to be started afterwards are for example dsound.dll(?), the loading of threads after 
+    virtual void firstThreadAttachAfterModAttachEvent(){}
 
     // additional function explizit called before letting the destructors run
     // default does nothing, since I see no real use, put I leave it here
