@@ -112,6 +112,17 @@ namespace modclasses
 
       return std::shared_ptr<T>{};
     }
+
+    // misusing the Json transform to get enums from strings
+    // if there is a better way, I don't know...
+    // NOTE: for this to work, String transformations need to be created with NLOHMANN_JSON_SERIALIZE_ENUM()
+    // for every enum intended to use, also, the enums apparently must be accessible form the scope of the caller(?)
+    template<typename T>
+    const T getEnumFromString(const std::string enumString) const
+    {
+      Json key = enumString;
+      return key.get<T>();
+    }
   };
 }
 

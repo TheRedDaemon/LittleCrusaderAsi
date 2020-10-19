@@ -2,9 +2,9 @@
 #define KEYBOARDENUMSANDUTIL
 
 #include <unordered_set>
-#include <Windows.h>
+#include <Windows.h>  // you create a lot of noice... TODO: if ever time, try to remove
 
-# include "modtypes.h"
+#include "modtypes.h"
 
 // json
 #include "../../dependencies/jsonParser/json.hpp"

@@ -42,10 +42,7 @@ namespace modclasses
 
       for (auto& keyKombination : confIt.value().items())
       {
-        // don't know if easier way to parse from string back to enum
-        Json key;
-        key["key"] = keyKombination.key();
-        VK toModify{ key["key"].get<VK>() };
+        VK toModify{getEnumFromString<VK>(keyKombination.key())};
 
         if (isChangeableKey(toModify))
         {

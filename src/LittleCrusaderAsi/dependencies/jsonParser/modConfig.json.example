@@ -21,5 +21,24 @@
 	"keyShortcut":[
             ["leftshift", "oemplus"]
         ]
+    },
+    "aicLoad":{
+        "aicFolder": "aics",
+        "loadList":[
+            "vanilla.json",
+            "someTest.json"
+        ],
+        "startState": true,
+        "keyConfig":{
+            "activate":[
+                ["leftshift", "oemcomma"]
+            ],
+            "reloadMain":[
+                ["oemperiod"]
+            ],
+            "reloadAll":[
+                ["leftshift", "oemperiod"]
+            ]
+        }
     }
 }

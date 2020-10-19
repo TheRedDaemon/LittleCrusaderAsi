@@ -84,9 +84,14 @@ namespace modclasses
         if (!keyboardShortcut.empty())
         {
           // source: https://stackoverflow.com/questions/7582546/using-generic-stdfunction-objects-with-member-functions-in-one-class
-          // one posts said, lambda is prefered, but I don't want to think about how to define currently
+          
+          // method using std::bind:
+          //std::function<void(const HWND, const bool, const bool)> func =
+          //  std::bind(&BuildRangeChanger::switchRangeChange, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+          
+          // method using lambda:
           std::function<void(const HWND, const bool, const bool)> func =
-            std::bind(&BuildRangeChanger::switchRangeChange, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+            [this](const HWND hw, const bool keyUp, const bool repeat) {this->switchRangeChange(hw, keyUp, repeat);};
 
           auto registerResult = keyInterceptor->registerFunction(func, keyboardShortcut);
           bool allRegistered{ true };
