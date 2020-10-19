@@ -13,7 +13,10 @@ namespace modcore
     try
     {
       std::ifstream configStream("modConfig.json"); // reading config from file
-      if (!configStream.good()) throw std::exception("Unable to load config file. Does it exist?");
+      if (!configStream.good())
+      {
+        throw std::exception("Unable to load config file. Does it exist?");
+      }
 
       Json modConfig = Json::parse(configStream);
 

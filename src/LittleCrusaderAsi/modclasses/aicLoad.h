@@ -2,7 +2,6 @@
 #define AICLOAD
 
 #include <memory>
-#include <limits>
 
 #include "IntSafe.h" // for DWORD
 #include "modBase.h"

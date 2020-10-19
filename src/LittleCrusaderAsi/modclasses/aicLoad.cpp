@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <limits>
 
 #include "aicLoad.h"
 
@@ -135,7 +136,6 @@ namespace modclasses
           << "Indicator: first int is not a 12." ;
       }
 
-
       // if it works, load data here
       // in theory, it should not cause direct harm -> if this fires to early, stronghold will place its own values over them
 
@@ -153,8 +153,8 @@ namespace modclasses
 
   const int32_t AICLoad::getAICFieldIndex(const AICharacterName aiName, const AIC field) const
   {
-    // 169 for every ai
-    return static_cast<int32_t>(aiName) * 169 + static_cast<int32_t>(field);
+    // 169 for every ai, minus 169 to get in range (aiName min 1, max 16; field min 0, max 168)
+    return static_cast<int32_t>(aiName) * 169 + static_cast<int32_t>(field) - 169;
   }
 
   // small helper
@@ -391,7 +391,7 @@ namespace modclasses
         std::string boolString{ value.get<std::string>() };
         try
         {
-          // may produce errors
+          // may produce errors (conversion problems, see warning) TODO: find safer way?
           std::transform(boolString.begin(), boolString.end(), boolString.begin(), std::tolower);
           if (boolString == "true")
           {
