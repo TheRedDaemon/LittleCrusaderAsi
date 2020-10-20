@@ -46,9 +46,9 @@ namespace modclasses
     // the first is the main, the values of all following will only be used if main has no value for them, and so on
     std::vector<std::string> loadList{};
 
-    // current idea: store values in unordered map<int_id, unordered map<string, value>>
-    // so, everything is stored and can be reconstructed
-    std::unordered_map<int32_t, std::unordered_map<std::string, int32_t>> loadedAICValues;
+    // store values in unordered map<string, std::unique_ptr<unordered map<int_id, value>>>
+    std::unordered_map<std::string, std::unique_ptr<std::unordered_map<int32_t, int32_t>>> loadedAICValues;
+    // TODO(?): maybe it would be a idea to store the summed values of everything but the main aic?
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -64,7 +64,7 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    bool initialize() override;
+    void initialize() override;
 
     // if this works, will be used to get the loaded aic data
     // this is not reliable und should be replaced by some event system
@@ -76,6 +76,15 @@ namespace modclasses
 
     /**additional functions for others**/
 
+    void activateAICs(const HWND window, const bool keyUp, const bool repeat);
+
+    void reloadMainAIC(const HWND window, const bool keyUp, const bool repeat);
+
+    void reloadAllAIC(const HWND window, const bool keyUp, const bool repeat);
+
+    // returns empty pointer in unrecoverable error case
+    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name) const;
+
     /**misc**/
 
     // prevent copy and assign (not sure how necessary)
@@ -84,12 +93,15 @@ namespace modclasses
 
   private:
 
-    void loadAICFile(const std::string name);
+    // returns empty pointer in unrecoverable error case
+    // if size_t == 0, value ignored
+    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const size_t mapInitSize) const;
+    void applyAICs();
 
     // returns if the value is valid, at the same time it fills an int32_t with the right value
     // this is necessary for some fields that use enum values
     // the int32_t will be unchanged, if the value is not valid
-    const bool isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue);
+    const bool isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue) const;
     const int32_t getAICFieldIndex(const AICharacterName aiName, const AIC field) const;
   };
 }

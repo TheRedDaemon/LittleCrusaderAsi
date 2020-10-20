@@ -43,7 +43,7 @@ namespace modcore
     int initializedMods{ 0 };
     for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
     {
-      if (modKeeper->loadedMods.at(i)->mod->initialize())
+      if (modKeeper->loadedMods.at(i)->mod->callInitialize())
       {
         ++initializedMods;
       }

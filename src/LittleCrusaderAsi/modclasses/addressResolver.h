@@ -32,7 +32,7 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    bool initialize() override;
+    void initialize() override;
 
     /**con- and destructor**/
 

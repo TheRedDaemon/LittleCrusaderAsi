@@ -49,7 +49,7 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    bool initialize() override;
+    void initialize() override;
 
     /**con- and destructor**/
     BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);

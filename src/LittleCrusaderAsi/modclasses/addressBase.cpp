@@ -4,7 +4,7 @@
 
 namespace modclasses
 {
-  bool AddressBase::initialize()
+  void AddressBase::initialize()
   {
     // code of the tutorial here
     // source: https://relearex.wordpress.com/2017/12/26/hooking-series-part-i-import-address-table-hooking/
@@ -22,7 +22,5 @@ namespace modclasses
     {
       LOG(WARNING) << "AddressBase was not initialized.";
     }
-
-    return initialized;
   }
 }

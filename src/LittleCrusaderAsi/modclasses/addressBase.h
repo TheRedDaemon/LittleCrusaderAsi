@@ -23,7 +23,7 @@ namespace modclasses
       return {};
     }
 
-    bool initialize() override;
+    void initialize() override;
 
     /**con- and destructor**/
     AddressBase() { } // default cons, does nothing though

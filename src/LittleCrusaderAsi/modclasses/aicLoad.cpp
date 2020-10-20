@@ -79,49 +79,78 @@ namespace modclasses
     }
   };
 
+
   // will need address and keyboard stuff
   std::vector<ModType> AICLoad::getDependencies() const
   {
     return { ModType::ADDRESS_RESOLVER, ModType::KEYBOARD_INTERCEPTOR };
   }
 
-  bool AICLoad::initialize()
+
+  void AICLoad::initialize()
   {
     auto addressResolver = getMod<AddressResolver>();
     auto keyInterceptor = getMod<KeyboardInterceptor>();
 
-    if (addressResolver && keyInterceptor)
+    // check mods and request addresses
+    if (!(addressResolver && keyInterceptor && addressResolver->requestAddresses(usedAddresses, *this)))
     {
-      // request addresses
-      if (addressResolver->requestAddresses(usedAddresses, *this))
+      LOG(WARNING) << "AICLoad was not initialized.";
+      return;
+    }
+
+    // get pointer
+    aicMemoryPtr = addressResolver->getAddressPointer<int32_t[2704]>(Address::AIC_IN_MEMORY, *this);
+
+    // load aic data
+    for (auto& aicName : loadList)
+    {
+      auto mapPointer{ loadAICFile(aicName) };
+
+      // if result, then not null
+      if (mapPointer)
       {
-        // reserve map space (using number of aic values
-        loadedAICValues.reserve(2704);
-
-        // get pointer
-        aicMemoryPtr = addressResolver->getAddressPointer<int32_t[2704]>(Address::AIC_IN_MEMORY, *this);
-
-        // load aic data
-        for (auto& aicName : loadList)
-        {
-          loadAICFile(aicName);
-        }
-
-        initialized = true;
+        loadedAICValues[aicName].swap(mapPointer);
       }
     }
 
-    if (!initialized)
+    if (!keysActivate.empty())
     {
-      LOG(WARNING) << "AICLoad was not initialized.";
-    }
-    else
-    {
-      LOG(INFO) << "AICLoad initialized.";
+      std::function<void(const HWND, const bool, const bool)> func =
+        [this](const HWND hw, const bool keyUp, const bool repeat){this->activateAICs(hw, keyUp, repeat);};
+
+      if (!keyInterceptor->simpleRegisterFunction(func, keysActivate))
+      {
+        LOG(WARNING) << "AICLoad: Activate: At least one key combination was not registered.";
+      }
     }
 
-    return initialized;
+    if (!keysReloadMain.empty())
+    {
+      std::function<void(const HWND, const bool, const bool)> func =
+        [this](const HWND hw, const bool keyUp, const bool repeat){this->reloadMainAIC(hw, keyUp, repeat);};
+
+      if (!keyInterceptor->simpleRegisterFunction(func, keysReloadMain))
+      {
+        LOG(WARNING) << "AICLoad: ReloadMainAIC: At least one key combination was not registered.";
+      }
+    }
+
+    if (!keysReloadAll.empty())
+    {
+      std::function<void(const HWND, const bool, const bool)> func =
+        [this](const HWND hw, const bool keyUp, const bool repeat){this->reloadAllAIC(hw, keyUp, repeat);};
+
+      if (!keyInterceptor->simpleRegisterFunction(func, keysReloadAll))
+      {
+        LOG(WARNING) << "AICLoad: KeysReloadAll: At least one key combination was not registered.";
+      }
+    }
+
+    initialized = true;
+    LOG(INFO) << "AICLoad initialized.";
   }
+
 
   void AICLoad::firstThreadAttachAfterModAttachEvent()
   {
@@ -136,20 +165,133 @@ namespace modclasses
           << "Indicator: first int is not a 12." ;
       }
 
-      // if it works, load data here
-      // in theory, it should not cause direct harm -> if this fires to early, stronghold will place its own values over them
+      // if aics are requested at start, load them in
+      if (isChanged)
+      {
+        applyAICs();
+      }
+
+      // keyboard calls should not be a problem, they overwrite each other at worst -> could however corrupt the vanilla save
+      // TODO: decide if register them here is better...
 
       LOG(INFO) << "AICLoad run through 'first thread attached'-event.";
     }
   }
 
+
   std::vector<AddressRequest> AICLoad::usedAddresses{
     {Address::AIC_IN_MEMORY, {{Version::NONE, 10816}}, true, AddressRisk::WARNING}
   };
 
+
   // keyboard functions
 
+
+  void AICLoad::activateAICs(const HWND, const bool keyUp, const bool repeat)
+  {
+    if (keyUp || repeat){ 
+      return;
+    }
+
+    if (isChanged)
+    {
+      // back to vanilla
+      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr));
+    }
+    else
+    {
+      // load in aics
+      applyAICs();
+    }
+
+    isChanged = !isChanged;
+
+    LOG(INFO) << "Changed load status of file AICs to: " << isChanged;
+  }
+
+
+  void AICLoad::reloadMainAIC(const HWND, const bool keyUp, const bool repeat)
+  {
+    // ignores silently if no aics set (good idea? not sure)
+    if (keyUp || repeat || loadList.size() == 0)
+    {
+      return;
+    }
+
+    // loadList is currently unchangeable, so doing this should be ok for now
+    std::string &mainName = loadList[0];
+    size_t mainSize{ loadedAICValues.find(mainName) != loadedAICValues.end() ? loadedAICValues[mainName]->size() : 0 }; // in case it does not exist
+
+    auto changedMain{ loadAICFile(mainName, mainSize) };
+    if (!changedMain)
+    {
+      LOG(WARNING) << "Error while reloading main. Loaded AIC data unchanged.";
+      return;
+    }
+
+    // swaps maps -> old should be deleted after this function
+    loadedAICValues[mainName].swap(changedMain);
+
+    if (isChanged)
+    {
+      // bit expensive here...
+      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr)); // reset to vanilla
+      applyAICs();
+    }
+
+    LOG(INFO) << "Reloaded main AIC '" << mainName << "'.";
+  }
+
+
+  void AICLoad::reloadAllAIC(const HWND, const bool keyUp, const bool repeat)
+  {
+    // ignores silently if no aics set (good idea? not sure)
+    if (keyUp || repeat || loadList.size() == 0)
+    {
+      return;
+    }
+
+    // same load function as in the initialization
+    for (auto& aicName : loadList)
+    {
+      auto mapPointer{ loadAICFile(aicName) };
+
+      // if result, then not null
+      if (mapPointer)
+      {
+        loadedAICValues[aicName].swap(mapPointer);
+      }
+    }
+
+    if (isChanged)
+    {
+      // bit expensive here...
+      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr)); // reset to vanilla
+      applyAICs();
+    }
+
+    LOG(INFO) << "Reloaded all AICs.";
+  }
+
+
   // private functions
+
+
+  void AICLoad::applyAICs()
+  {
+    for (auto it = loadList.rbegin(); it != loadList.rend(); ++it)
+    {
+      // silently ignore missing AIC files -> warnings should already be in log file
+      if (loadedAICValues.find(*it) != loadedAICValues.end())
+      {
+        for (auto& valuePair : *(loadedAICValues[*it]))
+        {
+          (*aicMemoryPtr)[valuePair.first] = valuePair.second;
+        }
+      }
+    }
+  }
+
 
   const int32_t AICLoad::getAICFieldIndex(const AICharacterName aiName, const AIC field) const
   {
@@ -157,13 +299,16 @@ namespace modclasses
     return static_cast<int32_t>(aiName) * 169 + static_cast<int32_t>(field) - 169;
   }
 
-  // small helper
+
+  // small helper (maybe I should not use this file contained functions too much...)
+
 
   const std::string getAICString(const AIPersonalityFieldsEnum field)
   {
     Json jField = field;
     return jField.get<std::string>();
   }
+
 
   // enums require NONE at least
   template<typename T>
@@ -186,6 +331,7 @@ namespace modclasses
     return true;
   }
 
+
   // does not even need template
   const bool validIntRangeHelper(const AIPersonalityFieldsEnum field, const Json &value, int32_t &validValue, const int32_t lowerEndIncl,
                                  const int32_t upperEndIncl, const std::string& warningEndRange)
@@ -207,10 +353,11 @@ namespace modclasses
     return true;
   }
 
+
   // will use switch statement to decide, since many have the same range
   // could be a bit smaller...
   // smoe are marked with cheating, which mean I changed the checks so the vanilla values pass... why is this so?
-  const bool AICLoad::isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue)
+  const bool AICLoad::isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue) const
   {
     static const int32_t int32Max{ (std::numeric_limits<int32_t>::max)() };
 
@@ -391,8 +538,8 @@ namespace modclasses
         std::string boolString{ value.get<std::string>() };
         try
         {
-          // may produce errors (conversion problems, see warning) TODO: find safer way?
-          std::transform(boolString.begin(), boolString.end(), boolString.begin(), std::tolower);
+          // may produce errors (stringcode, etc.), however, the error will hopefully be catched
+          std::transform(boolString.begin(), boolString.end(), boolString.begin(), [](char c){return static_cast<char>(std::tolower(c));});
           if (boolString == "true")
           {
             boolValue = true;
@@ -448,8 +595,22 @@ namespace modclasses
     }
   }
 
-  void AICLoad::loadAICFile(const std::string name)
+
+  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name) const
   {
+    return loadAICFile(name, 0);
+  }
+
+
+  // returns empty pointer in unrecoverable error case
+  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name, const size_t mapInitSize) const
+  {
+    auto aicMap{ std::make_unique<std::unordered_map<int32_t, int32_t>>() };
+    if (mapInitSize > 0)
+    {
+      aicMap->reserve(mapInitSize);
+    }
+
     bool runningOk{ true };
     std::string filePath = aicFolder.empty() ? name : aicFolder + "/" + name;
 
@@ -460,7 +621,7 @@ namespace modclasses
       if (!aicStream.good())
       {
         LOG(WARNING) << "AICLoad: Unable to load file '" << name << "'. Is the name or the aic folder wrong?";
-        return;
+        return std::unique_ptr<std::unordered_map<int32_t, int32_t>>();
       }
 
       Json aicJson = Json::parse(aicStream);
@@ -469,7 +630,7 @@ namespace modclasses
       if (fileIt == aicJson.end())
       {
         LOG(WARNING) << "AICLoad: Did not found the field 'AICharacters'. Unable to load aic '" << name << "'.";
-        return;
+        return std::unique_ptr<std::unordered_map<int32_t, int32_t>>();
       }
 
       Json &aicArray = fileIt.value();
@@ -516,7 +677,7 @@ namespace modclasses
             continue;
           }
 
-          loadedAICValues[getAICFieldIndex(aiName, aicField)][name] = value;
+          (*aicMap)[getAICFieldIndex(aiName, aicField)] = value;
         }
       }
       LOG(INFO) << "Loaded AIC '" << name << "'.";
@@ -532,15 +693,13 @@ namespace modclasses
       runningOk = false;
     }
 
-    // clearing the structure of potential garbage
+    // extra if big problem occured
     if (!runningOk)
     {
-      LOG(WARNING) << "Encountered unsolveable problems during load of AIC 'name'. Possible set values are removed.";
-
-      for (auto& indexValueMapPair: loadedAICValues)
-      {
-        indexValueMapPair.second.erase(name);
-      }
+      LOG(WARNING) << "Encountered unsolveable problems during load of AIC '" << name << "'. File is ignored.";
+      aicMap.reset();
     }
+
+    return aicMap;
   }
 }

@@ -31,11 +31,10 @@ namespace modclasses
       return { ModType::ADDRESS_RESOLVER };
     }
 
-    bool initialize() override
+    void initialize() override
     {
       getMod<AddressResolver>();
       initialized = resolver.lock()->requestAddresses(usedAddresses, *this);
-      return initialized;
     };
 
     /**con- and destructor**/
@@ -69,10 +68,7 @@ namespace modclasses
       return { ModType::TEST1 };
     }
 
-    bool initialize() override
-    {
-      return initialized;
-    };
+    void initialize() override {};
 
     /**con- and destructor**/
     Test2()

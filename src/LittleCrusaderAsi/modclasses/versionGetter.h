@@ -40,7 +40,7 @@ namespace modclasses
       return { ModType::ADDRESS_BASE };
     }
 
-    bool initialize() override;
+    void initialize() override;
 
     /**con- and destructor**/
     VersionGetter(const std::weak_ptr<modcore::ModKeeper> modKeeper) : ModBase{ modKeeper }{}

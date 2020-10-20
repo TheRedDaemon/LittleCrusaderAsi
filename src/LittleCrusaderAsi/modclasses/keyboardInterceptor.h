@@ -66,7 +66,7 @@ namespace modclasses
       return {};
     }
 
-    bool initialize() override;
+    void initialize() override;
 
     /**con- and destructor**/
     KeyboardInterceptor(const Json &config);  // needs to load keyboard reconfig -> also reject requests in order if multi?
@@ -84,9 +84,17 @@ namespace modclasses
     const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
                                              const std::vector<std::array<VK, 3>> &keyCombinations);
 
-    // same as other registred function, but takes value array of key combinations as json
+    // same as other registerFunction, but takes value array of key combinations as json
     const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
                                              const Json &keyCombinations);
+
+    // calls other registerFunction, but only returns true if everything worked or false, if at least one failed
+    const bool simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                      const std::vector<std::array<VK, 3>> &keyCombinations);
+
+    // same as other simpleRegisterFunction, but takes value array of key combinations as json
+    const bool simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                      const Json &keyCombinations);
 
     // needs function to add keyboard strokes to use
 

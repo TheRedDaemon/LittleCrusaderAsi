@@ -22,7 +22,7 @@ namespace modclasses
     return stringEqual && expVersionNumber == *versionNumber;
   }
 
-  bool VersionGetter::initialize()
+  void VersionGetter::initialize()
   {
     auto addressBaseMod = getMod<AddressBase>();
     
@@ -58,8 +58,6 @@ namespace modclasses
       initialized = true;
       LOG(INFO) << "VersionGetter initialized.";
     }
-
-    return initialized;
   }
   
   // NONE will be extreme 41

@@ -92,7 +92,7 @@ namespace modclasses
   }
 
 
-  bool KeyboardInterceptor::initialize()
+  void KeyboardInterceptor::initialize()
   {
     if (!handlerPointer)
     {
@@ -119,8 +119,6 @@ namespace modclasses
     {
       LOG(WARNING) << "KeyboardInterceptor was not initialized.";
     }
-
-    return initialized;
   }
 
 
@@ -212,6 +210,28 @@ namespace modclasses
   {
     std::vector<std::array<VK, 3>> keyCombArray{ resolveKeyConfig(keyCombinations) };
     return registerFunction(funcToExecute, keyCombArray);
+  }
+
+
+  const bool KeyboardInterceptor::simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                                                   const std::vector<std::array<VK, 3>> &keyCombinations)
+  {
+    std::vector<bool> registerResult{ registerFunction(funcToExecute, keyCombinations) };
+
+    bool allRegistered{ true };
+    for (bool ok : registerResult)
+    {
+      allRegistered = allRegistered && ok;
+    }
+    return allRegistered;
+  }
+
+
+  const bool KeyboardInterceptor::simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                                                   const Json &keyCombinations)
+  {
+    std::vector<std::array<VK, 3>> keyCombArray{ resolveKeyConfig(keyCombinations) };
+    return simpleRegisterFunction(funcToExecute, keyCombArray);
   }
 
 

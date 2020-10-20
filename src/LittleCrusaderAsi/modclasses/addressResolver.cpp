@@ -23,7 +23,7 @@ namespace modclasses
     return { ModType::ADDRESS_BASE, ModType::VERSION_GET };
   }
 
-  bool AddressResolver::initialize()
+  void AddressResolver::initialize()
   {
     auto addressBaseMod = getMod<AddressBase>();
     auto versionGetterMod = getMod<VersionGetter>();
@@ -48,8 +48,6 @@ namespace modclasses
     {
       LOG(WARNING) << "AddressResolver was not initialized.";
     }
-
-    return initialized;
   }
 
   /**********************************************************************************/

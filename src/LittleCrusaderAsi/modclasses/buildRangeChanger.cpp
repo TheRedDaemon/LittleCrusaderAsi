@@ -36,12 +36,14 @@ namespace modclasses
     }
   }
 
+
   std::vector<ModType> BuildRangeChanger::getDependencies() const
   {
     return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER };
   }
 
-  bool BuildRangeChanger::initialize()
+
+  void BuildRangeChanger::initialize()
   {
     auto addressResolver = getMod<AddressResolver>();
     auto keyInterceptor = getMod<KeyboardInterceptor>();
@@ -93,14 +95,7 @@ namespace modclasses
           std::function<void(const HWND, const bool, const bool)> func =
             [this](const HWND hw, const bool keyUp, const bool repeat) {this->switchRangeChange(hw, keyUp, repeat);};
 
-          auto registerResult = keyInterceptor->registerFunction(func, keyboardShortcut);
-          bool allRegistered{ true };
-          for (bool ok : registerResult)
-          {
-            allRegistered = allRegistered && ok;
-          }
-
-          if (!allRegistered)
+          if (!keyInterceptor->simpleRegisterFunction(func, keyboardShortcut))
           {
             LOG(WARNING) << "BuildRangeChanger: At least one key combination was not registered.";
           }
@@ -125,9 +120,8 @@ namespace modclasses
     {
       LOG(INFO) << "BuildRangeChanger initialized.";
     }
-
-    return initialized;
   }
+
 
   void BuildRangeChanger::switchRangeChange(const HWND, const bool keyUp, const bool repeat)
   {
@@ -153,6 +147,7 @@ namespace modclasses
       }
     }
   }
+
 
   std::vector<AddressRequest> BuildRangeChanger::usedAddresses{
     {Address::BUILDRANGE_CRUSADE_CASTLE_160, {{Version::NONE, 4}}, true, AddressRisk::WARNING},
