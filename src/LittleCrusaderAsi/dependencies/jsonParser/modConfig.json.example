@@ -23,10 +23,11 @@
         ]
     },
     "aicLoad":{
+	"modFolderRelToStronghold": "plugins",
         "aicFolder": "aics",
         "loadList":[
-            "vanilla.json",
-            "someTest.json"
+            "ratWolf.json",
+            "vanilla.json"
         ],
         "startState": true,
         "keyConfig":{
@@ -34,7 +35,7 @@
                 ["leftshift", "oemcomma"]
             ],
             "reloadMain":[
-                ["oemperiod"]
+                ["leftctrl", "oemperiod"]
             ],
             "reloadAll":[
                 ["leftshift", "oemperiod"]

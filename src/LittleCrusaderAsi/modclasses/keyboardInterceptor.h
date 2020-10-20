@@ -66,8 +66,6 @@ namespace modclasses
       return {};
     }
 
-    void initialize() override;
-
     /**con- and destructor**/
     KeyboardInterceptor(const Json &config);  // needs to load keyboard reconfig -> also reject requests in order if multi?
 
@@ -105,6 +103,8 @@ namespace modclasses
     virtual KeyboardInterceptor& operator=(const KeyboardInterceptor &base) final = delete;
 
   private:
+
+    void initialize() override;
 
     // receives the json object of one key config and turns it into an vector with the key combinations
     // doesn't check if valid positions, however, if structure not valid, returns an array of VK::NONE

@@ -85,7 +85,7 @@ namespace modclasses
     ModBase(const ModBase &base) = delete;
     virtual ModBase& operator=(const ModBase &base) final = delete;
 
-  protected:
+  private:
 
     // IMPORTANT: initialize happen after the main game code is loaded, but before anything is executed!
     // if the intention is to access memory that is just beeing written, one must get the load info... (really need an event handler)
@@ -94,6 +94,8 @@ namespace modclasses
     // if successful set "initialized" to true and return true
     // TODO -> it is currently possible to fail but return true. should be changed!!!
     virtual void initialize() = 0;
+
+  protected:
 
     // some utility functions
 

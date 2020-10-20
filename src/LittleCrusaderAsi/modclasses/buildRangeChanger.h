@@ -49,8 +49,6 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    void initialize() override;
-
     /**con- and destructor**/
     BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
 
@@ -63,6 +61,10 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     BuildRangeChanger(const BuildRangeChanger &base) = delete;
     virtual BuildRangeChanger& operator=(const BuildRangeChanger &base) final = delete;
+
+  private:
+
+    void initialize() override;
   };
 }
 

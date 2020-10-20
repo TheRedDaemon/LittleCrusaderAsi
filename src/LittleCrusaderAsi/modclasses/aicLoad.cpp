@@ -11,33 +11,44 @@ namespace modclasses
     // TODO?: it might be an idea to create a more general function for simple json value reads, but this depends on how samey they are...
 
     auto confIt = config.find("startState");
-    if (confIt != config.end())
+    if (confIt != config.end() && confIt.value().is_boolean())
     {
       isChanged = confIt.value().get<bool>();
     }
     else
     {
-      LOG(WARNING) << "AICLoad: No 'startState' found. Defaults to 'false'. Will not load AIC in game until requested.";
+      LOG(WARNING) << "AICLoad: No valid 'startState' found. Needs to be boolean. Defaults to 'false'. Will not load AIC in game until requested.";
     }
 
+    confIt = config.find("modFolderRelToStronghold");
+    if (confIt != config.end() && confIt.value().is_string())
+    {
+      relModPath = confIt.value().get<std::string>();
+    }
+    else
+    {
+      LOG(WARNING) << "AICLoad: No valid 'modFolderRelToStronghold' found. Needs to be string. Mod assumes AIC folder in mod root.";
+    }
+
+
     confIt = config.find("aicFolder");
-    if (confIt != config.end())
+    if (confIt != config.end() && confIt.value().is_string())
     {
       aicFolder = confIt.value().get<std::string>();
     }
     else
     {
-      LOG(WARNING) << "AICLoad: No 'aicFolder' found. Mod will look for the AICs in the mod root folder.";
+      LOG(WARNING) << "AICLoad: No valid 'aicFolder' found. Needs to be string. Mod will look for the AICs in the mod root folder.";
     }
 
     confIt = config.find("loadList");
-    if (confIt != config.end())
+    if (!(confIt == config.end() || !confIt.value().is_array() || confIt.value().empty() || !confIt.value()[0].is_string()))
     {
       loadList = confIt.value().get<std::vector<std::string>>();
     }
     else
     {
-      LOG(WARNING) << "AICLoad: No 'loadList' found. No AICs will be loaded.";
+      LOG(WARNING) << "AICLoad: No valid 'loadList' found. Needs to be array of string. No AICs will be loaded.";
     }
 
     confIt = config.find("keyConfig");
@@ -105,7 +116,7 @@ namespace modclasses
     // load aic data
     for (auto& aicName : loadList)
     {
-      auto mapPointer{ loadAICFile(aicName) };
+      auto mapPointer{ loadAICFile(aicName, true) };
 
       // if result, then not null
       if (mapPointer)
@@ -222,7 +233,7 @@ namespace modclasses
     std::string &mainName = loadList[0];
     size_t mainSize{ loadedAICValues.find(mainName) != loadedAICValues.end() ? loadedAICValues[mainName]->size() : 0 }; // in case it does not exist
 
-    auto changedMain{ loadAICFile(mainName, mainSize) };
+    auto changedMain{ loadAICFile(mainName, false, mainSize) };
     if (!changedMain)
     {
       LOG(WARNING) << "Error while reloading main. Loaded AIC data unchanged.";
@@ -254,7 +265,7 @@ namespace modclasses
     // same load function as in the initialization
     for (auto& aicName : loadList)
     {
-      auto mapPointer{ loadAICFile(aicName) };
+      auto mapPointer{ loadAICFile(aicName, false) };
 
       // if result, then not null
       if (mapPointer)
@@ -596,14 +607,14 @@ namespace modclasses
   }
 
 
-  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name) const
+  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name, const bool fileRelativeToMod) const
   {
-    return loadAICFile(name, 0);
+    return loadAICFile(name, fileRelativeToMod, 0);
   }
 
 
   // returns empty pointer in unrecoverable error case
-  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name, const size_t mapInitSize) const
+  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name, const bool fileRelativeToMod, const size_t mapInitSize) const
   {
     auto aicMap{ std::make_unique<std::unordered_map<int32_t, int32_t>>() };
     if (mapInitSize > 0)
@@ -612,7 +623,14 @@ namespace modclasses
     }
 
     bool runningOk{ true };
-    std::string filePath = aicFolder.empty() ? name : aicFolder + "/" + name;
+
+    // NOTE: key functions etc. happen from the folder of stronghold, not the plugin
+    std::string filePath;
+    if (!fileRelativeToMod && !relModPath.empty())
+    {
+      filePath += relModPath + "/";
+    }
+    filePath += aicFolder.empty() ? name : aicFolder + "/" + name;
 
     try
     {

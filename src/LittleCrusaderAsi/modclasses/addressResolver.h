@@ -32,8 +32,6 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    void initialize() override;
-
     /**con- and destructor**/
 
     // will get a config how to treat address overlaps
@@ -92,6 +90,8 @@ namespace modclasses
     virtual AddressResolver& operator=(const AddressResolver &base) final = delete;
 
   private:
+
+    void initialize() override;
 
     const DWORD getAddress(const Address memAddr);
 

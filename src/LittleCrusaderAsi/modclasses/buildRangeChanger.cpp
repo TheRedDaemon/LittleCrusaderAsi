@@ -6,7 +6,7 @@ namespace modclasses
   BuildRangeChanger::BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
   {
     auto confIt = config.find("startState");
-    if (confIt != config.end())
+    if (confIt != config.end() && confIt.value().is_boolean())
     {
       isChanged = confIt.value().get<bool>();
     }

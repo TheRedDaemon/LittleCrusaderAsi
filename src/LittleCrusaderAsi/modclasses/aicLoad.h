@@ -39,6 +39,8 @@ namespace modclasses
     Json keysReloadMain;
     Json keysReloadAll;
 
+    // folder of the mod relativ to stronghold
+    std::string relModPath;
     // name of the folder
     std::string aicFolder;
 
@@ -64,8 +66,6 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    void initialize() override;
-
     // if this works, will be used to get the loaded aic data
     // this is not reliable und should be replaced by some event system
     void firstThreadAttachAfterModAttachEvent() override;
@@ -83,7 +83,7 @@ namespace modclasses
     void reloadAllAIC(const HWND window, const bool keyUp, const bool repeat);
 
     // returns empty pointer in unrecoverable error case
-    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name) const;
+    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const bool fileRelativeToMod) const;
 
     /**misc**/
 
@@ -93,9 +93,11 @@ namespace modclasses
 
   private:
 
+    void initialize() override;
+
     // returns empty pointer in unrecoverable error case
     // if size_t == 0, value ignored
-    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const size_t mapInitSize) const;
+    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const bool fileRelativeToMod, const size_t mapInitSize) const;
     void applyAICs();
 
     // returns if the value is valid, at the same time it fills an int32_t with the right value

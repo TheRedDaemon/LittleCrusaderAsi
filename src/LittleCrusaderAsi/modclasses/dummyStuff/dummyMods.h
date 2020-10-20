@@ -31,12 +31,6 @@ namespace modclasses
       return { ModType::ADDRESS_RESOLVER };
     }
 
-    void initialize() override
-    {
-      getMod<AddressResolver>();
-      initialized = resolver.lock()->requestAddresses(usedAddresses, *this);
-    };
-
     /**con- and destructor**/
     Test1()
     {
@@ -48,6 +42,14 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     Test1(const Test1 &base) = delete;
     virtual Test1& operator=(const Test1 &base) final = delete;
+
+  private:
+
+    void initialize() override
+    {
+      getMod<AddressResolver>();
+      initialized = resolver.lock()->requestAddresses(usedAddresses, *this);
+    };
   };
 
   class Test2 : public ModBase
@@ -68,8 +70,6 @@ namespace modclasses
       return { ModType::TEST1 };
     }
 
-    void initialize() override {};
-
     /**con- and destructor**/
     Test2()
     {
@@ -81,6 +81,10 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     Test2(const Test2 &base) = delete;
     virtual Test2& operator=(const Test2 &base) final = delete;
+
+  private:
+
+    void initialize() override{};
   };
 }
 

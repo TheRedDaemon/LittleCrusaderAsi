@@ -40,8 +40,6 @@ namespace modclasses
       return { ModType::ADDRESS_BASE };
     }
 
-    void initialize() override;
-
     /**con- and destructor**/
     VersionGetter(const std::weak_ptr<modcore::ModKeeper> modKeeper) : ModBase{ modKeeper }{}
 
@@ -68,6 +66,10 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     VersionGetter(const VersionGetter &base) = delete;
     virtual VersionGetter& operator=(const VersionGetter &base) final = delete;
+
+  private:
+
+    void initialize() override;
   };
 }
 

@@ -23,8 +23,6 @@ namespace modclasses
       return {};
     }
 
-    void initialize() override;
-
     /**con- and destructor**/
     AddressBase() { } // default cons, does nothing though
 
@@ -46,6 +44,10 @@ namespace modclasses
     // prevent copy and assign (not sure how necessary)
     AddressBase(const AddressBase &base) = delete;
     virtual AddressBase& operator=(const AddressBase &base) final = delete;
+
+  private:
+
+    void initialize() override;
   };
 }
 
