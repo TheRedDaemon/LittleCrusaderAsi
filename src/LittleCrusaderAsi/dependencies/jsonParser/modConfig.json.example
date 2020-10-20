@@ -27,6 +27,7 @@
         "aicFolder": "aics",
         "loadList":[
             "ratWolf.json",
+            "wolfRat.json",
             "vanilla.json"
         ],
         "startState": true,

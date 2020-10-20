@@ -27,7 +27,7 @@ namespace modclasses
     }
     else
     {
-      LOG(WARNING) << "AICLoad: No valid 'modFolderRelToStronghold' found. Needs to be string. Mod assumes AIC folder in mod root.";
+      LOG(WARNING) << "AICLoad: No valid 'modFolderRelToStronghold' found. Needs to be string. Mod assumes to be in the game root.";
     }
 
 
@@ -183,16 +183,45 @@ namespace modclasses
       }
 
       // keyboard calls should not be a problem, they overwrite each other at worst -> could however corrupt the vanilla save
-      // TODO: decide if register them here is better...
 
       LOG(INFO) << "AICLoad run through 'first thread attached'-event.";
     }
   }
 
 
-  std::vector<AddressRequest> AICLoad::usedAddresses{
-    {Address::AIC_IN_MEMORY, {{Version::NONE, 10816}}, true, AddressRisk::WARNING}
-  };
+  // functions for others to use
+
+  
+  const bool AICLoad::setPersonalityValue(const AICharacterName aiName, const AIC field, const Json value)
+  {
+    if (aiName == AICharacterName::NONE || field == AIC::NONE || !initialized)
+    {
+      return false;
+    }
+
+    int32_t newValue;
+    if (isValidPersonalityValue(field, value, newValue))
+    {
+      // support for versions with only 8 KIs would need extra handling here
+      (*aicMemoryPtr)[getAICFieldIndex(aiName, field)] = newValue;
+      return true;
+    }
+
+    return false;
+  }
+
+
+  const bool AICLoad::setPersonalityValueUnchecked(const AICharacterName aiName, const AIC field, const int32_t value)
+  {
+    if (aiName == AICharacterName::NONE || field == AIC::NONE || !initialized)
+    {
+      return false;
+    }
+    
+    // support for versions with only 8 KIs would need extra handling here
+    (*aicMemoryPtr)[getAICFieldIndex(aiName, field)] = value;
+    return true;
+  }
 
 
   // keyboard functions
@@ -217,7 +246,7 @@ namespace modclasses
 
     isChanged = !isChanged;
 
-    LOG(INFO) << "Changed load status of file AICs to: " << isChanged;
+    LOG(INFO) << "Changed load status of file AICs to: " << (isChanged ? "true" : "false");
   }
 
 
@@ -367,7 +396,7 @@ namespace modclasses
 
   // will use switch statement to decide, since many have the same range
   // could be a bit smaller...
-  // smoe are marked with cheating, which mean I changed the checks so the vanilla values pass... why is this so?
+  // some are marked with cheating, which mean I changed the checks so the vanilla values pass... why is this so?
   const bool AICLoad::isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue) const
   {
     static const int32_t int32Max{ (std::numeric_limits<int32_t>::max)() };
@@ -539,9 +568,15 @@ namespace modclasses
         return validEnumHelper<DiggingUnit>(field, value, validValue, "digging unit");
       case AIC::OUTER_PATROL_GROUPS_MOVE: // this thing has to stay...
       {
+        if (value.is_boolean())
+        {
+          validValue = static_cast<int32_t>(value.get<bool>());
+          return true;
+        }
+
         if (!value.is_string())
         {
-          LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a string.";
+          LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a string or boolean.";
           return false;
         }
 
@@ -626,7 +661,7 @@ namespace modclasses
 
     // NOTE: key functions etc. happen from the folder of stronghold, not the plugin
     std::string filePath;
-    if (!fileRelativeToMod && !relModPath.empty())
+    if (!(fileRelativeToMod || relModPath.empty()))
     {
       filePath += relModPath + "/";
     }
@@ -720,4 +755,8 @@ namespace modclasses
 
     return aicMap;
   }
+
+  std::vector<AddressRequest> AICLoad::usedAddresses{
+    {Address::AIC_IN_MEMORY, {{Version::NONE, 10816}}, true, AddressRisk::WARNING}
+  };
 }

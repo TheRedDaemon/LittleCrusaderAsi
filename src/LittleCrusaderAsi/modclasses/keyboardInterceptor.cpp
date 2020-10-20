@@ -143,7 +143,7 @@ namespace modclasses
 
           if (modifierTwo != VK::NONE)
           {
-            addKeys = addKeys && isModificationKey(modifierTwo);
+            addKeys = addKeys && isModificationKey(modifierTwo) && modifierOne != modifierTwo;
             if (addKeys)
             {
               ++valid_keys;
@@ -165,6 +165,9 @@ namespace modclasses
         return true;
       }
     }
+
+    LOG(WARNING) << "The key combination '" << getStringFromEnum(modifierOne) << " + " << getStringFromEnum(modifierTwo)
+      << " + " << getStringFromEnum(mainkey) << "' failed to register.";
     return false;
   }
 

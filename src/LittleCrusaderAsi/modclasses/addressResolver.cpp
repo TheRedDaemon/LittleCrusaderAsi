@@ -182,7 +182,7 @@ namespace modclasses
     if (riskToHigh)
     {
       LOG(WARNING) << "Risk level violated trying to request address with id '" << std::to_string(static_cast<int>(newToAddReq.address))
-        << "' for mod with id '" << std::to_string(static_cast<int>(requestModType)) << "'.";
+        << "' for mod '" << getStringFromEnum(requestModType) << "'.";
     }
 
     return riskToHigh;
@@ -348,7 +348,7 @@ namespace modclasses
           }
         }
 
-        LOG(WARNING) << "Failed granting access of addresses to mod with id '" << std::to_string(static_cast<int>(requestingMod.getModType())) << "'.";
+        LOG(WARNING) << "Failed granting access of addresses to mod '" << getStringFromEnum(requestingMod.getModType()) << "'.";
         return false;
       }
 

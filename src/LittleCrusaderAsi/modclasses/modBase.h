@@ -130,8 +130,36 @@ namespace modclasses
     template<typename T>
     const T getEnumFromString(const std::string enumString) const
     {
-      Json key = enumString;
-      return key.get<T>();
+      try
+      {
+        Json key = enumString;
+        return key.get<T>();
+      }
+      catch (const std::exception&)
+      {
+        LOG(ERROR) << "Tried to tranform invalid enum to string.";
+        throw;
+      }
+    }
+
+    // misusing the Json transform to get strings from enum
+    // if there is a better way, I don't know...
+    // NOTE: for this to work, String transformations need to be created with NLOHMANN_JSON_SERIALIZE_ENUM()
+    // for every enum intended to use, also, the enums apparently must be accessible form the scope of the caller(?)
+    // returns "none" if enum transforms to nullptr, other inputs might turn to numbers...
+    template<typename T>
+    const std::string getStringFromEnum(const T enumValue) const
+    {
+      try
+      {
+        Json key = enumValue;
+        return key.is_null() ? "none" : key.get<std::string>();
+      }
+      catch (const std::exception&)
+      {
+        LOG(ERROR) << "Tried to tranform invalid string to enum.";
+        throw;
+      }
     }
   };
 }

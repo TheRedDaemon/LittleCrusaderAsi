@@ -21,8 +21,29 @@ static std::unique_ptr<modcore::ModLoader> modLoader;
 static void initiateLogger()
 {
   // very basic config currently
-  el::Configurations conf("logger.config");
+  el::Configurations conf;
+  bool fileLoaded{ conf.parseFromFile("logger.config") };
+  if (!fileLoaded)
+  {
+    conf.setToDefault();
+    conf.setGlobally(el::ConfigurationType::Format, "%datetime %level %msg");
+    conf.setGlobally(el::ConfigurationType::Filename, "crusaderAsi.log");
+    conf.setGlobally(el::ConfigurationType::Enabled, "true");
+    conf.setGlobally(el::ConfigurationType::ToFile, "true");
+    conf.setGlobally(el::ConfigurationType::ToStandardOutput, "false");
+    conf.setGlobally(el::ConfigurationType::SubsecondPrecision, "6");
+    conf.setGlobally(el::ConfigurationType::PerformanceTracking, "true");
+    conf.setGlobally(el::ConfigurationType::MaxLogFileSize, "2097152");
+    conf.setGlobally(el::ConfigurationType::LogFlushThreshold, "10"); // i do not expect many logs, so 10 should be good for default
+    conf.set(el::Level::Debug, el::ConfigurationType::Format, "%datetime{%d/%M} %level %func %msg");
+  }
+
   el::Loggers::reconfigureLogger("default", conf);
+
+  if (!fileLoaded)
+  {
+    LOG(WARNING) << "No valid 'logger.config'-file found, using default.";
+  }
   LOG(INFO) << "Logger loaded.";
 }
 

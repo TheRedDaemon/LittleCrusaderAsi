@@ -54,8 +54,6 @@ namespace modclasses
 
     /**additional functions for others**/
 
-    void switchRangeChange(const HWND window, const bool keyUp, const bool repeat);
-
     /**misc**/
 
     // prevent copy and assign (not sure how necessary)
@@ -63,6 +61,12 @@ namespace modclasses
     virtual BuildRangeChanger& operator=(const BuildRangeChanger &base) final = delete;
 
   private:
+
+    /**keyboard functions**/
+
+    void switchRangeChange(const HWND window, const bool keyUp, const bool repeat);
+
+    /****/
 
     void initialize() override;
   };

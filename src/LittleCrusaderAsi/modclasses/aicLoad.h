@@ -23,7 +23,7 @@ namespace modclasses
 
   private:
     
-    // will point to the loaded aics in memory, the access will be the following: AI * personalityField
+    // will point to the loaded aics in memory
     int32_t (*aicMemoryPtr)[2704]{ 0x0 };
 
     // stores a copy of the original values for quick swaps
@@ -76,12 +76,22 @@ namespace modclasses
 
     /**additional functions for others**/
 
-    void activateAICs(const HWND window, const bool keyUp, const bool repeat);
+    // needs ai-char, field and a fitting value; simply provide the later as value/string/enum, JSON will take care of the transform
+    // if no issue, sets the field to the requested value (NOTE -> for some fields, using the "wrong" enum (ex. Unit, not DiggingUnit) might yield working results)
+    // current AICLoad settings, like if AICs are applied or deactivated, are ignored and not changed
+    // returns bool indicating whether the function was successful
+    // NOTE: "false" likely means an invalid value, ai-char or field were NONE, or the mod was not initialized
+    const bool setPersonalityValue(const AICharacterName aiName, const AIC field, const Json value);
 
-    void reloadMainAIC(const HWND window, const bool keyUp, const bool repeat);
+    // basically a raw value edit with (a little?) less overhead then setPersonalityValue
+    // tests only if the ai-char or field are NONE, or if the mod was not initialized
+    // the use of static casted enums might make this a bit safer, but only if the right field is chosen
+    // returns bool indicating whether the function was successful
+    const bool setPersonalityValueUnchecked(const AICharacterName aiName, const AIC field, const int32_t value);
 
-    void reloadAllAIC(const HWND window, const bool keyUp, const bool repeat);
-
+    // name should be the direct file name, fileRelativeToMod should be true if the function is executed by initialization code
+    // false for calls using the keyboard interceptor (and maybe one day an event handler?), they are executed by stronghold directly
+    // making the file system is relative to the exe
     // returns empty pointer in unrecoverable error case
     std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const bool fileRelativeToMod) const;
 
@@ -92,6 +102,16 @@ namespace modclasses
     virtual AICLoad& operator=(const AICLoad &base) final = delete;
 
   private:
+
+    /**keyboard functions**/
+
+    void activateAICs(const HWND window, const bool keyUp, const bool repeat);
+
+    void reloadMainAIC(const HWND window, const bool keyUp, const bool repeat);
+
+    void reloadAllAIC(const HWND window, const bool keyUp, const bool repeat);
+
+    /****/
 
     void initialize() override;
 
