@@ -42,6 +42,9 @@ namespace modclasses
     // returns true if all addresses were registered, else false
     // nature of conflicts is logged
     // AddressRequests need to be persistent for the lifetime of the class, since currently pointers are used to store references
+    // requesting multiple small address amounts should be possible, however (to be honest) I am not as sure
+    // also, requesting the same address from the same mod twice might produce unwanted behaviour
+    // (ex. requesting a successful request again together with a failing will delete both -> the first will fail)
     const bool requestAddresses(std::vector<AddressRequest> &addrReq, const ModBase &requestingMod);
     // NOTE to impl -> remember that the changes to the check sets only should take effect or be persistent if no conflict or address reject occures
 
