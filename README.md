@@ -29,7 +29,7 @@ For more information on the implementation approach and structure, please take a
 
 ## Installation
 ### Getting LittleCrusaderAsi
-Go [HERE](https://github.com/TheRedDaemon/releases/latest) to get the latest release.
+Go [HERE](https://github.com/TheRedDaemon/LittleCrusaderAsi/releases/latest) to get the latest release.
 
 The project can also be build from source. It is written in C++17 and the repository contains a Visual Studio 2017 project. One must make sure to use the Win32 mode and (for DEBUG mode) redefine *Properties->General->Output Directory* and *Properties->Debugging->Command*, since both are currently configured to allow debugging the dll and point therefore in the file structure of the latest who edited the project file.
 
@@ -69,7 +69,7 @@ A very simple modification that allows to change the castle build range. Can be 
 
 **AICLoad**  
 *Supported versions:* V1.41.1-E | V1.41  
-AIC loader of the *LittleCrusaderAsi*. Allows to define an AIC-folder and a list of AIC-files to be loaded. The mod was created to support the file format defined by the UCP (2.14) ([Example with vanilla AIC](https://github.com/Sh0wdown/UnofficialCrusaderPatch/blob/master/UnofficialCrusaderPatch/AIC/Resources/vanilla.json)). The changes can either be loaded at the start or after requested. It is therefore possible to configure three key functions. The first simply switches between the current AIC data and the vanilla AICs. The second allows to reload the 'main'-AIC, which is the first in the AIC-list in the configuration file. The third allows to reload all AIC-files. AIC values are applied starting from the the main AIC to the second, then the third and so on. Note that this order is currently applied per value, so it is possible to carelessly create AI-amalgamations if one does only define half of the Rats values, while having another AIC with a another Rat in line.
+AIC loader of the *LittleCrusaderAsi*. Allows to define an AIC-folder and a list of AIC-files to be loaded. The mod was created to support the file format defined by the UCP (2.14) ([Example with vanilla AIC](https://github.com/Sh0wdown/UnofficialCrusaderPatch/blob/master/UnofficialCrusaderPatch/AIC/Resources/vanilla.json)). The changes can either be loaded at the start or after requested. It is therefore possible to configure three key functions. The first simply switches between the current AIC data and the vanilla AICs. The second allows to reload the 'main'-AIC, which is the first in the AIC-list in the configuration file. The third allows to reload all AIC-files. AIC values are applied starting from the the main AIC to the second, then the third and so on. Note that this order is currently applied per value, so it is possible to carelessly create AI-amalgamations if one does only define half of the Rats values, while having another AIC with another Rat in line.
 
 One last note. There is currently no direct way to indicate in-game that a function was executed and works. If in doubt, check the log-file created in the mod directory.
 
