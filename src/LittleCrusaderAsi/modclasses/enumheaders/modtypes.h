@@ -19,6 +19,8 @@ namespace modclasses
 
     BUILD_RANGE_CHANGER,  // changes the build range, currently on request (and key), but later maybe with timers from the event handler
     AIC_LOAD,  // allows changing of currently loaded aic values
+
+    BLT_OVERLAY, // in testing, trying to intercept some DirectDraw calls
     
     
     
@@ -35,6 +37,7 @@ namespace modclasses
     {ModType::KEYBOARD_INTERCEPTOR, "keyboardInterceptor"},
     {ModType::BUILD_RANGE_CHANGER, "buildRangeChanger"},
     {ModType::AIC_LOAD, "aicLoad"},
+    {ModType::BLT_OVERLAY, "bltOverlay"},
     {ModType::TEST1, "test1"},
     {ModType::TEST2, "test2"}
   })

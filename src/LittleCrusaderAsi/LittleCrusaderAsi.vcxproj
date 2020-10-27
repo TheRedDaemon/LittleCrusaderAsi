@@ -106,6 +106,7 @@
       <AssemblyDebug>true</AssemblyDebug>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress>NotSet</ShowProgress>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -180,8 +181,10 @@
     <ClInclude Include="Misc\copiedFunc.h" />
     <ClInclude Include="modclasses\addressResolver.h" />
     <ClInclude Include="modclasses\aicLoad.h" />
+    <ClInclude Include="modclasses\bltOverlay.h" />
     <ClInclude Include="modclasses\buildRangeChanger.h" />
     <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
+    <ClInclude Include="modclasses\dummyStuff\protoMod.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
     <ClInclude Include="modclasses\enumheaders\aiAndPersonalityEnums.h" />
@@ -202,6 +205,7 @@
     <ClCompile Include="modclasses\addressKeeper.cpp" />
     <ClCompile Include="modclasses\addressResolver.cpp" />
     <ClCompile Include="modclasses\aicLoad.cpp" />
+    <ClCompile Include="modclasses\bltOverlay.cpp" />
     <ClCompile Include="modclasses\buildRangeChanger.cpp" />
     <ClCompile Include="modclasses\enumheaders\keyboardUtil.cpp" />
     <ClCompile Include="modclasses\keyboardInterceptor.cpp" />

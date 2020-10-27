@@ -6,6 +6,7 @@
 #include "../modclasses/keyboardInterceptor.h"
 #include "../modclasses/buildRangeChanger.h"
 #include "../modclasses/aicLoad.h"
+#include "../modclasses/bltOverlay.h"
 //#include ...
 
 // dummy:
@@ -36,6 +37,9 @@ namespace modcore
         return std::make_shared<MC::BuildRangeChanger>(modKeeper, config);
       case MT::AIC_LOAD:
         return std::make_shared<MC::AICLoad>(modKeeper, config);
+
+      case MT::BLT_OVERLAY:
+        return std::make_shared<MC::BltOverlay>(modKeeper, config);
 
       // dummy:
       case MT::TEST1:

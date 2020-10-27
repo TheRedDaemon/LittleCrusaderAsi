@@ -105,6 +105,12 @@
     <ClInclude Include="modclasses\aicLoad.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
+    <ClInclude Include="modclasses\dummyStuff\protoMod.h">
+      <Filter>Headerdateien\ModClasses\TestStuff</Filter>
+    </ClInclude>
+    <ClInclude Include="modclasses\bltOverlay.h">
+      <Filter>Headerdateien\ModClasses</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -147,6 +153,9 @@
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
     <ClCompile Include="modclasses\aicLoad.cpp">
+      <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\bltOverlay.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
   </ItemGroup>
