@@ -17,6 +17,8 @@ namespace modclasses
   static DDCreate ddCreate;
   static DDCreateEx ddCreateEx;
   static IDirectDraw7* dd7InterfacePtr;
+  static IDirectDrawSurface7* dd7SurfacePtr;
+  static IDirectDrawSurface7* dd7BackbufferPtr;
 
   static HRESULT _stdcall DirectDrawCreateFake(GUID *lpGUID, LPDIRECTDRAW *lplpDD, IUnknown *pUnkOuter)
   {
@@ -84,7 +86,8 @@ namespace modclasses
   }
 
 
-  // IDirectDraw7 ptr is invalid once it reaches this position -> that might be a result of the wrapper... test without
+  // IDirectDraw7 ptr is invalid once it reaches this position
+  //   -> seems to be valid -> use of the process redirect is questionable (once the needed structure is found it becomes obsolete
   // -> important, I do not know if one can use surfaces from different IDirectDraw7 objects
   // -> problem could be, that I always loose the objects -> recreating seems to be a problem...
   // -> maybe I can get a handle of an object and keep it alive somehow -> first find flip
@@ -94,14 +97,55 @@ namespace modclasses
 
     if (res == S_OK)
     {
-      dd7InterfacePtr = that;
+      if (dd7InterfacePtr != that)
+      {
+        dd7InterfacePtr = that;
+        LOG(INFO) << "DirectDraw object changed.";
+      }
+      dd7SurfacePtr = *surf7;
+
+      DDSCAPS2 ddscapsBack;
+      ZeroMemory(&ddscapsBack, sizeof(ddscapsBack));
+      ddscapsBack.dwCaps = DDSCAPS_BACKBUFFER;
+      res = dd7SurfacePtr->GetAttachedSurface(&ddscapsBack, &dd7BackbufferPtr);
+      if (res == DD_OK)
+      {
+        LOG(INFO) << "Got backbuffer.";
+      }
+
+      dd7SurfacePtr->Flip(NULL, 0); // asi + 2E701C
+      // wrapper+BB6F0
+      // dxwrapper.dll+AAAF0 (flip function)
+
+
       LOG(INFO) << "Got first create.";
     }
 
     return res;
   }
 
-  // if no luck with create surface -> creating a surface and calling flip could be an option to find the code
+  // position flip: 0047064D (not easily redirectable)
+  // maybe here: 00470645 write address of flip function into edx
+  static HRESULT _stdcall FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags)
+  {
+    HRESULT res{ that->Flip(surf7, flags) };
+    if (res == S_OK)
+    {
+      // LOG(INFO) << "FLIP."; // <--- I hope this spams -> it spams
+    }
+    return res;
+  }
+
+  // since i now have a surface, i can try to find flip
+  // however, it is not clear if they used one primary frame or multiple (ugh)
+  // so it is important to find out where the flips are called
+  // -> in theory, only one should be called, at least in one situation
+  //   -> different flips would also be ok, because then i would need to find the flip for the menu/ingame/etc.
+  //     -> or only one, but then I would need a method to prevent unwanted changes in other situations
+  // -> in theory, if I redirect the flip to a static fkt, I get a pointer to the surface, which ín turn can receive the object -> might be a place to check
+  //   -> could also end as only place?
+  // -> also, I do not know if flip will be the place to do blt, nor do I know if there is place in the code for the jump/call
+  //   -> in this case, I would need to use cpp assembly (maybe copy overwritten parts and create jump to needed code here)
 
   /*******************************************************/
   // Non-static part starts here:
@@ -133,6 +177,8 @@ namespace modclasses
     *nop = 0x90;
 
     // first CreateSurface
+    // this seems to be at least reponsible for the main window
+    // -> it is allways called if the app is started or the resolution changed
     if (!VirtualProtect(reinterpret_cast<DWORD*>(0x0046FEB5), 5, PAGE_EXECUTE_READWRITE, &oldAddressProtection))
     {
       LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
@@ -146,5 +192,20 @@ namespace modclasses
 
     *call = 0xE8;
     *to = reinterpret_cast<int>(CreateSurfaceFake) - 0x0046FEB5 - 5;
+
+    // first flip I found
+    if (!VirtualProtect(reinterpret_cast<DWORD*>(0x00470645), 5, PAGE_EXECUTE_READWRITE, &oldAddressProtection))
+    {
+      LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
+    }
+
+    // maybe need some byte writer -> works for extreme
+    // call is always relative -> absolute pointer - pos from where i write to - length of edited segment (or absolute pointer - next address?)
+
+    mov = reinterpret_cast<char*>(0x00470645);
+    to = reinterpret_cast<int*>(0x00470645 + 1);
+
+    *mov = 0xBA;
+    *to = reinterpret_cast<int>(FlipFake);
   }
 }
