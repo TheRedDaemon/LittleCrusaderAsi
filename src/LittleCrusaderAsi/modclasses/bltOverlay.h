@@ -22,6 +22,8 @@ namespace modclasses
       return { ModType::KEYBOARD_INTERCEPTOR };
     }
 
+    void cleanUp() override;
+
     /**con- and destructor**/
     BltOverlay(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config); // default cons, does nothing though
 

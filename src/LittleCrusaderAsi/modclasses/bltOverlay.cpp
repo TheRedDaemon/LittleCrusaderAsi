@@ -1,12 +1,20 @@
 
 #include "bltOverlay.h"
 
+#include <initguid.h>
 #include "ddraw.h"
 
+
+// main source ddraw: https://www.codeproject.com/Articles/2370/Introduction-to-DirectDraw-and-Surface-Blitting
+// another: http://www.visualbasicworld.de/tutorial-directx-directdraw.html
+
+// NOTE: loses in dxwrapper case the window abilities after refocus
 namespace modclasses
+{
+
   // at 0046F710 both adderesses for directDraw are requested it seems... -> 0046F727 mov edi, [pointer zu GetProcAddress ] ?
   // address createEx: ab 0046F710
-{ // address create call: 0046FCB8? (mulitple?)
+  // address create call: 0046FCB8? (mulitple?)
   // address for create jump pointer: 0057D3D4
   // using ugly function pointers for tests
   using DDCreate = HRESULT(_stdcall *)(GUID*, LPDIRECTDRAW*, IUnknown*);
@@ -19,6 +27,15 @@ namespace modclasses
   static IDirectDraw7* dd7InterfacePtr;
   static IDirectDrawSurface7* dd7SurfacePtr;
   static IDirectDrawSurface7* dd7BackbufferPtr;
+
+  // this might need far more testing -> dd to d9 might create far other issues
+  static bool doNotKeepDD7Interface = true; // for d7tod9 -> removing the references removes handling window
+  // in case of non compatible mode Crusader (XP), VideoMemory creates errors
+  // if true, there will be no test performed again
+  static bool disableHardwareTest = false;
+
+  // test
+  static IDirectDrawSurface7* offscreenSurf;
 
   static HRESULT _stdcall DirectDrawCreateFake(GUID *lpGUID, LPDIRECTDRAW *lplpDD, IUnknown *pUnkOuter)
   {
@@ -37,7 +54,7 @@ namespace modclasses
     if (res == S_OK)
     {
       // get interface ptr... hopefully (and hopefully this is still used)
-      dd7InterfacePtr = (IDirectDraw7*) *lplpDD;
+      //dd7InterfacePtr = (IDirectDraw7*) *lplpDD;
 
       // trying to find position of CreateSurface by calling it
      // DDSURFACEDESC2 ddsd;
@@ -93,15 +110,29 @@ namespace modclasses
   // -> maybe I can get a handle of an object and keep it alive somehow -> first find flip
   static HRESULT _stdcall CreateSurfaceFake(IDirectDraw7* const that, LPDDSURFACEDESC2 desc2, LPDIRECTDRAWSURFACE7* surf7, IUnknown* unkn)
   {
-    HRESULT res{ that->CreateSurface(desc2, surf7, unkn) };
-
-    if (res == S_OK)
+    // keep control over pointer
+    if (dd7InterfacePtr != nullptr)
     {
-      if (dd7InterfacePtr != that)
+      offscreenSurf->Release();
+
+      if (!doNotKeepDD7Interface)
       {
-        dd7InterfacePtr = that;
-        LOG(INFO) << "DirectDraw object changed.";
+        dd7InterfacePtr->Release();
       }
+    }
+
+    HRESULT frontSurfRes{ that->CreateSurface(desc2, surf7, unkn) };
+
+    if (frontSurfRes == S_OK)
+    {
+      HRESULT res; // need to clean up
+
+      dd7InterfacePtr = that;
+      if (!doNotKeepDD7Interface)
+      {
+        dd7InterfacePtr->AddRef();
+      }
+
       dd7SurfacePtr = *surf7;
 
       DDSCAPS2 ddscapsBack;
@@ -113,25 +144,81 @@ namespace modclasses
         LOG(INFO) << "Got backbuffer.";
       }
 
-      dd7SurfacePtr->Flip(NULL, 0); // asi + 2E701C
+      //dd7SurfacePtr->Flip(NULL, 0); // asi + 2E701C
       // wrapper+BB6F0
       // dxwrapper.dll+AAAF0 (flip function)
+
+      // write to buffer test, create surface:
+
+      DDSURFACEDESC2 offscreenSurfDes;
+      ZeroMemory(&offscreenSurfDes, sizeof(offscreenSurfDes));
+
+      offscreenSurfDes.dwSize = sizeof(offscreenSurfDes);
+      offscreenSurfDes.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+      // important: without compatibility mode, stronghold does not support Hardware rendering -> DDSCAPS_VIDEOMEMORY only in this case
+      // -> could be done by flag in config -> this might be the case for other flags
+      offscreenSurfDes.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+      if (!disableHardwareTest)
+      {
+        offscreenSurfDes.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
+      }
+
+      // returns no hardware in compatibility mode...
+      /*DDCAPS ddcaps;
+      res = dd7InterfacePtr->GetCaps(&ddcaps, NULL);
+      if (res == S_OK && !(ddcaps.dwCaps & DDCAPS_NOHARDWARE))
+      {
+        offscreenSurfDes.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
+      }
+      else
+      {
+        LOG(WARNING) << "No hardware support for DirectDraw. Try setting compatibility mode to WinXP.";
+      }*/
+
+      offscreenSurfDes.dwWidth = 100;
+      offscreenSurfDes.dwHeight = 100;
+
+      res = dd7InterfacePtr->CreateSurface(&offscreenSurfDes, &offscreenSurf, NULL);
+      if (res == DDERR_NODIRECTDRAWHW)
+      {
+        offscreenSurfDes.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+        res = dd7InterfacePtr->CreateSurface(&offscreenSurfDes, &offscreenSurf, NULL);
+        
+        disableHardwareTest = true;
+        LOG(WARNING) << "No hardware support found for DirectDraw. Try compatibility mode for WinXP.";
+        if (res != S_OK)
+        {
+          LOG(ERROR) << "Failed to create offscreen surface.";
+        }
+      }
 
 
       LOG(INFO) << "Got first create.";
     }
 
-    return res;
+    return frontSurfRes;
   }
 
   // position flip: 0047064D (not easily redirectable)
   // maybe here: 00470645 write address of flip function into edx
   static HRESULT _stdcall FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags)
   {
+    RECT rect;
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = 100 + 0; // seems to use exclusive
+    rect.bottom = 100 + 0;
+
+    HRESULT bltRes = dd7BackbufferPtr->BltFast(300, 300, offscreenSurf, &rect, DDBLTFAST_NOCOLORKEY);
+
     HRESULT res{ that->Flip(surf7, flags) };
     if (res == S_OK)
     {
       // LOG(INFO) << "FLIP."; // <--- I hope this spams -> it spams
+      if (that != dd7SurfacePtr)
+      {
+        LOG(INFO) << "surface changed"; // if the surface is the same, so will be the ddObject...I hope
+      }
     }
     return res;
   }
@@ -207,5 +294,16 @@ namespace modclasses
 
     *mov = 0xBA;
     *to = reinterpret_cast<int>(FlipFake);
+
+
+
+    // test with other main dd7 object -> did not get it to work
+    // it returned ok, but nothing was drawn on screen
+  }
+
+  void BltOverlay::cleanUp()
+  {
+    // no resource delete -> process end should free it anyway (it also prevents problems from not knowing if still valid)
+    //offscreenSurf->Release();
   }
 }
