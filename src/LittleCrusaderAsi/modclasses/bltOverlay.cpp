@@ -4,26 +4,10 @@
 #include <initguid.h>
 #include "ddraw.h"
 
-
 // main source ddraw: https://www.codeproject.com/Articles/2370/Introduction-to-DirectDraw-and-Surface-Blitting
 // another: http://www.visualbasicworld.de/tutorial-directx-directdraw.html
-
-// NOTE: loses in dxwrapper case the window abilities after refocus
 namespace modclasses
 {
-
-  // at 0046F710 both adderesses for directDraw are requested it seems... -> 0046F727 mov edi, [pointer zu GetProcAddress ] ?
-  // address createEx: ab 0046F710
-  // address create call: 0046FCB8? (mulitple?)
-  // address for create jump pointer: 0057D3D4
-  // using ugly function pointers for tests
-  using DDCreate = HRESULT(_stdcall *)(GUID*, LPDIRECTDRAW*, IUnknown*);
-  using DDCreateEx = HRESULT(_stdcall *)(GUID*, LPVOID*, REFIID, IUnknown*);
-  using ProcFake = FARPROC(_stdcall *)(HMODULE, LPCSTR);
-  using DD7CreateSurface = HRESULT(_stdcall IDirectDraw7::*)(LPDDSURFACEDESC2, LPDIRECTDRAWSURFACE7*, IUnknown*);
-
-  static DDCreate ddCreate;
-  static DDCreateEx ddCreateEx;
   static IDirectDraw7* dd7InterfacePtr;
   static IDirectDrawSurface7* dd7SurfacePtr;
   static IDirectDrawSurface7* dd7BackbufferPtr;
@@ -36,78 +20,16 @@ namespace modclasses
 
   // test
   static IDirectDrawSurface7* offscreenSurf;
-
-  static HRESULT _stdcall DirectDrawCreateFake(GUID *lpGUID, LPDIRECTDRAW *lplpDD, IUnknown *pUnkOuter)
-  {
-    return ddCreate(lpGUID, lplpDD, pUnkOuter);
-  }
-
-  // stronghold seems to use CreateEx; test: asi + 1FC680
-  // seems to be called: dxwrapper.dll + BC170 (eigentliches object)
-  // possible CreateSurface Fkt: dxwrapper.dll + B3650
-  // Extreme call to CreateSurface: 0046FEB8 
-  // place for insert: 0046FEB5
-  static HRESULT _stdcall DirectDrawCreateExFake(GUID * lpGuid, LPVOID *lplpDD, REFIID iid, IUnknown *pUnkOuter)
-  {
-    HRESULT res{ ddCreateEx(lpGuid, lplpDD, iid, pUnkOuter) };
-
-    if (res == S_OK)
-    {
-      // get interface ptr... hopefully (and hopefully this is still used)
-      //dd7InterfacePtr = (IDirectDraw7*) *lplpDD;
-
-      // trying to find position of CreateSurface by calling it
-     // DDSURFACEDESC2 ddsd;
-      //ZeroMemory(&ddsd, sizeof(ddsd));  // empty
-      //ddsd.dwSize = sizeof(ddsd);
-
-      //IDirectDrawSurface7* surfPtr;
-      //dd7InterfacePtr->CreateSurface(&ddsd, &surfPtr, 0);
-
-      // now need to test where the Create Surface Functions are called
-      // need flip (if it is used) and the BackbufferSurface -> not defined yet, can not do this here
-      // maybe I can get the BackbufferSurface in the first flip?
-      // currently, I need to get the flip position to intercept it, the other way would be to create another impl of the Objects and return that
-
-      // small test -> try to get pointer to flip
-      //int b;
-      //HRESULT o = dd7InterfacePtr->GetVerticalBlankStatus(&b);
-
-      
-      //if (o == S_OK)
-      //{
-      //  LOG(INFO) << "Did not return non-sense.";
-      //}
-    }
-
-    return res;
-  }
   
-  // NOTE: -> extern functions seem to work pretty good... however...copy them nicely
+  // NOTE: -> linking to static functions seem to work pretty good -> the copy needs to be nice though (in first tests, _stdcall was missing)
   // maybe there are some stuff like _stdcall etc that might help me?
-  static FARPROC _stdcall GetProcAddressFake(HMODULE hmod, LPCSTR str)
-  {
-    std::string fkt{ str };
-    if (fkt == "DirectDrawCreate")
-    {
-      ddCreate = (DDCreate)GetProcAddress(hmod, str);
-      return (FARPROC)DirectDrawCreateFake;
-    }
-    else if (fkt == "DirectDrawCreateEx")
-    {
-      ddCreateEx = (DDCreateEx)GetProcAddress(hmod, str);
-      return (FARPROC)DirectDrawCreateExFake;
-    }
-
-    return GetProcAddress(hmod, str);
-  }
 
 
   // IDirectDraw7 ptr is invalid once it reaches this position
-  //   -> seems to be valid -> use of the process redirect is questionable (once the needed structure is found it becomes obsolete
-  // -> important, I do not know if one can use surfaces from different IDirectDraw7 objects
-  // -> problem could be, that I always loose the objects -> recreating seems to be a problem...
-  // -> maybe I can get a handle of an object and keep it alive somehow -> first find flip
+  // -> old surfaces sometimes are lost, sometimes they work
+  // -> depends on asiLoader (and its config)
+  // test with different main dd7 object -> did not get it to work
+  // it returned ok, but nothing was drawn on screen
   static HRESULT _stdcall CreateSurfaceFake(IDirectDraw7* const that, LPDDSURFACEDESC2 desc2, LPDIRECTDRAWSURFACE7* surf7, IUnknown* unkn)
   {
     // keep control over pointer
@@ -155,6 +77,7 @@ namespace modclasses
 
       offscreenSurfDes.dwSize = sizeof(offscreenSurfDes);
       offscreenSurfDes.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+      
       // important: without compatibility mode, stronghold does not support Hardware rendering -> DDSCAPS_VIDEOMEMORY only in this case
       // -> could be done by flag in config -> this might be the case for other flags
       offscreenSurfDes.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
@@ -162,18 +85,6 @@ namespace modclasses
       {
         offscreenSurfDes.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
       }
-
-      // returns no hardware in compatibility mode...
-      /*DDCAPS ddcaps;
-      res = dd7InterfacePtr->GetCaps(&ddcaps, NULL);
-      if (res == S_OK && !(ddcaps.dwCaps & DDCAPS_NOHARDWARE))
-      {
-        offscreenSurfDes.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
-      }
-      else
-      {
-        LOG(WARNING) << "No hardware support for DirectDraw. Try setting compatibility mode to WinXP.";
-      }*/
 
       offscreenSurfDes.dwWidth = 100;
       offscreenSurfDes.dwHeight = 100;
@@ -199,8 +110,13 @@ namespace modclasses
     return frontSurfRes;
   }
 
+
+  static int testAdd{ 0 };
+
+
   // position flip: 0047064D (not easily redirectable)
   // maybe here: 00470645 write address of flip function into edx
+  // flip is called at a relative constant time -> no menu responsiveness issues
   static HRESULT _stdcall FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags)
   {
     RECT rect;
@@ -209,7 +125,12 @@ namespace modclasses
     rect.right = 100 + 0; // seems to use exclusive
     rect.bottom = 100 + 0;
 
-    HRESULT bltRes = dd7BackbufferPtr->BltFast(300, 300, offscreenSurf, &rect, DDBLTFAST_NOCOLORKEY);
+    HRESULT bltRes = dd7BackbufferPtr->BltFast(300 + testAdd, 300, offscreenSurf, &rect, DDBLTFAST_NOCOLORKEY);
+    ++testAdd;
+    if (testAdd > 100)
+    {
+      testAdd = 0;
+    }
 
     HRESULT res{ that->Flip(surf7, flags) };
     if (res == S_OK)
@@ -223,20 +144,11 @@ namespace modclasses
     return res;
   }
 
-  // since i now have a surface, i can try to find flip
-  // however, it is not clear if they used one primary frame or multiple (ugh)
-  // so it is important to find out where the flips are called
-  // -> in theory, only one should be called, at least in one situation
-  //   -> different flips would also be ok, because then i would need to find the flip for the menu/ingame/etc.
-  //     -> or only one, but then I would need a method to prevent unwanted changes in other situations
-  // -> in theory, if I redirect the flip to a static fkt, I get a pointer to the surface, which ín turn can receive the object -> might be a place to check
-  //   -> could also end as only place?
-  // -> also, I do not know if flip will be the place to do blt, nor do I know if there is place in the code for the jump/call
-  //   -> in this case, I would need to use cpp assembly (maybe copy overwritten parts and create jump to needed code here)
 
   /*******************************************************/
   // Non-static part starts here:
   /*******************************************************/
+
 
   BltOverlay::BltOverlay(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
   {
@@ -244,66 +156,98 @@ namespace modclasses
 
   void BltOverlay::initialize()
   {
+    auto addressResolver = getMod<AddressResolver>();
 
-    // getProcAddress
-    // clean up?
-    DWORD oldAddressProtection{ 0 };
-    if (!VirtualProtect(reinterpret_cast<DWORD*>(0x0046F727), 6, PAGE_EXECUTE_READWRITE, &oldAddressProtection))
+    if (addressResolver)
     {
-      LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
+      // request addresses
+      if (addressResolver->requestAddresses(usedAddresses, *this))
+      {
+        // TODO(?): maybe some byte writer would be an idea... (but assembly to opcode would be too much/difficult I guess)
+        // would need to construct byte array out of given values with types...
+
+        // first CreateSurface -> responsible for the main window, called when the app started, switched back to or the resolution changed
+        unsigned char* surfCall{ addressResolver->getAddressPointer<unsigned char>(Address::DD_MainSurfaceCreate, *this) };
+        int32_t* surfAddr{ reinterpret_cast<int32_t*>(surfCall + 1) };
+        
+        // call rel32 -> rel32 = absolute pointer - pos from where i write to - length of edited segment (or absolute pointer - next address?)
+        *surfCall = 0xE8;
+        *surfAddr = reinterpret_cast<int32_t>(CreateSurfaceFake) - reinterpret_cast<int32_t>(surfCall) - 5;
+
+        // first found Flip
+        unsigned char* flipMov = addressResolver->getAddressPointer<unsigned char>(Address::DD_MainFlip, *this);
+        int32_t* flipAddr{ reinterpret_cast<int32_t*>(flipMov + 1) };
+        
+        // mov edx, func address
+        *flipMov = 0xBA;
+        *flipAddr = reinterpret_cast<int>(FlipFake);
+
+        initialized = true;
+      }
     }
 
-    // maybe need some byte writer -> works for extreme
-    // 
-    char* mov = reinterpret_cast<char*>(0x0046F727);
-    int* to = reinterpret_cast<int*>(0x0046F727 + 1);
-    char* nop = reinterpret_cast<char*>(0x0046F727 + 5);
-
-    *mov = 0xBF;
-    *to = reinterpret_cast<int>(GetProcAddressFake);
-    *nop = 0x90;
-
-    // first CreateSurface
-    // this seems to be at least reponsible for the main window
-    // -> it is allways called if the app is started or the resolution changed
-    if (!VirtualProtect(reinterpret_cast<DWORD*>(0x0046FEB5), 5, PAGE_EXECUTE_READWRITE, &oldAddressProtection))
-    {
-      LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
-    }
-
-    // maybe need some byte writer -> works for extreme
-    // call is always relative -> absolute pointer - pos from where i write to - length of edited segment (or absolute pointer - next address?)
-
-    char* call = reinterpret_cast<char*>(0x0046FEB5);
-    to = reinterpret_cast<int*>(0x0046FEB5 + 1);
-
-    *call = 0xE8;
-    *to = reinterpret_cast<int>(CreateSurfaceFake) - 0x0046FEB5 - 5;
-
-    // first flip I found
-    if (!VirtualProtect(reinterpret_cast<DWORD*>(0x00470645), 5, PAGE_EXECUTE_READWRITE, &oldAddressProtection))
-    {
-      LOG(WARNING) << "Couldn't allow write access of memory. Error code: " << GetLastError();
-    }
-
-    // maybe need some byte writer -> works for extreme
-    // call is always relative -> absolute pointer - pos from where i write to - length of edited segment (or absolute pointer - next address?)
-
-    mov = reinterpret_cast<char*>(0x00470645);
-    to = reinterpret_cast<int*>(0x00470645 + 1);
-
-    *mov = 0xBA;
-    *to = reinterpret_cast<int>(FlipFake);
-
-
-
-    // test with other main dd7 object -> did not get it to work
-    // it returned ok, but nothing was drawn on screen
+    initialized ? LOG(INFO) << "BltOverlay initialized." : LOG(WARNING) << "BltOverlay was not initialized.";
   }
+
 
   void BltOverlay::cleanUp()
   {
     // no resource delete -> process end should free it anyway (it also prevents problems from not knowing if still valid)
-    //offscreenSurf->Release();
+    // offscreenSurf->Release();
   }
+
+
+  std::vector<AddressRequest> BltOverlay::usedAddresses{
+    {Address::DD_MainSurfaceCreate, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},
+    {Address::DD_MainFlip, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL}
+  };
+
+  /*******************************************************/
+  // Unused function safe (+ notes):
+  /*******************************************************/
+  /* comment start
+
+  // way to create easier (old school) function pointers
+  using DDCreate = HRESULT(_stdcall *)(GUID*, LPDIRECTDRAW*, IUnknown*);
+  using DDCreateEx = HRESULT(_stdcall *)(GUID*, LPVOID*, REFIID, IUnknown*);
+
+  static DDCreate ddCreate;
+  static DDCreateEx ddCreateEx;
+
+  static HRESULT _stdcall DirectDrawCreateFake(GUID *lpGUID, LPDIRECTDRAW *lplpDD, IUnknown *pUnkOuter)
+  {
+    return ddCreate(lpGUID, lplpDD, pUnkOuter);
+  }
+
+  // crusader seems to use CreateEx
+  static HRESULT _stdcall DirectDrawCreateExFake(GUID * lpGuid, LPVOID *lplpDD, REFIID iid, IUnknown *pUnkOuter)
+  {
+    HRESULT res{ ddCreateEx(lpGuid, lplpDD, iid, pUnkOuter) };
+
+    return res;
+  }
+
+  // getProcAddress replace -> not needed for process
+  // address for Extreme 1.41.1-E: 0x0046F727 (rel: 0x6F727)
+  // would need to be replaced with 0xBF + this func address + 0x90 (mov in edi(?) + addr + nop)
+  // this function would redirect the first create DirectDraw object calls to the custom create functions
+  // however, the there created seem to not be used for the actual game
+  static FARPROC _stdcall GetProcAddressFake(HMODULE hmod, LPCSTR str)
+  {
+    std::string fkt{ str };
+    if (fkt == "DirectDrawCreate")
+    {
+      ddCreate = (DDCreate)GetProcAddress(hmod, str);
+      return (FARPROC)DirectDrawCreateFake;
+    }
+    else if (fkt == "DirectDrawCreateEx")
+    {
+      ddCreateEx = (DDCreateEx)GetProcAddress(hmod, str);
+      return (FARPROC)DirectDrawCreateExFake;
+    }
+
+    return GetProcAddress(hmod, str);
+  }
+
+  comment end */
 }

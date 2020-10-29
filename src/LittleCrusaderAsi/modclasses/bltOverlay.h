@@ -3,12 +3,20 @@
 
 #include "modBase.h"
 
+#include "keyboardInterceptor.h"
+#include "addressResolver.h"
+
 namespace modclasses
 {
 
   // simple proto class, replace all 'ProtoMod' with the new name
   class BltOverlay : public ModBase
   {
+  private:
+
+    // needed to give the address resolver the right infos
+    // can be static, I don't assume changes
+    static std::vector<AddressRequest> usedAddresses;
 
   public:
 
@@ -19,7 +27,7 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override
     {
-      return { ModType::KEYBOARD_INTERCEPTOR };
+      return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER };
     }
 
     void cleanUp() override;

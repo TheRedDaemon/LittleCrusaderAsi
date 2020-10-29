@@ -7,6 +7,7 @@ namespace modclasses
   // always add a small description to it (or give it a telling name) and maybe the data type
   // these are only aliases, the actual address (together with commands to used bytes)
   // should be made in the "great resolver file"
+  // "complex" -> description for non value addresses (opcodes + addresses, etc.)
   enum class Address
   {
     NONE,                             // DUMMY (and for failure, if needed somewhere)
@@ -23,6 +24,9 @@ namespace modclasses
     BUILDRANGE_CRUSADE_CASTLE_400,  // signed int32 : build range on a 400x400 map (at least during crusader match)
 
     AIC_IN_MEMORY, // signed int32? : after the start of stronghold, the aics are places in memory as an array, orderd by lord
+
+    DD_MainSurfaceCreate, // complex : place used to insert code to call a dummy CreateSurface func to redirect main CreateSurface
+    DD_MainFlip, // complex : place used to insert code to call a dummy Flip func to redirect main Flip
 
   };
 }

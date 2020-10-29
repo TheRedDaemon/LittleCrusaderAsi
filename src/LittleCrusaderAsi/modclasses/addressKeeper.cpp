@@ -85,6 +85,26 @@ namespace modclasses
             return 0x1FFCB8C; // 10816 byte (169 int32 * 16)
         }
         break;
+
+      case Address::DD_MainSurfaceCreate:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0x6FEB5; // 5 byte -> needs to be replaced wih relative call
+          case Version::V1P41:
+            return 0x6FC95; // 5 byte -> needs to be replaced wih relative call
+        }
+        break;
+
+      case Address::DD_MainFlip:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0x70645; // 5 byte -> needs to move func address in 'edx'
+          case Version::V1P41:
+            return 0x70425; // 5 byte -> needs to move func address in 'edx'
+        }
+        break;
     }
 
     // if no value was returned, then there seems to be none, throw exception in this case
