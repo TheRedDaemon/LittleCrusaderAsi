@@ -5,7 +5,7 @@
 // another: http://www.visualbasicworld.de/tutorial-directx-directdraw.html
 namespace modclasses
 {
-  // amcro found online, source: https://gamedev.net/forums/topic/289485-16-bit-color-on-directdraw-surfaces/2825618/
+  // macro found online, source: https://gamedev.net/forums/topic/289485-16-bit-color-on-directdraw-surfaces/2825618/
   #define RGB16(r,g,b) ((b>>3)|((g>>2)<<5)|((r>>3)<<11))
 
   // pointer for static functions

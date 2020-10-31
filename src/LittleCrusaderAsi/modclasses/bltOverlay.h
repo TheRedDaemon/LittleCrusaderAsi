@@ -14,8 +14,52 @@
 // DirectDraw
 #include "ddraw.h"
 
+// all font loading structures were contructed using the DDFontEngine
+// https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw/
 namespace modclasses
 {
+  enum class FontTypeEnum
+  {
+    NONE,             // for config
+    SMALL,
+    SMALL_BOLD,
+    NORMAL,
+    NORMAL_BOLD
+  };
+
+  // used to parse string to enum
+  NLOHMANN_JSON_SERIALIZE_ENUM(FontTypeEnum, {
+    {FontTypeEnum::NONE, nullptr},
+    {FontTypeEnum::SMALL, "small"},
+    {FontTypeEnum::SMALL_BOLD, "smallBold"},
+    {FontTypeEnum::NORMAL, "normal"},
+    {FontTypeEnum::NORMAL_BOLD, "normalBold"}
+  })
+
+  struct FontContainer
+  {
+    LPDIRECTDRAWSURFACE7 lpFontSurf{ nullptr }; // surface to draw on
+    tagBITMAPINFO bitmapInfo;                 // bitmap info
+    std::vector<unsigned char> bitmapData;    // actual data
+    ABC ABCWidths[256];                       // distance values
+    RECT SrcRects[256];                       // Pre-calculated SrcRects for Blt
+    int BPlusC[256];                          // another distance
+    DWORD TextColor;                          // textcolor
+  };
+
+  class FontHandler
+  {
+  private:
+    std::unordered_map<FontTypeEnum, FontContainer> fonts{};
+
+  public:
+
+    bool loadFont(FontTypeEnum fontType, Json &fontData, const IDirectDraw7* drawObject);
+    bool drawText(LPDIRECTDRAWSURFACE7 destination, FontTypeEnum fontType, const std::string &text, int32_t posX, int32_t posY,
+                  int verticalMaxLength, bool centerBoxHorizontal, bool centerVertical, bool truncate, int32_t &retUsedHorizontalSpace);
+    void releaseSurfaces();
+
+  };
 
   // simple proto class, replace all 'ProtoMod' with the new name
   class BltOverlay : public ModBase
