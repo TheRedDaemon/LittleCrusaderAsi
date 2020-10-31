@@ -6,7 +6,7 @@
 
 namespace modcore
 {
-  ModLoader::ModLoader()
+  ModLoader::ModLoader(HMODULE ownModule) : modKeeper{ std::make_shared<ModKeeper>(ownModule) }
   {
     // will load config and what ever is required at the start
     std::unordered_map<MT, Json> modConfigs{};

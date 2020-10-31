@@ -7,7 +7,7 @@
 #include "modtypes.h"
 
 // json
-#include "../../dependencies/jsonParser/json.hpp"
+#include "../../dependencies/JsonForModernC++/json.hpp"
 
 namespace modclasses 
 {

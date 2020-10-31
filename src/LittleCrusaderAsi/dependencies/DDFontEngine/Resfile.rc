@@ -1,0 +1,19 @@
+#include "Resfile.h"
+
+MAINMENU MENU
+{
+    POPUP "&File"
+    {
+        MENUITEM "&Load Font...", CM_LOADFONT
+        MENUITEM "&Save DirectDraw Font...", CM_SAVEFONT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", CM_EXIT
+    }
+}
+
+STRINGTABLE
+{
+    CM_LOADFONT, "Select Windows font to create bitmap from"
+    CM_SAVEFONT, "Create DirectDraw Font from currently loaded Window font"
+}
+

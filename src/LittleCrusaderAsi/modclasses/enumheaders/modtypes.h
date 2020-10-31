@@ -2,7 +2,7 @@
 #define MODTYPES  // header gard without seperator to avoid problems with enums with the same name
 
 // json
-#include "../../dependencies/jsonParser/json.hpp"
+#include "../../dependencies/JsonForModernC++/json.hpp"
 
 namespace modclasses 
 {

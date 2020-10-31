@@ -10,7 +10,7 @@
 #include "../misc/copiedFunc.h"
 
 //logging
-#include "../dependencies/logger/easylogging++.h"
+#include "../dependencies/easylogging++/easylogging++.h"
 INITIALIZE_EASYLOGGINGPP
 
 // add at least log-level
@@ -109,7 +109,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
       // would make everything useless, actually
       try
       {
-        modLoader = std::make_unique<modcore::ModLoader>();
+        modLoader = std::make_unique<modcore::ModLoader>(hModule);
       }
       catch (const std::exception& o_O)
       {

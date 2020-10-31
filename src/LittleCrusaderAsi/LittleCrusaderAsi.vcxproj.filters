@@ -60,12 +60,6 @@
     <ClInclude Include="modcore\logUtility.h">
       <Filter>Headerdateien\ModCore</Filter>
     </ClInclude>
-    <ClInclude Include="dependencies\logger\easylogging++.h">
-      <Filter>dependencies</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\jsonParser\json.hpp">
-      <Filter>dependencies</Filter>
-    </ClInclude>
     <ClInclude Include="modclasses\versionGetter.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
@@ -111,6 +105,15 @@
     <ClInclude Include="modclasses\bltOverlay.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
+    <ClInclude Include="dependencies\JsonForModernC++\json.hpp">
+      <Filter>dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\easylogging++\easylogging++.h">
+      <Filter>dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\DDFontEngine\DDFontEngine.h">
+      <Filter>dependencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -127,9 +130,6 @@
     </ClCompile>
     <ClCompile Include="modcore\logUtility.cpp">
       <Filter>Quelldateien\ModCore</Filter>
-    </ClCompile>
-    <ClCompile Include="dependencies\logger\easylogging++.cc">
-      <Filter>dependencies</Filter>
     </ClCompile>
     <ClCompile Include="modclasses\versionGetter.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
@@ -157,6 +157,12 @@
     </ClCompile>
     <ClCompile Include="modclasses\bltOverlay.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\easylogging++\easylogging++.cc">
+      <Filter>dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp">
+      <Filter>dependencies</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

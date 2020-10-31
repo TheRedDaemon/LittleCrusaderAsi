@@ -11,7 +11,7 @@
 #include "modKeeper.h"
 
 // json
-#include "../dependencies/jsonParser/json.hpp"
+#include "../../dependencies/JsonForModernC++/json.hpp"
 
 namespace modcore
 {
@@ -23,13 +23,13 @@ namespace modcore
   {
   private:
 
-    std::shared_ptr<ModKeeper> modKeeper = std::make_shared<ModKeeper>();
+    std::shared_ptr<ModKeeper> modKeeper;
     bool firstThreadAttachAfterDllAttachReceived{ false };
 
   public:
 
     // config will be send as ref, but will be created in the Constructor and discarded afterwards, so create a lokal copy if needed
-    ModLoader();
+    ModLoader(HMODULE ownModule);
 
     // When the first thread attach message arives, at least some data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
     // I will use the first as an event handler for now

@@ -175,8 +175,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dependencies\jsonParser\json.hpp" />
-    <ClInclude Include="dependencies\logger\easylogging++.h" />
+    <ClInclude Include="dependencies\DDFontEngine\DDFontEngine.h" />
+    <ClInclude Include="dependencies\JsonForModernC++\json.hpp" />
+    <ClInclude Include="dependencies\easylogging++\easylogging++.h" />
     <ClInclude Include="Modclasses\addressBase.h" />
     <ClInclude Include="Misc\copiedFunc.h" />
     <ClInclude Include="modclasses\addressResolver.h" />
@@ -199,7 +200,8 @@
     <ClInclude Include="modcore\modLoader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dependencies\logger\easylogging++.cc" />
+    <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp" />
+    <ClCompile Include="dependencies\easylogging++\easylogging++.cc" />
     <ClCompile Include="Modclasses\addressBase.cpp" />
     <ClCompile Include="Misc\copiedFunctions.cpp" />
     <ClCompile Include="modclasses\addressKeeper.cpp" />

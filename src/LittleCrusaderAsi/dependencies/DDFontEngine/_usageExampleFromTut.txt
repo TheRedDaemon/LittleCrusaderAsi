@@ -1,0 +1,15 @@
+// Create font engine object:
+TDDFontEngine *Engine; Engine = new TDDFontEngine(lpDD);
+
+// Create font objects:
+TDDFont *FirstFont, *SecondFont;
+FirstFont = new TDDFont(Engine, “Arial.ddf”);
+SecondFont = new TDDFont(Engine, “Times New Roman.ddf”);
+
+// Draw using first font:
+Engine->SelectFont(FirstFont);
+Engine->DrawText(lpDDSBack, 0, 0, “Hello, Arial World!”);
+
+// Draw using second font:
+Engine->SelectFont(SecondFont);
+Engine->DrawText(lpDDSBack, 0, 0, “Hello, Times New Roman World!”);

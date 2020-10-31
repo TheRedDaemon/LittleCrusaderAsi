@@ -1,5 +1,10 @@
+
+
 #ifndef BLTOVERLAY
 #define BLTOVERLAY
+
+// DDFontEngine
+#include "../dependencies/DDFontEngine/DDFontEngine.h"
 
 #include "modBase.h"
 
@@ -40,11 +45,16 @@ namespace modclasses
     // and the rect structures (contain also size for them) (hardcoded currently
     RECT menuRect{0, 0, 300, 500 };
     RECT textRect{ 0, 0, 500, 250 };
-    RECT inputRect{ 0, 0, 300, 100 };
+    RECT inputRect{ 0, 0, 300, 150 };
     // and positions on screen
     std::pair<DWORD, DWORD> menuPos{ 0, 0 };  // upper corner
     std::pair<DWORD, DWORD> textPos{ 300, 0 };        // next to menu
     std::pair<DWORD, DWORD> inputPos{ 0, 0 };   // set by program
+
+    // DDFontEngine stuff
+    std::unique_ptr<TDDFontEngine> fontEngine;
+    std::unique_ptr<TDDFont> fatText;
+    std::unique_ptr<TDDFont> normalText;
 
     // place for whatever structure will be used for additional input stuff
 
@@ -89,7 +99,7 @@ namespace modclasses
     void prepareDDInterfaces(IDirectDraw7* const that, IDirectDrawSurface7* const dd7SurfacePtr);
 
     // blts the overlay surface in the backbuffer
-    void bltMainDDOffSurf();
+    void bltMainDDOffSurfs();
 
     // needs pointer to value
     void createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor);

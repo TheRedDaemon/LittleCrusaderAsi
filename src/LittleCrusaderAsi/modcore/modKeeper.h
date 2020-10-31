@@ -6,7 +6,7 @@
 #include <unordered_map>
 
 // logging
-#include "../dependencies/logger/easylogging++.h"
+#include "../dependencies/easylogging++/easylogging++.h"
 #include "../modcore/logUtility.h" // used to mark that log needs to be copied at the end
 
 #include "../modclasses/enumheaders/modTypes.h"
@@ -40,11 +40,14 @@ namespace modcore
 
     std::vector<std::shared_ptr<ModContainer>> loadedMods{};
 
+    HMODULE handle;
+
   public:
 
-    ModKeeper(){};
+    ModKeeper() = delete;
+    ModKeeper(HMODULE ownModuleHandle) : handle{ownModuleHandle} {}
 
-    ~ModKeeper(){};
+    ~ModKeeper(){}
 
     // needs the ModClass as Template
     // checks if the mod is there, initialized and requested
@@ -83,6 +86,11 @@ namespace modcore
       }
 
       return std::shared_ptr<T>{};
+    }
+
+    HMODULE getOwnModuleHandle()
+    {
+      return handle;
     }
 
     /**misc**/

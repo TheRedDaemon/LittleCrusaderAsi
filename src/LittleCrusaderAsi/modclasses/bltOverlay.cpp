@@ -34,7 +34,7 @@ namespace modclasses
 
   HRESULT _stdcall BltOverlay::FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags)
   {
-    overPtr->bltMainDDOffSurf();
+    overPtr->bltMainDDOffSurfs();
 
     return that->Flip(surf7, flags);
   }
@@ -213,11 +213,16 @@ namespace modclasses
     inputPos.first = surfaceInfos.dwWidth / 2 - inputRect.right / 2;
     inputPos.second = surfaceInfos.dwHeight / 2 - inputRect.bottom / 2;
 
+    // prepare font -> should write something more fitting with the code given later
+    fontEngine = std::make_unique<TDDFontEngine>(that);
+    fatText = std::make_unique<TDDFont>(fontEngine.get(), "plugins/resources/TimesNewRomanFat.ddf");
+    normalText = std::make_unique<TDDFont>(fontEngine.get(), "plugins/resources/TimesNewRoman.ddf");
+
     LOG(INFO) << "Finished surface prepare.";
   }
 
 
-  void BltOverlay::bltMainDDOffSurf()
+  void BltOverlay::bltMainDDOffSurfs()
   {
     /*
     // test
@@ -241,6 +246,9 @@ namespace modclasses
     dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_NOCOLORKEY);
+
+    fontEngine->SelectFont(fatText.get());
+    fontEngine->DrawText(dd7BackbufferPtr, 0, 0, std::string("Hello, Roman World!").data());
   }
 
 
@@ -248,6 +256,19 @@ namespace modclasses
     {Address::DD_MainSurfaceCreate, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},
     {Address::DD_MainFlip, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL}
   };
+
+  // other createSurface calls (extreme)(not all, but I failed to get past the requests):
+  // 0046FF51
+  // 00470007 (mov)
+
+  // codes called when hovering over create Szenario, that access the text:
+  // maybe it will be possible to one day use the text drawing functions of Stronghold
+  // however, for now, i will use a simple for my own
+  // 0x46A3B0
+  // 0x473150
+  // 0x469D04
+  // 0x469DDE
+  // 0x469E10
 
   /*******************************************************/
   // Unused function safe (+ notes):
