@@ -40,7 +40,7 @@
     <Filter Include="Headerdateien\ModClasses\EnumHeaders">
       <UniqueIdentifier>{05cf2cd9-20fd-4592-a8c4-02a65e39c517}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Quelldateien\ModClasses\enumUtil">
+    <Filter Include="Quelldateien\ModClasses\Util">
       <UniqueIdentifier>{197a9e0b-cbf4-402b-b98e-c0740b408722}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -143,9 +143,6 @@
     <ClCompile Include="modclasses\keyboardInterceptor.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
-    <ClCompile Include="modclasses\enumheaders\keyboardUtil.cpp">
-      <Filter>Quelldateien\ModClasses\enumUtil</Filter>
-    </ClCompile>
     <ClCompile Include="modclasses\buildRangeChanger.cpp">
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
@@ -163,6 +160,15 @@
     </ClCompile>
     <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp">
       <Filter>dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\DDFontEngine\WinMain.cpp">
+      <Filter>dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\util\keyboardUtil.cpp">
+      <Filter>Quelldateien\ModClasses\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="modclasses\util\fontUtil.cpp">
+      <Filter>Quelldateien\ModClasses\Util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

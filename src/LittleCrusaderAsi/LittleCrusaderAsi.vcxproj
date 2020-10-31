@@ -201,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp" />
+    <ClCompile Include="dependencies\DDFontEngine\WinMain.cpp" />
     <ClCompile Include="dependencies\easylogging++\easylogging++.cc" />
     <ClCompile Include="Modclasses\addressBase.cpp" />
     <ClCompile Include="Misc\copiedFunctions.cpp" />
@@ -209,7 +210,8 @@
     <ClCompile Include="modclasses\aicLoad.cpp" />
     <ClCompile Include="modclasses\bltOverlay.cpp" />
     <ClCompile Include="modclasses\buildRangeChanger.cpp" />
-    <ClCompile Include="modclasses\enumheaders\keyboardUtil.cpp" />
+    <ClCompile Include="modclasses\util\fontUtil.cpp" />
+    <ClCompile Include="modclasses\util\keyboardUtil.cpp" />
     <ClCompile Include="modclasses\keyboardInterceptor.cpp" />
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
