@@ -1,5 +1,5 @@
 
-#include "keyboardEnumsAndUtil.h"
+#include "../enumheaders/keyboardEnumsAndUtil.h"
 
 namespace modclasses
 {

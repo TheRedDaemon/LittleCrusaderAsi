@@ -175,7 +175,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dependencies\DDFontEngine\DDFontEngine.h" />
     <ClInclude Include="dependencies\JsonForModernC++\json.hpp" />
     <ClInclude Include="dependencies\easylogging++\easylogging++.h" />
     <ClInclude Include="Modclasses\addressBase.h" />
@@ -200,8 +199,6 @@
     <ClInclude Include="modcore\modLoader.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp" />
-    <ClCompile Include="dependencies\DDFontEngine\WinMain.cpp" />
     <ClCompile Include="dependencies\easylogging++\easylogging++.cc" />
     <ClCompile Include="Modclasses\addressBase.cpp" />
     <ClCompile Include="Misc\copiedFunctions.cpp" />

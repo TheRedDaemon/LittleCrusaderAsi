@@ -92,11 +92,11 @@ This repository is licensed using the MIT License.
 LittleStrongholdAsi uses third party tools/code.  
 You will find them together with a copy of their licenses under [THIS](src/LittleCrusaderAsi/dependencies) folder.
 
-Dependency | Used Version
------------- | -------------
+Dependency | Used Version | Notes
+------------ | ------------- | -------------
 [Easylogging++](https://github.com/amrayn/easyloggingpp) | 9.96.7
 [JSON for Modern C++](https://github.com/nlohmann/json) | 3.7.3
-[DDFontEngine](https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw) | - (Old Tutorial for DirectDraw fonts)
+[DDFontEngine](https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw) | - | Old Tutorial for DirectDraw fonts. Classes themselves unused, but kept for reference.
 
 ### Other Crusader projects
 There are a handful of projects on GitHub for Stronghold (Crusader) 1. So take a look. After all, every development might be helpful for other projects.  

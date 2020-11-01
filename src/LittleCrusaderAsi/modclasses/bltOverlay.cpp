@@ -112,7 +112,7 @@ namespace modclasses
   void BltOverlay::createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor)
   {
     DDSURFACEDESC2 offscreenSurfDes;
-    zeroDDObjectAndSetSize<DDSURFACEDESC2>(offscreenSurfDes);
+    ZeroDDObjectAndSetSize<DDSURFACEDESC2>(offscreenSurfDes);
 
     offscreenSurfDes.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
 
@@ -129,7 +129,7 @@ namespace modclasses
 
     // test
     //offscreenSurfDes.dwFlags |= DDSD_PIXELFORMAT;
-    //zeroDDObjectAndSetSize(offscreenSurfDes.ddpfPixelFormat);
+    //ZeroDDObjectAndSetSize(offscreenSurfDes.ddpfPixelFormat);
     //offscreenSurfDes.ddpfPixelFormat.dwFlags = DDPF_ALPHAPIXELS | DDPF_ALPHAPREMULT | DDPF_PALETTEINDEXED8 | DDPF_RGB;
     //offscreenSurfDes.ddpfPixelFormat.dwRGBBitCount = 32;
 
@@ -151,7 +151,7 @@ namespace modclasses
 
     // dummy initial color fill
     DDBLTFX fx;
-    zeroDDObjectAndSetSize<DDBLTFX>(fx);
+    ZeroDDObjectAndSetSize<DDBLTFX>(fx);
 
     fx.dwFillColor = fillColor;
 
@@ -166,6 +166,7 @@ namespace modclasses
       menuOffSurf->Release();
       textOffSurf->Release();
       inputOffSurf->Release();
+      fntHandler.releaseSurfaces();
 
       if (!doNotKeepDD7Interface)
       {
@@ -186,7 +187,7 @@ namespace modclasses
     }
 
     DDSCAPS2 ddscapsBack;
-    zeroDDObject<DDSCAPS2>(ddscapsBack);
+    ZeroDDObject<DDSCAPS2>(ddscapsBack);
     ddscapsBack.dwCaps = DDSCAPS_BACKBUFFER;
     res = dd7SurfacePtr->GetAttachedSurface(&ddscapsBack, &dd7BackbufferPtr);
     if (res == DD_OK)
@@ -200,12 +201,12 @@ namespace modclasses
     
     // set input pos to middle
     DDSURFACEDESC2 surfaceInfos;
-    zeroDDObjectAndSetSize<DDSURFACEDESC2>(surfaceInfos);
+    ZeroDDObjectAndSetSize<DDSURFACEDESC2>(surfaceInfos);
     dd7SurfacePtr->GetSurfaceDesc(&surfaceInfos);
 
     /*
     DDPIXELFORMAT px;
-    zeroDDObjectAndSetSize(px);
+    ZeroDDObjectAndSetSize(px);
     menuOffSurf->GetPixelFormat(&px);
     dd7SurfacePtr->GetPixelFormat(&px);
     */
@@ -214,9 +215,8 @@ namespace modclasses
     inputPos.second = surfaceInfos.dwHeight / 2 - inputRect.bottom / 2;
 
     // prepare font -> should write something more fitting with the code given later
-    fontEngine = std::make_unique<TDDFontEngine>(that);
-    fatText = std::make_unique<TDDFont>(fontEngine.get(), "plugins/resources/TimesNewRomanFat.ddf");
-    normalText = std::make_unique<TDDFont>(fontEngine.get(), "plugins/resources/TimesNewRoman.ddf");
+    Json test{ nullptr };
+    fntHandler.loadFont(FontTypeEnum::NORMAL, test, dd7InterfacePtr, RGB(255, 255, 255));
 
     LOG(INFO) << "Finished surface prepare.";
   }
@@ -247,8 +247,13 @@ namespace modclasses
     dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_NOCOLORKEY);
 
-    fontEngine->SelectFont(fatText.get());
-    fontEngine->DrawText(dd7BackbufferPtr, 0, 0, std::string("Hello, Roman World!").data());
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Hallo, das ist ein Test.", 0, 0, 480, false, false, false, nullptr);
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin in der Mitte.", inputRect.right / 2 + inputPos.first,
+                        inputRect.bottom / 2 + inputPos.second, 480, true, true, false, nullptr);
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin gekürzt", menuRect.right,
+                        menuRect.bottom, 200, false, false, true, nullptr);
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin alles zusammen", textRect.right + textPos.first,
+                        textRect.bottom, 150, true, true, true, nullptr);
   }
 
 

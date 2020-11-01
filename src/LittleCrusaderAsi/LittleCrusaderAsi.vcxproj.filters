@@ -111,9 +111,6 @@
     <ClInclude Include="dependencies\easylogging++\easylogging++.h">
       <Filter>dependencies</Filter>
     </ClInclude>
-    <ClInclude Include="dependencies\DDFontEngine\DDFontEngine.h">
-      <Filter>dependencies</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -156,12 +153,6 @@
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\easylogging++\easylogging++.cc">
-      <Filter>dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="dependencies\DDFontEngine\DDFontEngine.cpp">
-      <Filter>dependencies</Filter>
-    </ClCompile>
-    <ClCompile Include="dependencies\DDFontEngine\WinMain.cpp">
       <Filter>dependencies</Filter>
     </ClCompile>
     <ClCompile Include="modclasses\util\keyboardUtil.cpp">

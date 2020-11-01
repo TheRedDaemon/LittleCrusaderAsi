@@ -3,9 +3,6 @@
 #ifndef BLTOVERLAY
 #define BLTOVERLAY
 
-// DDFontEngine
-#include "../dependencies/DDFontEngine/DDFontEngine.h"
-
 #include "modBase.h"
 
 #include "keyboardInterceptor.h"
@@ -27,6 +24,7 @@ namespace modclasses
     NORMAL_BOLD
   };
 
+
   // used to parse string to enum
   NLOHMANN_JSON_SERIALIZE_ENUM(FontTypeEnum, {
     {FontTypeEnum::NONE, nullptr},
@@ -36,16 +34,41 @@ namespace modclasses
     {FontTypeEnum::NORMAL_BOLD, "normalBold"}
   })
 
+
+  // small global helper method to zero ddObject (and set size value)
+  template <typename T>
+  void ZeroDDObject(T &ddObject)
+  {
+    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    ZeroMemory(&ddObject, sizeof(ddObject));
+  }
+
+
+  template <typename T>
+  void ZeroDDObjectAndSetSize(T &ddObject)
+  {
+    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    ZeroMemory(&ddObject, sizeof(ddObject));
+    ddObject.dwSize = sizeof(ddObject);
+  }
+
+
   struct FontContainer
   {
-    LPDIRECTDRAWSURFACE7 lpFontSurf{ nullptr }; // surface to draw on
-    tagBITMAPINFO bitmapInfo;                 // bitmap info
-    std::vector<unsigned char> bitmapData;    // actual data
-    ABC ABCWidths[256];                       // distance values
-    RECT SrcRects[256];                       // Pre-calculated SrcRects for Blt
-    int BPlusC[256];                          // another distance
-    DWORD TextColor;                          // textcolor
+    LPDIRECTDRAWSURFACE7 lpFontSurf{ nullptr };     // surface to draw on
+    std::unique_ptr<char[]> bitmapInfo{};           // bitmap info
+    std::unique_ptr<char[]> bitmapData{};           // actual data
+    ABC ABCWidths[256];                             // distance values
+    RECT SrcRects[256];                             // Pre-calculated SrcRects for Blt
+    int BPlusC[256];                                // another distance
+    DWORD TextColor;                                // textcolor
+
+    LPBITMAPINFO getBitmapInfo()  // since the structure is constructed using char... (do not know better way)
+    {
+      return reinterpret_cast<LPBITMAPINFO>(bitmapInfo.get());
+    }
   };
+
 
   class FontHandler
   {
@@ -54,12 +77,18 @@ namespace modclasses
 
   public:
 
-    bool loadFont(FontTypeEnum fontType, Json &fontData, const IDirectDraw7* drawObject);
+    bool loadFont(FontTypeEnum fontType, Json &fontData, IDirectDraw7* drawObject, DWORD textcolor);
     bool drawText(LPDIRECTDRAWSURFACE7 destination, FontTypeEnum fontType, const std::string &text, int32_t posX, int32_t posY,
-                  int verticalMaxLength, bool centerBoxHorizontal, bool centerVertical, bool truncate, int32_t &retUsedHorizontalSpace);
+                  int horizontalMaxLength, bool centerBoxHorizontal, bool centerVertical, bool truncate,
+                  std::function<std::pair<int32_t, int32_t>(std::pair<int32_t, int32_t>)> *reactToRelSize);
     void releaseSurfaces();
 
+
+  private:
+
+    void cleanInErrorCase(FontTypeEnum fontType, std::string &&logMsg);
   };
+
 
   // simple proto class, replace all 'ProtoMod' with the new name
   class BltOverlay : public ModBase
@@ -95,16 +124,15 @@ namespace modclasses
     std::pair<DWORD, DWORD> textPos{ 300, 0 };        // next to menu
     std::pair<DWORD, DWORD> inputPos{ 0, 0 };   // set by program
 
-    // DDFontEngine stuff
-    std::unique_ptr<TDDFontEngine> fontEngine;
-    std::unique_ptr<TDDFont> fatText;
-    std::unique_ptr<TDDFont> normalText;
+    // font stuff
+    FontHandler fntHandler{};
 
     // place for whatever structure will be used for additional input stuff
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
     static std::vector<AddressRequest> usedAddresses;
+
 
   public:
 
@@ -131,6 +159,7 @@ namespace modclasses
     BltOverlay(const BltOverlay &base) = delete;
     virtual BltOverlay& operator=(const BltOverlay &base) final = delete;
 
+
   private:
 
     // should be defined in .cpp
@@ -150,21 +179,6 @@ namespace modclasses
 
 
     // static functions: //
-
-    // small helper method to zero ddObject (and set size value)
-    template <typename T>
-    void zeroDDObject(T &ddObject)
-    {
-      // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
-      ZeroMemory(&ddObject, sizeof(ddObject));
-    }
-    template <typename T>
-    void zeroDDObjectAndSetSize(T &ddObject)
-    {
-      // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
-      ZeroMemory(&ddObject, sizeof(ddObject));
-      ddObject.dwSize = sizeof(ddObject);
-    }
 
     // IDirectDraw7 ptr is invalid once it reaches this position
     // -> old surfaces sometimes are lost, sometimes they work
