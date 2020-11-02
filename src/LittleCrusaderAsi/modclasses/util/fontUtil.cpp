@@ -205,8 +205,8 @@ namespace modclasses
 
 
   bool FontHandler::drawText(LPDIRECTDRAWSURFACE7 destination, FontTypeEnum fontType, const std::string &text, int32_t posX, int32_t posY,
-                             int horizontalMaxLength, bool centerBoxHorizontal, bool centerVertical, bool truncate,
-                             std::function<std::pair<int32_t, int32_t>(std::pair<int32_t, int32_t>)> *reactToRelSize)
+                             int horizontalMaxLength, bool centerHorizontal, bool centerVertical, bool truncate,
+                             std::function<std::pair<int32_t, int32_t>(RECT)> *reactToRelSize)
   {
     auto fntIt{ fonts.find(fontType) };
     if (fntIt == fonts.end() || fntIt->second.lpFontSurf == nullptr)
@@ -217,106 +217,141 @@ namespace modclasses
     bool allOk{ true };
     FontContainer& font = fntIt->second;
 
-    // precompute position for centering...  not the best solution to be fair
-    // TODO: think of better way if possible
+    // precompute positions
+    // line separation for now will only happen on a ' ' position
+    // trailing whitespace is not removed -> centered stuff could be moved in strange ways
+    int32_t heightOfAChar{ font.SrcRects['a'].bottom - font.SrcRects['a'].top };
+    int32_t spaceWidth{ font.ABCWidths[' '].abcA + font.BPlusC[' '] };
+
+    // only get number of chars and line size -> compute based on conditions first: number, second: length, third, add to counter, because space ignored
+    std::vector<std::tuple<int32_t, int32_t, bool>> lineInfo;
     bool stillTruncate{ false };
-    int32_t writeCharMax{0};
-    std::pair<int32_t, int32_t> relPos{ 0, 0 };
-    if (centerBoxHorizontal || centerVertical || truncate)
-    {
+    int32_t lastSpace{ 0 };
+    int32_t beforeLastSpace{ 0 };
 
-      if (centerVertical)
-      {
-        relPos.second -= font.SrcRects['a'].bottom - font.SrcRects['a'].top; // init with one line
-      }
-
-      int32_t relXPos{ 0 };
-      for (unsigned char chr : text)
-      {
-        int32_t xPosAdd = font.ABCWidths[chr].abcA + font.BPlusC[chr];
-        if (horizontalMaxLength < relXPos + xPosAdd)
-        {
-          if (relPos.first != -horizontalMaxLength / 2)
-          {
-            if (centerBoxHorizontal)
-            {
-              relPos.first = -horizontalMaxLength / 2;
-            }
-
-            if (truncate)
-            {
-              stillTruncate = true;
-              break; // we are done if the line is filled
-            }
-          }
-
-          if (centerVertical)
-          {
-            relPos.second -= font.SrcRects['a'].bottom - font.SrcRects['a'].top; // another line
-          }
-
-          relXPos = 0;
-        }
-
-        ++writeCharMax;
-        relXPos += xPosAdd;
-      }
-
-      if (centerBoxHorizontal && relPos.first != -horizontalMaxLength / 2)
-      {
-        relPos.first += -relXPos / 2;
-      }
-
-      if (centerVertical)
-      {
-        relPos.second /= 2; // init with one line
-      }
-    }
-    else
-    {
-      writeCharMax = text.size();
-    }
-
-    if (reactToRelSize)
-    {
-      relPos = (*reactToRelSize)(relPos);
-    }
-
-    posX += relPos.first;
-    posY += relPos.second;
-
-    relPos.first = posX;  // to have actual start
-    relPos.second = posY;
-
-    int32_t drawnChars{ 0 };
-    int32_t limit{ horizontalMaxLength + posX };
+    size_t charNumber{ 0 };
+    int32_t relXPos{ 0 };
     for (unsigned char chr : text)
     {
-      if (font.ABCWidths[chr].abcA + font.BPlusC[chr] + posX >= limit)
+      if (chr == ' ')
       {
-        posX = relPos.first;
-        posY += font.SrcRects['a'].bottom - font.SrcRects['a'].top; // another line
+        // will contain length and number until then
+        lastSpace = charNumber; // at this point it is the char position (and 0 is ignored)
+        beforeLastSpace = relXPos;  // includes the space length
+      }
+
+      int32_t xPosAdd = font.ABCWidths[chr].abcA + font.BPlusC[chr];
+      if (horizontalMaxLength < relXPos + xPosAdd)
+      {
+        if (truncate) // truncate does not care
+        {
+          stillTruncate = true;
+          break; // we are done if the line is filled
+        }
+
+        if (horizontalMaxLength > xPosAdd) // the char is placed if alone to big for line
+        {
+          if (lastSpace > 0)
+          {
+            lineInfo.push_back({ lastSpace, beforeLastSpace, true });
+            charNumber -= (lastSpace + 1);  // removing last space
+            relXPos -= (beforeLastSpace + spaceWidth); // removing last space wdith
+          }
+          else  // if the line is filled, it cuts
+          {
+            lineInfo.push_back({ charNumber, relXPos, false });
+            charNumber = 0;
+            relXPos = 0;
+          }
+          beforeLastSpace = 0;
+          lastSpace = 0;
+        }
+      }
+
+      ++charNumber;
+      relXPos += xPosAdd;
+    }
+    lineInfo.push_back({ charNumber, relXPos, false }); // if it run through
+
+
+    // idea changed, these function now updates x and y
+    if (reactToRelSize)
+    {
+      // compute containing box
+      RECT textBox{ 0, 0, 0, 0 };
+      
+      for (auto& numberLengthAndSpace : lineInfo)
+      {
+        if (std::get<1>(numberLengthAndSpace) > textBox.right)
+        {
+          textBox.right = std::get<1>(numberLengthAndSpace);
+        }
+      }
+      textBox.bottom = lineInfo.size() * heightOfAChar;
+
+      if (centerVertical)
+      {
+        textBox.bottom /= 2;
+        textBox.top -= textBox.bottom;
+      }
+
+      if (centerHorizontal)
+      {
+        textBox.right /= 2;
+        textBox.left -= textBox.right;
       }
       
-      posX += font.ABCWidths[chr].abcA;
-      allOk = allOk && destination->BltFast(posX, posY, font.lpFontSurf, &(font.SrcRects[chr]), DDBLTFAST_SRCCOLORKEY) == S_OK;
-      posX += font.BPlusC[chr];
+      textBox.left += posX;
+      textBox.right += posX;
+      textBox.top += posY;
+      textBox.bottom += posY;
 
-      ++drawnChars;
-      if (drawnChars >= writeCharMax)
-      {
-        break;
-      }
+      std::pair<int32_t, int32_t> newXYpos = (*reactToRelSize)(textBox);
+      posX = newXYpos.first;
+      posY = newXYpos.second;
     }
 
-    // add three points (and other variable to notice it)
-    if (stillTruncate)
+
+    // print chars
+    size_t counter{ 0 };
+    for (size_t line{ 0 }; line < lineInfo.size(); line++)
     {
-      for (size_t i = 0; i < 3; i++)
+      auto& numberLengthAndSpace = lineInfo[line];
+      int32_t x{ posX };
+      int32_t y{ posY + static_cast<int32_t>(line) * heightOfAChar };
+
+      if (centerVertical)
       {
-        posX += font.ABCWidths['.'].abcA;
-        allOk = allOk && destination->BltFast(posX, posY, font.lpFontSurf, &(font.SrcRects['.']), DDBLTFAST_SRCCOLORKEY) == S_OK;
-        posX += font.BPlusC['.'];
+        y -= heightOfAChar * lineInfo.size() / 2;
+      }
+
+      if (centerHorizontal)
+      {
+        x -= std::get<1>(numberLengthAndSpace) / 2;
+      }
+
+      for (int32_t chrNum{ 0 }; chrNum < std::get<0>(numberLengthAndSpace); chrNum++)
+      {
+        unsigned char chr = text[counter];
+        x += font.ABCWidths[chr].abcA;
+        allOk = allOk && destination->BltFast(x, y, font.lpFontSurf, &(font.SrcRects[chr]), DDBLTFAST_SRCCOLORKEY) == S_OK;
+        x += font.BPlusC[chr];
+        ++counter;
+      }
+
+      // ignores everything else, just places it
+      if (stillTruncate)
+      {
+        for (size_t i = 0; i < 3; i++)
+        {
+          x += font.ABCWidths['.'].abcA;
+          allOk = allOk && destination->BltFast(x, y, font.lpFontSurf, &(font.SrcRects['.']), DDBLTFAST_SRCCOLORKEY) == S_OK;
+          x += font.BPlusC['.'];
+        }
+      }
+      else if (std::get<2>(numberLengthAndSpace))
+      {
+        ++counter; // adding one, because removed space
       }
     }
 

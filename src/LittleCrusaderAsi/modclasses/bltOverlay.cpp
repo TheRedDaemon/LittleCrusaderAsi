@@ -249,9 +249,9 @@ namespace modclasses
 
     fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Hallo, das ist ein Test.", 0, 0, 480, false, false, false, nullptr);
     fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin in der Mitte.", inputRect.right / 2 + inputPos.first,
-                        inputRect.bottom / 2 + inputPos.second, 480, true, true, false, nullptr);
+                        inputRect.bottom / 2 + inputPos.second, 20, true, true, false, nullptr);
     fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin gekürzt", menuRect.right,
-                        menuRect.bottom, 200, false, false, true, nullptr);
+                        menuRect.bottom, 100, false, false, true, nullptr);
     fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin alles zusammen", textRect.right + textPos.first,
                         textRect.bottom, 150, true, true, true, nullptr);
   }

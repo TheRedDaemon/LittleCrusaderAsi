@@ -79,8 +79,8 @@ namespace modclasses
 
     bool loadFont(FontTypeEnum fontType, Json &fontData, IDirectDraw7* drawObject, DWORD textcolor);
     bool drawText(LPDIRECTDRAWSURFACE7 destination, FontTypeEnum fontType, const std::string &text, int32_t posX, int32_t posY,
-                  int horizontalMaxLength, bool centerBoxHorizontal, bool centerVertical, bool truncate,
-                  std::function<std::pair<int32_t, int32_t>(std::pair<int32_t, int32_t>)> *reactToRelSize);
+                  int horizontalMaxLength, bool centerHorizontal, bool centerVertical, bool truncate,
+                  std::function<std::pair<int32_t, int32_t>(RECT)> *reactToRelSize);
     void releaseSurfaces();
 
 
