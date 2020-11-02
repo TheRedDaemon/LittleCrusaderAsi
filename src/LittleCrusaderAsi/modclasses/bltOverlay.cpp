@@ -6,7 +6,10 @@
 namespace modclasses
 {
   // macro found online, source: https://gamedev.net/forums/topic/289485-16-bit-color-on-directdraw-surfaces/2825618/
-  #define RGB16(r,g,b) ((b>>3)|((g>>2)<<5)|((r>>3)<<11))
+  #define RGB16(r, g, b) ((b >> 3) | ((g >> 2) << 5) | ((r >> 3) << 11))
+
+  // from: https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw/
+  #define TEXTCOLOR(r, g, b) ((DWORD) (((BYTE) (b) | ((WORD) (g) << 8)) | (((DWORD) (BYTE) (r)) << 16)))
 
   // pointer for static functions
   static BltOverlay *overPtr{ nullptr };
@@ -56,6 +59,16 @@ namespace modclasses
     {
       LOG(WARNING) << "BltOverlay: No valid 'doNotKeepDD7Interface' found. Needs to be boolean. Defaults to 'false'. "
         << "Only used for some D7to9 modes (if asiloader is dxwrapper) to prevent issues. Ex. window modes needs 'true', or it vanishes.";
+    }
+
+    confIt = config.find("fontConfigs");
+    if (confIt != config.end() && confIt.value().is_object())
+    {
+      fontConfigs = confIt.value();
+    }
+    else
+    {
+      LOG(WARNING) << "BltOverlay: No valid 'fontConfigs' found. Needs to be an object with font configs. Using default fonts.";
     }
   }
 
@@ -109,7 +122,7 @@ namespace modclasses
   // intern functions //
 
 
-  void BltOverlay::createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor)
+  bool BltOverlay::createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor)
   {
     DDSURFACEDESC2 offscreenSurfDes;
     ZeroDDObjectAndSetSize<DDSURFACEDESC2>(offscreenSurfDes);
@@ -146,7 +159,7 @@ namespace modclasses
     if (res != S_OK)
     {
       LOG(ERROR) << "Failed to create offscreen surface.";
-      return;
+      return false;
     }
 
     // dummy initial color fill
@@ -156,6 +169,8 @@ namespace modclasses
     fx.dwFillColor = fillColor;
 
     res = (*surf)->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+
+    return true;
   }
 
 
@@ -190,33 +205,41 @@ namespace modclasses
     ZeroDDObject<DDSCAPS2>(ddscapsBack);
     ddscapsBack.dwCaps = DDSCAPS_BACKBUFFER;
     res = dd7SurfacePtr->GetAttachedSurface(&ddscapsBack, &dd7BackbufferPtr);
-    if (res == DD_OK)
+    if (res != DD_OK)
     {
-      LOG(INFO) << "Got backbuffer.";
+      LOG(WARNING) << "Did not get backbuffer. Overlay will not work.";
+      dd7BackbufferPtr = nullptr;
     }
 
-    createOffSurface(&menuOffSurf, menuRect.right, menuRect.bottom, RGB16(0,0,255));
-    createOffSurface(&textOffSurf, textRect.right, textRect.bottom, RGB16(255, 0, 0));
-    createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, RGB16(0, 255, 0));
+    bool mainSurfOk{ true };
+    mainSurfOk = mainSurfOk && createOffSurface(&menuOffSurf, menuRect.right, menuRect.bottom, RGB16(0,0,255));
+    mainSurfOk = mainSurfOk && createOffSurface(&textOffSurf, textRect.right, textRect.bottom, RGB16(255, 0, 0));
+    mainSurfOk = mainSurfOk && createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, RGB16(0, 255, 0));
+    if (!mainSurfOk)
+    {
+      LOG(ERROR) << "At least one overlay surface could not get created. Removing backbuffer pointer to prevent crashes.";
+      dd7BackbufferPtr = nullptr;
+    }
     
     // set input pos to middle
     DDSURFACEDESC2 surfaceInfos;
     ZeroDDObjectAndSetSize<DDSURFACEDESC2>(surfaceInfos);
     dd7SurfacePtr->GetSurfaceDesc(&surfaceInfos);
 
-    /*
-    DDPIXELFORMAT px;
-    ZeroDDObjectAndSetSize(px);
-    menuOffSurf->GetPixelFormat(&px);
-    dd7SurfacePtr->GetPixelFormat(&px);
-    */
-
     inputPos.first = surfaceInfos.dwWidth / 2 - inputRect.right / 2;
     inputPos.second = surfaceInfos.dwHeight / 2 - inputRect.bottom / 2;
 
     // prepare font -> should write something more fitting with the code given later
-    Json test{ nullptr };
-    fntHandler.loadFont(FontTypeEnum::NORMAL, test, dd7InterfacePtr, RGB(255, 255, 255));
+    fntHandler.setUseVideoMemory(!disableHardwareTest);
+    bool fontOk{ true };
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 250));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 150));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 250));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 150));
+    if (!fontOk)
+    {
+      LOG(WARNING) << "At least one font failed to load.";
+    }
 
     LOG(INFO) << "Finished surface prepare.";
   }
@@ -224,35 +247,17 @@ namespace modclasses
 
   void BltOverlay::bltMainDDOffSurfs()
   {
-    /*
-    // test
-    static int testAdd{ 0 };
-
-    RECT rect;
-    rect.left = 0;
-    rect.top = 0;
-    rect.right = 100 + 0; // seems to use exclusive
-    rect.bottom = 100 + 0;
-
-    HRESULT bltRes = dd7BackbufferPtr->BltFast(300 + testAdd, 300, mainOffSurf, &rect, DDBLTFAST_NOCOLORKEY);
-    ++testAdd;
-    if (testAdd > 100)
-    {
-      testAdd = 0;
-    }
-    */
-
-    // NOTE: normal blt can auto transform the size to fit
+    // NOTE: normal blt can auto transform the size to fit (info)
     dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_NOCOLORKEY);
 
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Hallo, das ist ein Test.", 0, 0, 480, false, false, false, nullptr);
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL_BOLD, "Hallo, das ist ein Test.", 0, 0, 480, false, false, false, nullptr);
     fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin in der Mitte.", inputRect.right / 2 + inputPos.first,
-                        inputRect.bottom / 2 + inputPos.second, 20, true, true, false, nullptr);
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin gekürzt", menuRect.right,
+                        inputRect.bottom / 2 + inputPos.second, 75, true, true, false, nullptr);
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::SMALL, "Ich bin vielleicht gekürzt", menuRect.right,
                         menuRect.bottom, 100, false, false, true, nullptr);
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin alles zusammen", textRect.right + textPos.first,
+    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::SMALL_BOLD, "Ich bin alles zusammen", textRect.right + textPos.first,
                         textRect.bottom, 150, true, true, true, nullptr);
   }
 

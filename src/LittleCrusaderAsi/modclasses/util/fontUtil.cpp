@@ -6,31 +6,164 @@
 // most of the comments are from there, too
 namespace modclasses
 {
+  FontConfig FontHandler::loadDefaultConfig(FontTypeEnum type)
+  {
+    switch (type)
+    {
+      case FontTypeEnum::NORMAL:
+        return { "Times New Roman", 14, FW_NORMAL, false, false, false };
+      case FontTypeEnum::NORMAL_BOLD:
+        return { "Times New Roman", 14, FW_BOLD, false, false, false };
+      case FontTypeEnum::SMALL:
+        return { "Times New Roman", 10, FW_NORMAL, false, false, false };
+      case FontTypeEnum::SMALL_BOLD:
+        return { "Times New Roman", 10, FW_BOLD, false, false, false };
+      default:
+        throw std::exception("This should not happen. No default fond found.");
+    }
+  }
+
   bool FontHandler::loadFont(FontTypeEnum fontType, Json &fontData, IDirectDraw7* drawObject, DWORD textcolor)
   {
+    if (fontType == FontTypeEnum::NONE)
+    {
+      LOG(WARNING) << "Requested 'NONE' font.";
+      return false;
+    }
+
     auto fntIt{ fonts.find(fontType) };
     if (fntIt == fonts.end())
     {
-      FontContainer& font = fonts[fontType];  // create
-      //FontContainer font; // test
-      // whole bitmap loading was taken from DDFrontEngine
-      // needs a lot of error checks
+      // loading config:
+      FontConfig conf{ loadDefaultConfig(fontType) };
 
-      // TODO: create font configuration (and maybe look, if you can clean this up a little)
-      HFONT hfont{ CreateFont(24, 0, 0, 0, FW_BOLD, false, false, false, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-                              CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Times New Roman")) };
-      if (hfont == NULL)
+      try
       {
-        cleanInErrorCase(fontType, "Unable to get font.");
+        Json jsNameFont = fontType;
+        std::string nameFontType = jsNameFont.get<std::string>();
+
+        auto confIt = fontData.find(nameFontType);
+        if (confIt != fontData.end() && confIt.value().is_object())
+        {
+          Json& configData = confIt.value();
+          bool issue{ false }; // used if the if clause itself is not enough
+
+          confIt = configData.find("name");
+          if (confIt != configData.end() && confIt.value().is_string())
+          {
+            conf.name = confIt.value();
+          }
+          else
+          {
+            LOG(WARNING) << "BltOverlay: No font name for '" << nameFontType << "' found. Needs to be string. Using default.";
+          }
+
+          confIt = configData.find("height");
+          issue = true;
+          if (confIt != configData.end() && confIt.value().is_number_integer())
+          {
+            int h{ confIt.value().get<int>() };
+            if (h > 0)
+            {
+              conf.height = h;
+              issue = false;
+            }
+          }
+          if (issue)
+          {
+            LOG(WARNING) << "BltOverlay: No font height for '" << nameFontType << "' found. Needs to be integer bigger the 0. Using default.";
+            issue = false;
+          }
+
+          confIt = configData.find("weight");
+          issue = true;
+          if (confIt != configData.end() && confIt.value().is_number_integer())
+          {
+            int w{ confIt.value().get<int>() };
+            if (w >= 0 && w <= 1000)
+            {
+              conf.weight = w;
+              issue = false;
+            }
+          }
+          if (issue)
+          {
+            LOG(WARNING) << "BltOverlay: No font weight for '" << nameFontType << "' found. Needs to be integer between 0 and 1000. Using default.";
+            issue = false;
+          }
+
+          confIt = configData.find("italic");
+          if (confIt != configData.end() && confIt.value().is_boolean())
+          {
+            conf.italic = confIt.value();
+          }
+          else
+          {
+            LOG(WARNING) << "BltOverlay: No statement found if font '" << nameFontType << "' should use italic font. "
+              << "Needs to be boolean. Using default.";
+          }
+
+          confIt = configData.find("underlined");
+          if (confIt != configData.end() && confIt.value().is_boolean())
+          {
+            conf.underline = confIt.value();
+          }
+          else
+          {
+            LOG(WARNING) << "BltOverlay: No statement found if font '" << nameFontType << "' should use underlined font. "
+              << "Needs to be boolean. Using default.";
+          }
+
+          confIt = configData.find("strikeout");
+          if (confIt != configData.end() && confIt.value().is_boolean())
+          {
+            conf.strikeOut = confIt.value();
+          }
+          else
+          {
+            LOG(WARNING) << "BltOverlay: No statement found if font '" << nameFontType << "' should use strikeout font. "
+              << "Needs to be boolean. Using default.";
+          }
+        }
+        else
+        {
+          LOG(WARNING) << "BltOverlay: No config for font '" << nameFontType << "' found. Using default.";
+        }
+      }
+      catch (const std::exception& o_O)
+      {
+        LOG(ERROR) << "Error during font config: " << o_O.what() << ". Using default.";
+      }
+
+
+      // font construction:
+      FontContainer& font = fonts[fontType];
+
+      HDC hdc{ NULL };
+      HFONT hfont{ NULL };
+      HBITMAP OffscrBmp{ NULL };
+
+      // Create an offscreen device context:
+      hdc = CreateCompatibleDC(0);
+      if (!hdc)
+      {
+        cleanInErrorCase(fontType, "Failed creating device context.");  // nothing was created so far, no need for delete
         return false;
       }
 
-      // Create an offscreen device context:
-      HDC hdc{ CreateCompatibleDC(0) };
-      if (hdc == NULL)
+      if (!SetMapMode(hdc, MM_TEXT))
       {
-        cleanInErrorCase(fontType, "Failed creating device context.");
-        DeleteObject(hfont);
+        cleanInErrorCase(fontType, "Unable to set map mode.");
+        deleteDCObjects(hfont, OffscrBmp, hdc);
+        return false;
+      }
+      int fontHeight = -MulDiv(conf.height, GetDeviceCaps(hdc, LOGPIXELSY), 72);  // compute pixel size
+      hfont = CreateFont(fontHeight, 0, 0, 0, conf.weight, conf.italic, conf.underline, conf.strikeOut, DEFAULT_CHARSET,
+                         OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, conf.name.c_str());
+      if (!hfont)
+      {
+        cleanInErrorCase(fontType, "Unable to get font.");
+        deleteDCObjects(hfont, OffscrBmp, hdc);
         return false;
       }
 
@@ -58,12 +191,11 @@ namespace modclasses
       // Create an offscreen bitmap:
       int width = 16 * tm.tmMaxCharWidth;
       int height = 14 * tm.tmHeight;
-      HBITMAP OffscrBmp = CreateCompatibleBitmap(hdc, width, height);
+      OffscrBmp = CreateCompatibleBitmap(hdc, width, height);
       if (!OffscrBmp)
       {
         cleanInErrorCase(fontType, "Unable to create bitmap.");
-        DeleteObject(hfont);
-        DeleteDC(hdc);
+        deleteDCObjects(hfont, OffscrBmp, hdc);
         return false;
       }
       // Select bitmap into DC:
@@ -71,9 +203,7 @@ namespace modclasses
       if (!OldBmp)
       {
         cleanInErrorCase(fontType, "Unable to get old bitmap.");
-        DeleteObject(hfont);
-        DeleteObject(OffscrBmp);
-        DeleteDC(hdc);
+        deleteDCObjects(hfont, OffscrBmp, hdc);
         return false;
       }
 
@@ -106,9 +236,7 @@ namespace modclasses
       if (!GetDIBits(hdc, OffscrBmp, 0, height, NULL, bmInfo, DIB_RGB_COLORS))
       {
         cleanInErrorCase(fontType, "Unable to receive bitmap info.");
-        DeleteObject(hfont);
-        DeleteObject(OffscrBmp);
-        DeleteDC(hdc);
+        deleteDCObjects(hfont, OffscrBmp, hdc);
         return false;
       }
 
@@ -119,16 +247,12 @@ namespace modclasses
       if (!GetDIBits(hdc, OffscrBmp, 0, height, font.bitmapData.get(), bmInfo, DIB_RGB_COLORS))
       {
         cleanInErrorCase(fontType, "Unable to receive bitmap data.");
-        DeleteObject(hfont);
-        DeleteObject(OffscrBmp);
-        DeleteDC(hdc);
+        deleteDCObjects(hfont, OffscrBmp, hdc);
         return false;
       }
 
       // release HDC:
-      DeleteObject(hfont);
-      DeleteObject(OffscrBmp);
-      DeleteDC(hdc);
+      deleteDCObjects(hfont, OffscrBmp, hdc);
 
       // Pre-calculate SrcRects:
       int32_t CellWidth = bmInfo->bmiHeader.biWidth >> 4;
@@ -145,8 +269,6 @@ namespace modclasses
         font.BPlusC[c] = font.ABCWidths[c].abcB + font.ABCWidths[c].abcC;
       }
 
-      // which object causes problems?;
-
       fntIt = fonts.find(fontType);
     }
 
@@ -162,6 +284,10 @@ namespace modclasses
       ZeroDDObjectAndSetSize(ddsd);
       ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
       ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+      if (useVideoMemory)
+      {
+        ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
+      }
       ddsd.dwWidth = surfWidth;
       ddsd.dwHeight = surfHeight;
 
@@ -204,6 +330,23 @@ namespace modclasses
   }
 
 
+  void FontHandler::deleteDCObjects(HFONT &hfont, HBITMAP &hBitmap, HDC &hdc)
+  {
+    if (hfont)
+    {
+      DeleteObject(hfont);
+    }
+    if (hBitmap)
+    {
+      DeleteObject(hBitmap);
+    }
+    if (hdc)
+    {
+      DeleteDC(hdc);
+    }
+  }
+
+
   bool FontHandler::drawText(LPDIRECTDRAWSURFACE7 destination, FontTypeEnum fontType, const std::string &text, int32_t posX, int32_t posY,
                              int horizontalMaxLength, bool centerHorizontal, bool centerVertical, bool truncate,
                              std::function<std::pair<int32_t, int32_t>(RECT)> *reactToRelSize)
@@ -241,35 +384,41 @@ namespace modclasses
       }
 
       int32_t xPosAdd = font.ABCWidths[chr].abcA + font.BPlusC[chr];
-      if (horizontalMaxLength < relXPos + xPosAdd)
+      if (charNumber > 0 && horizontalMaxLength < relXPos + xPosAdd)
       {
         if (truncate) // truncate does not care
         {
           stillTruncate = true;
           break; // we are done if the line is filled
         }
-
-        if (horizontalMaxLength > xPosAdd) // the char is placed if alone to big for line
+        
+        if (lastSpace > 0)
         {
-          if (lastSpace > 0)
-          {
-            lineInfo.push_back({ lastSpace, beforeLastSpace, true });
-            charNumber -= (lastSpace + 1);  // removing last space
-            relXPos -= (beforeLastSpace + spaceWidth); // removing last space wdith
-          }
-          else  // if the line is filled, it cuts
-          {
-            lineInfo.push_back({ charNumber, relXPos, false });
-            charNumber = 0;
-            relXPos = 0;
-          }
-          beforeLastSpace = 0;
-          lastSpace = 0;
+          lineInfo.push_back({ lastSpace, beforeLastSpace, true });
+          charNumber -= (lastSpace + 1);  // removing last space
+          relXPos -= (beforeLastSpace + spaceWidth); // removing last space wdith
         }
+        else  // if the line is filled, it cuts
+        {
+          lineInfo.push_back({ charNumber, relXPos, false });
+          charNumber = 0;
+          relXPos = 0;
+        }
+        beforeLastSpace = 0;
+        lastSpace = 0;
       }
 
-      ++charNumber;
-      relXPos += xPosAdd;
+      if (horizontalMaxLength < xPosAdd) // the char is placed if alone to big for line
+      {
+        lineInfo.push_back({ 1, xPosAdd, false });
+        charNumber = 0;
+        relXPos = 0;
+      }
+      else
+      {
+        ++charNumber;
+        relXPos += xPosAdd;
+      }
     }
     lineInfo.push_back({ charNumber, relXPos, false }); // if it run through
 

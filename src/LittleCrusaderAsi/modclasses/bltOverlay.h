@@ -53,6 +53,7 @@ namespace modclasses
   }
 
 
+  // will contain the fonds to switch to
   struct FontContainer
   {
     LPDIRECTDRAWSURFACE7 lpFontSurf{ nullptr };     // surface to draw on
@@ -70,9 +71,22 @@ namespace modclasses
   };
 
 
+  // used inside FontHandler class
+  struct FontConfig
+  {
+    std::string name;
+    int height;
+    int weight;
+    bool italic;
+    bool underline;
+    bool strikeOut;
+  };
+
+
   class FontHandler
   {
   private:
+    bool useVideoMemory{ false };
     std::unordered_map<FontTypeEnum, FontContainer> fonts{};
 
   public:
@@ -82,11 +96,16 @@ namespace modclasses
                   int horizontalMaxLength, bool centerHorizontal, bool centerVertical, bool truncate,
                   std::function<std::pair<int32_t, int32_t>(RECT)> *reactToRelSize);
     void releaseSurfaces();
-
+    void setUseVideoMemory(bool setTo)
+    {
+      useVideoMemory = setTo;
+    }
 
   private:
 
+    FontConfig loadDefaultConfig(FontTypeEnum fontType);
     void cleanInErrorCase(FontTypeEnum fontType, std::string &&logMsg);
+    void deleteDCObjects(HFONT &hfont, HBITMAP &hBitmap, HDC &hdc);
   };
 
 
@@ -126,6 +145,7 @@ namespace modclasses
 
     // font stuff
     FontHandler fntHandler{};
+    Json fontConfigs;
 
     // place for whatever structure will be used for additional input stuff
 
@@ -175,7 +195,7 @@ namespace modclasses
     void bltMainDDOffSurfs();
 
     // needs pointer to value
-    void createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor);
+    bool createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor);
 
 
     // static functions: //
