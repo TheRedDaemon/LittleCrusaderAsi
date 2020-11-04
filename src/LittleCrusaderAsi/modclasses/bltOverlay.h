@@ -3,6 +3,8 @@
 #ifndef BLTOVERLAY
 #define BLTOVERLAY
 
+#include <deque>
+
 #include "modBase.h"
 
 #include "keyboardInterceptor.h"
@@ -10,6 +12,11 @@
 
 // DirectDraw
 #include "ddraw.h"
+
+// conains func for PNG load
+// TODO?: GDI+ comes with great overhead, even its own thread
+// if there ever happens to be a better solution, use it (pure bitmaps would bloat the exe)
+#include "../misc/copiedFunc.h"
 
 // all font loading structures were contructed using the DDFontEngine
 // https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw/
@@ -114,6 +121,8 @@ namespace modclasses
   {
   private:
 
+    std::vector<std::function<void()>> funcsForDDrawLoadEvent;
+
     IDirectDraw7* dd7InterfacePtr{ nullptr };            // currentMainInterface
     IDirectDrawSurface7* dd7BackbufferPtr{ nullptr };    // currentBackbufferInterface
 
@@ -134,7 +143,7 @@ namespace modclasses
     IDirectDrawSurface7* menuOffSurf; // menu
     IDirectDrawSurface7* textOffSurf; // display text
     IDirectDrawSurface7* inputOffSurf; // input field in the middle of screen
-    // and the rect structures (contain also size for them) (hardcoded currently
+    // and the rect structures (contain also size for them) (hardcoded currently)
     RECT menuRect{0, 0, 300, 500 };
     RECT textRect{ 0, 0, 500, 250 };
     RECT inputRect{ 0, 0, 300, 150 };
@@ -147,7 +156,14 @@ namespace modclasses
     FontHandler fntHandler{};
     Json fontConfigs;
 
-    // place for whatever structure will be used for additional input stuff
+    // console -> (current max size hardcoded to 10)
+    std::deque<std::string> conQueue;
+
+    // menu components
+    CImage menuComp;
+    IDirectDrawSurface7* compSurf;
+
+    // functions to execute on DDraw Load event
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -173,6 +189,20 @@ namespace modclasses
 
     /**additional functions for others**/
 
+    // send a msg to the console
+    // the return bool will indicate if the msg was delivered to the console
+    bool sendToConsole(const std::string &msg);
+    
+    // send a msg to the console and create a log
+    // the return bool will indicate if the msg was delivered to the console
+    // log should always happen (but of cause would dirty the trace)
+    // currently only level INFO, WARNING and ERROR are supported
+    bool sendToConsole(const std::string &msg, el::Level logLevel);
+
+    // TODO: this might need a better place (event handler?)
+    // event fired when ddraw is loaded in stronghold (at least for GetProcAddress for Create calls)
+    void registerDDrawLoadEvent(std::function<void()> &&func);
+
     /**misc**/
 
     // prevent copy and assign (not sure how necessary)
@@ -197,8 +227,14 @@ namespace modclasses
     // needs pointer to value
     bool createOffSurface(IDirectDrawSurface7** surf, DWORD width, DWORD height, DWORD fillColor);
 
+    // redraws console based on msg queue
+    void updateConsole();
+
 
     // static functions: //
+
+    // fires when stronghold requests ddraw to be loaded
+    static HMODULE _stdcall LoadLibraryFake(LPCSTR lpLibFileName);
 
     // IDirectDraw7 ptr is invalid once it reaches this position
     // -> old surfaces sometimes are lost, sometimes they work

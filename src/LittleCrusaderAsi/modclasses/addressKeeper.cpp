@@ -85,6 +85,16 @@ namespace modclasses
             return 0x1FFCB8C; // 10816 byte (169 int32 * 16)
         }
         break;
+      
+      case Address::DD_LoadLibrary:
+        switch (version)
+        {
+          case Version::V1P41P1SE:
+            return 0x6F717; // 6 byte -> needs to be replaced wih relative call and add one NOP after (5 + 1)
+          case Version::V1P41:
+            return 0x6F4F7; // 6 byte -> needs to be replaced wih relative call and add one NOP after (5 + 1)
+        }
+        break;
 
       case Address::DD_MainSurfaceCreate:
         switch (version)

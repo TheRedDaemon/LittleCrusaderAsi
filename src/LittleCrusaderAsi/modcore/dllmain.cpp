@@ -138,7 +138,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
         try
         {
           // ending stuff on detach
-          modLoader->dllThreadAttachEvent();
+          modLoader->dllThreadAttachEvent();  // current issue -> using CImage and as a result GDIPlus creates an thread early -> make reliable event
         }
         catch (const std::exception& o_O)
         {

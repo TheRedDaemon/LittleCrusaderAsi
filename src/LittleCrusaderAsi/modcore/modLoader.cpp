@@ -60,7 +60,7 @@ namespace modcore
       // at the first attach event, fire this event to the mods
       for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
       {
-        modKeeper->loadedMods.at(i)->mod->firstThreadAttachAfterModAttachEvent();
+        modKeeper->loadedMods.at(i)->mod->threadAttachAfterModAttachEvent();
       }
     }
   }

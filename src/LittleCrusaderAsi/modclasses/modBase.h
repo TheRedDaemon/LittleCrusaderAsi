@@ -69,7 +69,7 @@ namespace modclasses
     // This is pretty unsafe, until is found out, what causes this
     // There is no initialization control!
     // NOTE: threads that seem to be started afterwards are for example dsound.dll(?), the loading of threads after 
-    virtual void firstThreadAttachAfterModAttachEvent(){}
+    virtual void threadAttachAfterModAttachEvent(){}
 
     // additional function explizit called before letting the destructors run
     // default does nothing, since I see no real use, put I leave it here
@@ -98,6 +98,21 @@ namespace modclasses
   protected:
 
     // some utility functions
+
+    HMODULE getOwnModuleHandle()
+    {
+      auto keeperPointer = keeper.lock();
+      if (keeperPointer)
+      {
+        return keeperPointer->getOwnModuleHandle();
+      }
+      else
+      {
+        LOG(WARNING) << "The mod with id '" << static_cast<int>(getModType()) << "' tried to receive the HMODULE but has no keeper.";
+      }
+
+      return nullptr;
+    }
 
     // return shared pointer of mod if there, requested, initialized
     // otherwise the return will be an empty pointer

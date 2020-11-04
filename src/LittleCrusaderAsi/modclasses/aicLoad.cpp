@@ -94,7 +94,7 @@ namespace modclasses
   // will need address and keyboard stuff
   std::vector<ModType> AICLoad::getDependencies() const
   {
-    return { ModType::ADDRESS_RESOLVER, ModType::KEYBOARD_INTERCEPTOR };
+    return { ModType::ADDRESS_RESOLVER, ModType::KEYBOARD_INTERCEPTOR, ModType::BLT_OVERLAY };
   }
 
 
@@ -102,6 +102,7 @@ namespace modclasses
   {
     auto addressResolver = getMod<AddressResolver>();
     auto keyInterceptor = getMod<KeyboardInterceptor>();
+    auto bltOverlay = getMod<BltOverlay>();
 
     // check mods and request addresses
     if (!(addressResolver && keyInterceptor && addressResolver->requestAddresses(usedAddresses, *this)))
@@ -158,12 +159,24 @@ namespace modclasses
       }
     }
 
+    if (bltOverlay)
+    {
+      bltOverlay->registerDDrawLoadEvent([this]()
+      {
+        this->initialAICLoad();
+      });
+    }
+    else
+    {
+      LOG(WARNING) << "AICLoad: Unable to register initialAICLoad-event, because BltOverlay was not initialized.";
+    }
+
     initialized = true;
     LOG(INFO) << "AICLoad initialized.";
   }
 
 
-  void AICLoad::firstThreadAttachAfterModAttachEvent()
+  void AICLoad::initialAICLoad()
   {
     if (initialized)
     {
@@ -172,7 +185,7 @@ namespace modclasses
 
       if (vanillaAIC.at(0) != 12)
       {
-        LOG(WARNING) << "First thread attached event was seemingly triggerd before AIC initialisation. AICLoad features are likely unreliable."
+        LOG(WARNING) << "First thread attached event was seemingly triggerd before AIC initialisation. AICLoad features are likely unreliable. "
           << "Indicator: first int is not a 12." ;
       }
 
@@ -184,7 +197,7 @@ namespace modclasses
 
       // keyboard calls should not be a problem, they overwrite each other at worst -> could however corrupt the vanilla save
 
-      LOG(INFO) << "AICLoad run through 'first thread attached'-event.";
+      LOG(INFO) << "AICLoad run through initial AIC loading.";
     }
   }
 

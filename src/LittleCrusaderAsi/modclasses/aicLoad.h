@@ -12,6 +12,7 @@
 // needed mods:
 #include "addressResolver.h"
 #include "keyboardInterceptor.h"
+#include "bltOverlay.h"
 
 namespace modclasses
 {
@@ -66,10 +67,6 @@ namespace modclasses
 
     std::vector<ModType> getDependencies() const override;
 
-    // if this works, will be used to get the loaded aic data
-    // this is not reliable und should be replaced by some event system
-    void firstThreadAttachAfterModAttachEvent() override;
-
     /**con- and destructor**/
 
     AICLoad(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
@@ -114,6 +111,10 @@ namespace modclasses
     /****/
 
     void initialize() override;
+
+    // this will be given to an event executor (currently BltOverlay, maybe one day EventHandler)
+    // should be triggered after the AICvalues are loaded
+    void initialAICLoad();
 
     // returns empty pointer in unrecoverable error case
     // if size_t == 0, value ignored

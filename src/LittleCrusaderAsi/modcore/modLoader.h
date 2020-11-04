@@ -31,10 +31,9 @@ namespace modcore
     // config will be send as ref, but will be created in the Constructor and discarded afterwards, so create a lokal copy if needed
     ModLoader(HMODULE ownModule);
 
-    // When the first thread attach message arives, at least some data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
-    // I will use the first as an event handler for now
-    // BUT: I don't know what causes this, the optimium would be stronghold, this would be reliable
+    // When the thread attach message arives, at least some data (aic was where I noticed this) is already loaded, unlike after DLL_PROCESS_ATTACH
     // This should likely by replaced by something more controlled, like an event handler
+    // NOTE: currently left for convenience
     void dllThreadAttachEvent();
 
     ~ModLoader();

@@ -25,6 +25,7 @@ namespace modclasses
 
     AIC_IN_MEMORY, // signed int32? : after the start of stronghold, the aics are places in memory as an array, orderd by lord
 
+    DD_LoadLibrary, // complex : place used to insert code to call a dummy LoadLibrary func to redirect DDraw LoadLibrary
     DD_MainSurfaceCreate, // complex : place used to insert code to call a dummy CreateSurface func to redirect main CreateSurface
     DD_MainFlip, // complex : place used to insert code to call a dummy Flip func to redirect main Flip
 

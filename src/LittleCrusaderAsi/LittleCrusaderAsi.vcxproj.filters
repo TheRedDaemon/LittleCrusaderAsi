@@ -111,6 +111,9 @@
     <ClInclude Include="dependencies\easylogging++\easylogging++.h">
       <Filter>dependencies</Filter>
     </ClInclude>
+    <ClInclude Include="resources\resource.h">
+      <Filter>Headerdateien\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -161,5 +164,15 @@
     <ClCompile Include="modclasses\util\fontUtil.cpp">
       <Filter>Quelldateien\ModClasses\Util</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\Resource.rc">
+      <Filter>Ressourcendateien</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\menuComponents.png">
+      <Filter>Ressourcendateien</Filter>
+    </Image>
   </ItemGroup>
 </Project>

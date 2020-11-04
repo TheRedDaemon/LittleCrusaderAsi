@@ -150,6 +150,7 @@
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AssemblyDebug>false</AssemblyDebug>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -197,6 +198,7 @@
     <ClInclude Include="modcore\logUtility.h" />
     <ClInclude Include="modcore\modKeeper.h" />
     <ClInclude Include="modcore\modLoader.h" />
+    <ClInclude Include="resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\easylogging++\easylogging++.cc" />
@@ -215,6 +217,12 @@
     <ClCompile Include="Modcore\modConstructors.cpp" />
     <ClCompile Include="modclasses\versionGetter.cpp" />
     <ClCompile Include="modcore\modLoader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resources\Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\menuComponents.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

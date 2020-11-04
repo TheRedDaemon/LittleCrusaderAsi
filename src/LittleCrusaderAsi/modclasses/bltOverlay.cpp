@@ -1,5 +1,6 @@
 
 #include "bltOverlay.h"
+#include "../resources/resource.h"
 
 // main source ddraw: https://www.codeproject.com/Articles/2370/Introduction-to-DirectDraw-and-Surface-Blitting
 // another: http://www.visualbasicworld.de/tutorial-directx-directdraw.html
@@ -18,6 +19,22 @@ namespace modclasses
   // NOTE: -> linking to static functions seem to work pretty good -> the copy needs to be nice though (in first tests, _stdcall was missing)
   // maybe there are some stuff like _stdcall etc that might help me?
 
+  // Small Note: In theory it could be possible to allow Crusader to run in windowed mode...maybe.
+  // The defining steps are: manipulating the Primary Surface for windowed mode -> create a Clipper for windowed (or for backbuffer)
+  // Disable backbuffer on Primary Surface, redirect GetAttachedSurface of Stronghold to return an unrelated Surface as backbuffer
+  // (I think this one needs the clipper -> see I-net)
+  // use the flip to instead blt the backbuffer on the primary surface -> other problems might stay
+  // BACKLOG -> only if ever interest in this
+
+  HMODULE _stdcall BltOverlay::LoadLibraryFake(LPCSTR lpLibFileName)
+  {
+    for (auto& func : (*overPtr).funcsForDDrawLoadEvent)
+    {
+      func();
+    }
+
+    return LoadLibrary(lpLibFileName);
+  }
 
   HRESULT _stdcall BltOverlay::CreateSurfaceFake(IDirectDraw7* const that, LPDDSURFACEDESC2 desc2, LPDIRECTDRAWSURFACE7* surf7, IUnknown* unkn)
   {
@@ -82,12 +99,29 @@ namespace modclasses
       LOG(ERROR) << "BltOverlay needs to be singleton. Creating another BltOverlay is not allowed.";
     }
     overPtr = this;
+
+    // load menuComponents
+    if (!(issue || copyFunc::LoadPNGinCImage(getOwnModuleHandle(), menuComp, MAKEINTRESOURCE(MENU_COMPONENTS))))
+    {
+      issue = true;
+      LOG(WARNING) << "BltOverlay was unable to load the menu components.";
+    }
     
     auto addressResolver = getMod<AddressResolver>();
     if (!issue && addressResolver && addressResolver->requestAddresses(usedAddresses, *this))
     {
       // TODO(?): maybe some byte writer would be an idea... (but assembly to opcode would be too much/difficult I guess)
       // would need to construct byte array out of given values with types...
+
+       // ddraw LoadLibrary -> load ddraw library, needs to be replaced with relative call + 1 nop
+      unsigned char* libCall{ addressResolver->getAddressPointer<unsigned char>(Address::DD_LoadLibrary, *this) };
+      int32_t* libAddr{ reinterpret_cast<int32_t*>(libCall + 1) };
+      unsigned char* libNop{ reinterpret_cast<unsigned char*>(libCall + 5) };
+
+      // call rel32 -> rel32 = absolute pointer - pos from where i write to - length of edited segment(call) (or absolute pointer - next address?)
+      *libCall = 0xE8;
+      *libAddr = reinterpret_cast<int32_t>(LoadLibraryFake) - reinterpret_cast<int32_t>(libCall) - 5;
+      *libNop = 0x90;
 
       // first CreateSurface -> responsible for the main window, called when the app started, switched back to or the resolution changed
       unsigned char* surfCall{ addressResolver->getAddressPointer<unsigned char>(Address::DD_MainSurfaceCreate, *this) };
@@ -114,8 +148,16 @@ namespace modclasses
 
   void BltOverlay::cleanUp()
   {
+    menuComp.Destroy(); // release everything, for safety
+
     // no resource delete -> process end should free it anyway (it also prevents problems from not knowing if still valid)
     // offscreenSurf->Release();
+  }
+
+
+  void BltOverlay::registerDDrawLoadEvent(std::function<void()> &&func)
+  {
+    funcsForDDrawLoadEvent.push_back(func);
   }
 
 
@@ -163,12 +205,15 @@ namespace modclasses
     }
 
     // dummy initial color fill
-    DDBLTFX fx;
-    ZeroDDObjectAndSetSize<DDBLTFX>(fx);
+    if (fillColor != NULL)  // NULL would be black anyway
+    {
+      DDBLTFX fx;
+      ZeroDDObjectAndSetSize<DDBLTFX>(fx);
 
-    fx.dwFillColor = fillColor;
+      fx.dwFillColor = fillColor;
 
-    res = (*surf)->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+      res = (*surf)->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+    }
 
     return true;
   }
@@ -181,6 +226,7 @@ namespace modclasses
       menuOffSurf->Release();
       textOffSurf->Release();
       inputOffSurf->Release();
+      compSurf->Release();
       fntHandler.releaseSurfaces();
 
       if (!doNotKeepDD7Interface)
@@ -207,7 +253,7 @@ namespace modclasses
     res = dd7SurfacePtr->GetAttachedSurface(&ddscapsBack, &dd7BackbufferPtr);
     if (res != DD_OK)
     {
-      LOG(WARNING) << "Did not get backbuffer. Overlay will not work.";
+      LOG(WARNING) << "BltOverlay: Did not get backbuffer. Overlay will not work.";
       dd7BackbufferPtr = nullptr;
     }
 
@@ -217,7 +263,22 @@ namespace modclasses
     mainSurfOk = mainSurfOk && createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, RGB16(0, 255, 0));
     if (!mainSurfOk)
     {
-      LOG(ERROR) << "At least one overlay surface could not get created. Removing backbuffer pointer to prevent crashes.";
+      LOG(ERROR) << "BltOverlay: At least one overlay surface could not get created. Removing backbuffer pointer to prevent crashes.";
+      dd7BackbufferPtr = nullptr;
+    }
+
+    bool menuCompOk{ true };
+    menuCompOk = mainSurfOk && createOffSurface(&compSurf, menuComp.GetWidth(), menuComp.GetHeight(), NULL);
+    HDC surfDC{ nullptr };
+    if (menuCompOk = mainSurfOk && compSurf->GetDC(&surfDC) == S_OK; menuCompOk)
+    {
+      menuCompOk = mainSurfOk && menuComp.BitBlt(surfDC, 0, 0, SRCCOPY);
+      compSurf->ReleaseDC(surfDC);
+    }
+    
+    if (!menuCompOk)
+    {
+      LOG(ERROR) << "BltOverlay: Creation of component surface caused problems.";
       dd7BackbufferPtr = nullptr;
     }
     
@@ -238,15 +299,19 @@ namespace modclasses
     fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 150));
     if (!fontOk)
     {
-      LOG(WARNING) << "At least one font failed to load.";
+      LOG(WARNING) << "BltOverlay: At least one font failed to load.";
     }
 
-    LOG(INFO) << "Finished surface prepare.";
+    LOG(INFO) << "BltOverlay: Finished surface prepare.";
   }
 
 
   void BltOverlay::bltMainDDOffSurfs()
   {
+    // test
+    RECT a{ 300, 0, 800, 250 };
+    textOffSurf->BltFast(0, 0, compSurf, &a, DDBLTFAST_NOCOLORKEY);
+
     // NOTE: normal blt can auto transform the size to fit (info)
     dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
     dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
@@ -262,9 +327,56 @@ namespace modclasses
   }
 
 
+  bool BltOverlay::sendToConsole(const std::string &msg)
+  {
+    return sendToConsole(msg, el::Level::Unknown);
+  }
+
+
+  bool BltOverlay::sendToConsole(const std::string &msg, el::Level logLevel)
+  {
+    switch (logLevel)
+    {
+      case el::Level::Error:
+        LOG(ERROR) << msg;
+        break;
+      case el::Level::Warning:
+        LOG(WARNING) << msg;
+        break;
+      case el::Level::Info:
+        LOG(INFO) << msg;
+        break;
+      default:
+        break;
+    }
+
+    if (!(initialized && dd7BackbufferPtr))
+    {
+      return false;
+    }
+
+    if (conQueue.size() >= 10)
+    {
+      conQueue.pop_front();
+    }
+    conQueue.push_back(msg);
+
+    updateConsole();
+
+    return true;
+  }
+
+
+  void BltOverlay::updateConsole()
+  {
+
+  }
+
+
   std::vector<AddressRequest> BltOverlay::usedAddresses{
     {Address::DD_MainSurfaceCreate, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},
-    {Address::DD_MainFlip, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL}
+    {Address::DD_MainFlip, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},
+    {Address::DD_LoadLibrary, {{Version::NONE, 6}}, true, AddressRisk::CRITICAL}
   };
 
   // other createSurface calls (extreme)(not all, but I failed to get past the requests):
