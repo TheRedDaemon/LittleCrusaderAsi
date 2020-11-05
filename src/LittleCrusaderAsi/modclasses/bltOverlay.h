@@ -121,6 +121,12 @@ namespace modclasses
   {
   private:
 
+    // containes the rects of every menu part
+    // everything hardcoded, also only need one of them
+    static constexpr struct MenuCompRects
+    {
+    } menuRects{};
+
     std::vector<std::function<void()>> funcsForDDrawLoadEvent;
 
     IDirectDraw7* dd7InterfacePtr{ nullptr };            // currentMainInterface
