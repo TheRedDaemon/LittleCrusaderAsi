@@ -125,9 +125,27 @@ namespace modclasses
     // everything hardcoded, also only need one of them
     static constexpr struct MenuCompRects
     {
+      // can not be const, since non const pointer required (made inline?)
+      inline static RECT mainMenu{ 0, 0, 300, 500 };
+      inline static RECT consoleBorder{ 300, 0, 800, 250 };
+      inline static RECT msgIcon{ 800, 0, 812, 12 };
+      inline static RECT bigButton{ 0, 500, 280, 560 };
+      inline static RECT bigButtonPressed{ 0, 560, 280, 560 };
+      inline static RECT smallButton{ 300, 250, 580, 282 };
+      inline static RECT smallButtonPressed{ 300, 282, 580, 314 };
+      inline static RECT smallInputBox{ 300, 314, 600, 464 };
+      inline static RECT bigInputBox{ 600, 250, 900, 500 };
+      inline static RECT inputField{ 300, 496, 550, 528 };
+      inline static RECT inputFieldSelected{ 300, 528, 550, 560 };
+      inline static RECT okBox{ 300, 464, 332, 496 };
+      inline static RECT okBoxSelected{ 332, 464, 364, 496 };
+      inline static RECT cancelBox{ 364, 464, 396, 496 };
+      inline static RECT cancelBoxSelected{ 396, 464, 428, 496 };
+      inline static RECT goldArrowUp{ 280, 500, 300, 560 };
+      inline static RECT goldArrowDown{ 280, 560, 300, 620 };
+      inline static RECT silverArrowUp{ 580, 250, 600, 282 };
+      inline static RECT silverArrowDown{ 580, 282, 600, 314 };
     } menuRects{};
-
-    std::vector<std::function<void()>> funcsForDDrawLoadEvent;
 
     IDirectDraw7* dd7InterfacePtr{ nullptr };            // currentMainInterface
     IDirectDrawSurface7* dd7BackbufferPtr{ nullptr };    // currentBackbufferInterface
@@ -152,11 +170,19 @@ namespace modclasses
     // and the rect structures (contain also size for them) (hardcoded currently)
     RECT menuRect{0, 0, 300, 500 };
     RECT textRect{ 0, 0, 500, 250 };
-    RECT inputRect{ 0, 0, 300, 150 };
+    RECT inputRect{ 0, 0, 300, 250 };
     // and positions on screen
     std::pair<DWORD, DWORD> menuPos{ 0, 0 };  // upper corner
     std::pair<DWORD, DWORD> textPos{ 300, 0 };        // next to menu
     std::pair<DWORD, DWORD> inputPos{ 0, 0 };   // set by program
+    // status
+    bool menuActive{ false };
+    bool textActive{ true };
+    bool inputActive{ false };
+
+    // small menu indicator active
+    bool menuIndicator{ false };
+    RECT menuSmallRect{ 10, 10, 290, 70 };
 
     // font stuff
     FontHandler fntHandler{};
@@ -170,6 +196,7 @@ namespace modclasses
     IDirectDrawSurface7* compSurf;
 
     // functions to execute on DDraw Load event
+    std::vector<std::function<void()>> funcsForDDrawLoadEvent;
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -235,6 +262,12 @@ namespace modclasses
 
     // redraws console based on msg queue
     void updateConsole();
+
+    // redraws input field
+    void updateInput();
+
+    // redraws menu
+    void updateMenu();
 
 
     // static functions: //

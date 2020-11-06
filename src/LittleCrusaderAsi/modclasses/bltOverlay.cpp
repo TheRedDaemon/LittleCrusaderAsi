@@ -78,6 +78,17 @@ namespace modclasses
         << "Only used for some D7to9 modes (if asiloader is dxwrapper) to prevent issues. Ex. window modes needs 'true', or it vanishes.";
     }
 
+    confIt = config.find("menuIndicator");
+    if (confIt != config.end() && confIt.value().is_boolean())
+    {
+      menuIndicator = confIt.value().get<bool>();
+    }
+    else
+    {
+      LOG(WARNING) << "BltOverlay: No valid 'menuIndicator' found. Needs to be boolean. Defaults to 'false'. "
+        << "If 'true', shows a menu box as indicator that the menu is active, even if closed.";
+    }
+
     confIt = config.find("fontConfigs");
     if (confIt != config.end() && confIt.value().is_object())
     {
@@ -182,12 +193,6 @@ namespace modclasses
     offscreenSurfDes.dwWidth = width;
     offscreenSurfDes.dwHeight = height;
 
-    // test
-    //offscreenSurfDes.dwFlags |= DDSD_PIXELFORMAT;
-    //ZeroDDObjectAndSetSize(offscreenSurfDes.ddpfPixelFormat);
-    //offscreenSurfDes.ddpfPixelFormat.dwFlags = DDPF_ALPHAPIXELS | DDPF_ALPHAPREMULT | DDPF_PALETTEINDEXED8 | DDPF_RGB;
-    //offscreenSurfDes.ddpfPixelFormat.dwRGBBitCount = 32;
-
     HRESULT res = dd7InterfacePtr->CreateSurface(&offscreenSurfDes, surf, NULL);
     if (res == DDERR_NODIRECTDRAWHW)
     {
@@ -203,6 +208,11 @@ namespace modclasses
       LOG(ERROR) << "Failed to create offscreen surface.";
       return false;
     }
+
+    // set keying color to black
+    DDCOLORKEY ddck;
+    ddck.dwColorSpaceLowValue = ddck.dwColorSpaceHighValue = 0;
+    (*surf)->SetColorKey(DDCKEY_SRCBLT, &ddck);
 
     // dummy initial color fill
     if (fillColor != NULL)  // NULL would be black anyway
@@ -258,9 +268,13 @@ namespace modclasses
     }
 
     bool mainSurfOk{ true };
-    mainSurfOk = mainSurfOk && createOffSurface(&menuOffSurf, menuRect.right, menuRect.bottom, RGB16(0,0,255));
-    mainSurfOk = mainSurfOk && createOffSurface(&textOffSurf, textRect.right, textRect.bottom, RGB16(255, 0, 0));
-    mainSurfOk = mainSurfOk && createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, RGB16(0, 255, 0));
+    mainSurfOk = mainSurfOk && createOffSurface(&menuOffSurf, menuRect.right, menuRect.bottom, 0);
+    mainSurfOk = mainSurfOk && createOffSurface(&textOffSurf, textRect.right, textRect.bottom, 0);
+    // leaking here for test -> clipper (at least without config? not enough
+    // IDirectDrawClipper* clip;
+    // dd7InterfacePtr->CreateClipper(0, &clip, 0);
+    // textOffSurf->SetClipper(clip);
+    mainSurfOk = mainSurfOk && createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, 0);
     if (!mainSurfOk)
     {
       LOG(ERROR) << "BltOverlay: At least one overlay surface could not get created. Removing backbuffer pointer to prevent crashes.";
@@ -293,37 +307,49 @@ namespace modclasses
     // prepare font -> should write something more fitting with the code given later
     fntHandler.setUseVideoMemory(!disableHardwareTest);
     bool fontOk{ true };
-    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 250));
-    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 150));
-    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 250));
-    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(250, 250, 150));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 230));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 150));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 230));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 150));
     if (!fontOk)
     {
       LOG(WARNING) << "BltOverlay: At least one font failed to load.";
     }
 
-    LOG(INFO) << "BltOverlay: Finished surface prepare.";
+    // backbuffer is indicator
+    if (dd7BackbufferPtr)
+    {
+      // fill initial
+      updateMenu();
+      updateInput();
+      //updateConsole();
+    }
+
+    // should update console
+    sendToConsole("BltOverlay: Finished surface prepare.", el::Level::Info);
   }
 
 
   void BltOverlay::bltMainDDOffSurfs()
   {
-    // test
-    RECT a{ 300, 0, 800, 250 };
-    textOffSurf->BltFast(0, 0, compSurf, &a, DDBLTFAST_NOCOLORKEY);
+    if (textActive)
+    {
+      dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
+    }
+    
+    if (menuActive)
+    {
+      dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
+    }
+    else if (menuIndicator)
+    {
+      dd7BackbufferPtr->BltFast(menuPos.first + 10, menuPos.second + 10, menuOffSurf, &menuSmallRect, DDBLTFAST_NOCOLORKEY);
+    }
 
-    // NOTE: normal blt can auto transform the size to fit (info)
-    dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
-    dd7BackbufferPtr->BltFast(textPos.first, textPos.second, textOffSurf, &textRect, DDBLTFAST_NOCOLORKEY);
-    dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_NOCOLORKEY);
-
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL_BOLD, "Hallo, das ist ein Test.", 0, 0, 480, false, false, false, nullptr);
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::NORMAL, "Ich bin in der Mitte.", inputRect.right / 2 + inputPos.first,
-                        inputRect.bottom / 2 + inputPos.second, 75, true, true, false, nullptr);
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::SMALL, "Ich bin vielleicht gekürzt", menuRect.right,
-                        menuRect.bottom, 100, false, false, true, nullptr);
-    fntHandler.drawText(dd7BackbufferPtr, FontTypeEnum::SMALL_BOLD, "Ich bin alles zusammen", textRect.right + textPos.first,
-                        textRect.bottom, 150, true, true, true, nullptr);
+    if (inputActive)
+    {
+      dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_SRCCOLORKEY);
+    }
   }
 
 
@@ -355,11 +381,11 @@ namespace modclasses
       return false;
     }
 
-    if (conQueue.size() >= 10)
+    if (conQueue.size() >= 30)  // max currently hardcoded
     {
-      conQueue.pop_front();
+      conQueue.pop_back();
     }
-    conQueue.push_back(msg);
+    conQueue.push_front(msg);
 
     updateConsole();
 
@@ -369,7 +395,85 @@ namespace modclasses
 
   void BltOverlay::updateConsole()
   {
+    if (!dd7BackbufferPtr){
+      // return if no backbuffer
+      return;
+    }
 
+    // fill background (prepare DDBLTFX somewhere else?)
+    DDBLTFX fx;
+    ZeroDDObjectAndSetSize<DDBLTFX>(fx);
+    fx.dwFillColor = RGB16(18, 18, 18);
+    textOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+
+    // write text
+    // TODO: currently, blt text is not properly cut, instead, the position seems to be made valid (y from -something to 0),
+    // but only a the remaining part is used... -> see if there is a solution? (maybe clipper?, maybe blt instead?)
+    // error if position out of bounce: 0x88760096, also bltfast does not support clipper
+    // TDOD: check error msg code
+    const int32_t maxWidth{ textRect.right - textRect.left - 45 };
+    int32_t remainingHeight{ textRect.bottom - textRect.top - 10};
+    std::pair<int32_t, int32_t> lastValidPos{ textRect.left + 35, textRect.bottom - 10 };
+
+    std::function<std::pair<int32_t, int32_t>(RECT)> posAdapt{
+      [&remainingHeight, &lastValidPos](RECT rec) {
+        remainingHeight -= rec.bottom;
+        lastValidPos.second -= rec.bottom;
+        return lastValidPos;
+      }
+    };
+
+    for (auto& msg : conQueue)
+    {
+      if (remainingHeight < 0)
+      {
+        break;
+      }
+      fntHandler.drawText(textOffSurf, FontTypeEnum::SMALL, msg, 0, 0, maxWidth, false, false, false, &posAdapt);
+
+      // only draw if it fits
+      if (lastValidPos.second + 12 > 0) // + height of icon
+      {
+        if (lastValidPos.second < 0)  // cut it (since I do not know if I can have the hardware do it...)
+        {
+          RECT otherRect{ menuRects.msgIcon };
+          otherRect.top -= lastValidPos.second;
+          textOffSurf->BltFast(14, 0, compSurf, &otherRect, DDBLTFAST_SRCCOLORKEY);
+        }
+        else
+        {
+          textOffSurf->BltFast(14, lastValidPos.second, compSurf, &menuRects.msgIcon, DDBLTFAST_SRCCOLORKEY);
+        }
+      }
+    }
+
+    // add border
+    textOffSurf->BltFast(0, 0, compSurf, &menuRects.consoleBorder, DDBLTFAST_SRCCOLORKEY);
+  }
+
+
+  void BltOverlay::updateInput()
+  {
+    if (!dd7BackbufferPtr)
+    {
+      // return if no backbuffer
+      return;
+    }
+  }
+
+
+  void BltOverlay::updateMenu()
+  {
+    if (!dd7BackbufferPtr)
+    {
+      // return if no backbuffer
+      return;
+    }
+
+    // add basis
+    menuOffSurf->BltFast(0, 0, compSurf, &menuRects.mainMenu, DDBLTFAST_NOCOLORKEY);
+
+    // do all the other stuff
   }
 
 

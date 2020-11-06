@@ -479,11 +479,44 @@ namespace modclasses
         x -= std::get<1>(numberLengthAndSpace) / 2;
       }
 
+      // following only helps for stuff on upper boarder //
+      // maybe add bottom y limit to have something to cut on?
+
+      // skip invisible lines
+      if (y + heightOfAChar < 0)
+      {
+        counter += std::get<0>(numberLengthAndSpace);
+        if (std::get<2>(numberLengthAndSpace))
+        {
+          ++counter; // adding one, because removed space
+        }
+        continue;
+      }
+
+      // extra handling
+      bool cutLine{ y < 0 };
+
+      // //
+
       for (int32_t chrNum{ 0 }; chrNum < std::get<0>(numberLengthAndSpace); chrNum++)
       {
         unsigned char chr = text[counter];
         x += font.ABCWidths[chr].abcA;
-        allOk = allOk && destination->BltFast(x, y, font.lpFontSurf, &(font.SrcRects[chr]), DDBLTFAST_SRCCOLORKEY) == S_OK;
+        
+        // for some reason, taking the result in case of error allows better recover? (direct compare stopped them from appearing)
+        HRESULT res;
+        if (cutLine)  // helps only for issues with upper border
+        {
+          RECT otherRect{ font.SrcRects[chr] };
+          otherRect.top -= y;
+          res = destination->BltFast(x, 0, font.lpFontSurf, &otherRect, DDBLTFAST_SRCCOLORKEY);
+        }
+        else
+        {
+          res = destination->BltFast(x, y, font.lpFontSurf, &(font.SrcRects[chr]), DDBLTFAST_SRCCOLORKEY);
+        }
+        
+        allOk = allOk && res == S_OK;
         x += font.BPlusC[chr];
         ++counter;
       }
