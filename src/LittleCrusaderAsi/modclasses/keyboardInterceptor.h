@@ -73,26 +73,40 @@ namespace modclasses
 
     /**additional functions for others**/
 
-    // will try to register the function to the reqested keys, return vector of bool with success result for every combination in order
-    // note, that for this (currently) at least modifier one is needed, to add just modifierOn + key, send VK::NONE for modifierTwo
+
+    // will try to register the function to the reqested keys
+    // return type is either bool (all worked) or vector of bool (for every combination) (template true -> simple bool return)
+    // KeyComb is either a reference to a Json containing the keys, or directly a vector of std::array<VK, 3> (modifierTwo, modifierOne, changeableKey)
+    // note, that for this is at least modifier one is needed, to add just modifierOn + key, send VK::NONE for modifierTwo
     // the key array need the combinations in order: modifierOne, modifierTwo, key
     // NOTE: multiple calls to this could work, but there is currently no additional check, so every call to this will create an additional FunctionKey action
     // so it is prefered all key combinations are requested together (different functions require different calls to this, of course)
     // also, multiple key combinations result in the ability to "open" multiple calls (multiple key downs before the first lift)
-    const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                             const std::vector<std::array<VK, 3>> &keyCombinations);
+    template<bool simpleReturn, typename KeyComb>
+    const auto registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
+                                const KeyComb &keyCombinations)
+    {
+      std::array<bool, 3> allowedKeyComb{ false, true, true };
+      return registerKeyComb<simpleReturn, false>(funcToExecute, keyCombinations, allowedKeyComb);
+    }
 
-    // same as other registerFunction, but takes value array of key combinations as json
-    const std::vector<bool> registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                             const Json &keyCombinations);
 
-    // calls other registerFunction, but only returns true if everything worked or false, if at least one failed
-    const bool simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                      const std::vector<std::array<VK, 3>> &keyCombinations);
+    // will try to register the function to the reqested keys
+    // return type is either bool (all worked) or vector of bool (for every combination) (template true -> simple bool return)
+    // KeyComb is either a reference to a Json containing the keys, or directly a vector of std::array<VK, 3> (modifierTwo, modifierOne, changeableKey)
+    // registerPassage derails only single changeable keys, since the modifier keys would not reach the function
+    // it is then up to the single mod what to do with the keys
+    // NOTE: multiple calls to this could work, but there is currently no additional check, so every call to this will create an additional PassageKey action
+    // so it is prefered all key combinations are requested together (different functions require different calls to this, of course)
+    // also, multiple key combinations result in the ability to "open" multiple calls (multiple key downs before the first lift)
+    template<bool simpleReturn, typename KeyComb>
+    const auto registerPassage(const std::function<void(const HWND, const bool, const bool, const VK)> &funcToExecute,
+                               const KeyComb &keyCombinations)
+    {
+      std::array<bool, 3> allowedKeyComb{ true, false, false }; // only single keys
+      return registerKeyComb<simpleReturn, true>(funcToExecute, keyCombinations, allowedKeyComb);
+    }
 
-    // same as other simpleRegisterFunction, but takes value array of key combinations as json
-    const bool simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                      const Json &keyCombinations);
 
     // needs function to add keyboard strokes to use
 
@@ -105,6 +119,84 @@ namespace modclasses
   private:
 
     void initialize() override;
+
+
+    // main template for both register functions
+    template<bool simpleReturn, bool passage, typename Func, typename KeyComb>
+    const auto registerKeyComb(const Func &funcToExecute, const KeyComb &keyCombinations, std::array<bool, 3> &allowedKeyComb)
+    {
+      std::vector<std::array<VK, 3>>* combPtr{ nullptr };
+
+      // only used if array needed
+      std::vector<std::array<VK, 3>> kombArray;
+      if constexpr (std::is_same<KeyComb, Json>::value)
+      {
+        kombArray = resolveKeyConfig(keyCombinations);
+        combPtr = &kombArray;
+      }
+      else
+      {
+        combPtr = &keyCombinations;
+      }
+
+      // construct return type
+      typename std::conditional<simpleReturn, bool, std::vector<bool>>::type workingKeyCombinations;
+      if constexpr (simpleReturn)
+      {
+        workingKeyCombinations = true;
+      }
+      else
+      {
+        workingKeyCombinations = std::vector<bool>(combPtr->size(), false);
+      }
+
+      if (funcToExecute)
+      {
+        // construct object
+        typename std::conditional<passage, std::unique_ptr<KPassage>, std::unique_ptr<KAction>>::type newFunc;
+        if constexpr (passage)
+        {
+          newFunc = std::make_unique<KPassage>(funcToExecute);;
+        }
+        else
+        {
+          newFunc = std::make_unique<KFunction>(funcToExecute);
+        }
+
+        bool onePlaced{ false };
+
+        for (size_t i = 0; i < combPtr->size(); i++)
+        {
+          const std::array<VK, 3>& keys = combPtr->at(i);
+
+          bool success = registerKey(keys.at(0), keys.at(1), keys.at(2), newFunc.get(), allowedKeyComb);
+          onePlaced = onePlaced || success;
+
+          if constexpr (simpleReturn)
+          {
+            workingKeyCombinations = workingKeyCombinations && success;
+          }
+          else
+          {
+            workingKeyCombinations[i] = success;
+          }
+        }
+
+        if (onePlaced)
+        {
+          actionContainer.push_back(std::move(newFunc));
+        }
+      }
+      else
+      {
+        LOG(WARNING) << "KeyboardIntercepter: No valid function for key function add provided.";
+      }
+
+      // will mostly stay silent, use return to throw or log
+      // TODO: maybe some debug logs would be practical...?
+      return workingKeyCombinations;
+    }
+
 
     // receives the json object of one key config and turns it into an vector with the key combinations
     // doesn't check if valid positions, however, if structure not valid, returns an array of VK::NONE

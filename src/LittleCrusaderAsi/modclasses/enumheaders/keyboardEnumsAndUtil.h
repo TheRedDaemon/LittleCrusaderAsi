@@ -419,7 +419,7 @@ namespace modclasses
     {
     public:
 
-      virtual void doAction(const HWND window, const bool keyUp, const bool repeat) const = 0;
+      virtual void doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const = 0;
 
       KeyAction() {}
       virtual ~KeyAction(){ }
@@ -442,7 +442,7 @@ namespace modclasses
 
     public:
 
-      void doAction(const HWND window, const bool keyUp, const bool repeat) const override;
+      void doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const override;
 
       KeyChange(VK keySendInstead):keyToUse{ keySendInstead }{};
 
@@ -460,7 +460,7 @@ namespace modclasses
 
     public:
 
-      void doAction(const HWND window, const bool keyUp, const bool repeat) const override;
+      void doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const override;
 
       KeyFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute):funcToUse{ funcToExecute }{}
 
@@ -468,12 +468,32 @@ namespace modclasses
       KeyFunction(const KeyFunction &keyAction) = delete;
       virtual KeyFunction& operator=(const KeyFunction &keyAction) final = delete;
     };
+
+
+    // pass the key -> keeping others for now
+    class KeyPassage : public KeyAction
+    {
+    private:
+
+      std::function<void(const HWND, const bool, const bool, const VK)> passageFunc;
+
+    public:
+
+      void doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const override;
+
+      KeyPassage(const std::function<void(const HWND, const bool, const bool, const VK)> &passageFunc):passageFunc{ passageFunc }{}
+
+      // prevent copy and assign (not sure how necessary)
+      KeyPassage(const KeyPassage &keyAction) = delete;
+      virtual KeyPassage& operator=(const KeyPassage &keyAction) final = delete;
+    };
   }
 
   using VK = keyboard::VirtualKey;
   using KAction = keyboard::KeyAction;
   using KChange = keyboard::KeyChange;
   using KFunction = keyboard::KeyFunction;
+  using KPassage = keyboard::KeyPassage;
 }
 
 #endif //KEYBOARDENUMSANDUTIL

@@ -177,7 +177,7 @@ namespace modclasses
     std::pair<DWORD, DWORD> inputPos{ 0, 0 };   // set by program
     // status
     bool menuActive{ false };
-    bool textActive{ true };
+    bool textActive{ false };
     bool inputActive{ false };
 
     // small menu indicator active
@@ -197,6 +197,10 @@ namespace modclasses
 
     // functions to execute on DDraw Load event
     std::vector<std::function<void()>> funcsForDDrawLoadEvent;
+
+    // keyboard stuff
+    Json menuShortcut;
+    Json consoleShortcut;
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -227,10 +231,11 @@ namespace modclasses
     bool sendToConsole(const std::string &msg);
     
     // send a msg to the console and create a log
+    // uses the already forced singelton for this
     // the return bool will indicate if the msg was delivered to the console
     // log should always happen (but of cause would dirty the trace)
     // currently only level INFO, WARNING and ERROR are supported
-    bool sendToConsole(const std::string &msg, el::Level logLevel);
+    static bool sendToConsole(const std::string &msg, el::Level logLevel);
 
     // TODO: this might need a better place (event handler?)
     // event fired when ddraw is loaded in stronghold (at least for GetProcAddress for Create calls)
@@ -269,6 +274,13 @@ namespace modclasses
     // redraws menu
     void updateMenu();
 
+    // keyboard:
+
+    void switchConsole(const HWND window, const bool keyUp, const bool repeat);
+    
+    void switchMenu(const HWND window, const bool keyUp, const bool repeat);
+    
+    void controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK);
 
     // static functions: //
 

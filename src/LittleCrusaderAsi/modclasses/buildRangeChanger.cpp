@@ -39,7 +39,7 @@ namespace modclasses
 
   std::vector<ModType> BuildRangeChanger::getDependencies() const
   {
-    return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER };
+    return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER, ModType::BLT_OVERLAY };
   }
 
 
@@ -95,7 +95,7 @@ namespace modclasses
           std::function<void(const HWND, const bool, const bool)> func =
             [this](const HWND hw, const bool keyUp, const bool repeat) {this->switchRangeChange(hw, keyUp, repeat);};
 
-          if (!keyInterceptor->simpleRegisterFunction(func, keyboardShortcut))
+          if (!keyInterceptor->registerFunction<true>(func, keyboardShortcut))
           {
             LOG(WARNING) << "BuildRangeChanger: At least one key combination was not registered.";
           }
@@ -112,14 +112,8 @@ namespace modclasses
       }
     }
 
-    if (!initialized)
-    {
-      LOG(WARNING) << "BuildRangeChanger was not initialized.";
-    }
-    else
-    {
-      LOG(INFO) << "BuildRangeChanger initialized.";
-    }
+    initialized ? BltOverlay::sendToConsole("BuildRangeChanger initialized.", el::Level::Info)
+      : BltOverlay::sendToConsole("BuildRangeChanger was not initialized.", el::Level::Warning);
   }
 
 
@@ -145,6 +139,9 @@ namespace modclasses
         }
         isChanged = true;
       }
+
+      std::string msg{ isChanged ? "active" : "deactivated" };
+      BltOverlay::sendToConsole("BuildRangeChanger status: " + msg, el::Level::Info);
     }
   }
 

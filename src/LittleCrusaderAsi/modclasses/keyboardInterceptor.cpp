@@ -172,72 +172,6 @@ namespace modclasses
   }
 
 
-  const std::vector<bool> KeyboardInterceptor::registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                                                const std::vector<std::array<VK, 3>> &keyCombinations)
-  {
-    std::vector<bool> workingKeyCombinations(keyCombinations.size(), false);
-    std::array<bool, 3> allowedKeyComb{false, true, true};
-
-    if (funcToExecute)
-    {
-      std::unique_ptr<KAction> newFunc = std::make_unique<KFunction>(funcToExecute);
-      bool onePlaced{ false };
-
-      for (size_t i = 0; i < keyCombinations.size(); i++)
-      {
-        const std::array<VK, 3>& keys = keyCombinations.at(i);
-
-        bool success = registerKey(keys.at(0), keys.at(1), keys.at(2), newFunc.get(), allowedKeyComb);
-        onePlaced = onePlaced || success;
-        workingKeyCombinations[i] = success;
-      }
-
-      if (onePlaced)
-      {
-        actionContainer.push_back(std::move(newFunc));
-      }
-    }
-    else
-    {
-      LOG(WARNING) << "KeyboardIntercepter: No valid function for key function add provided.";
-    }
-
-    // will mostly stay silent, use return to throw or log
-    // TODO: maybe some debug logs would be practical...?
-    return workingKeyCombinations;
-  }
-
-
-  const std::vector<bool> KeyboardInterceptor::registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                                                const Json &keyCombinations)
-  {
-    std::vector<std::array<VK, 3>> keyCombArray{ resolveKeyConfig(keyCombinations) };
-    return registerFunction(funcToExecute, keyCombArray);
-  }
-
-
-  const bool KeyboardInterceptor::simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                                                   const std::vector<std::array<VK, 3>> &keyCombinations)
-  {
-    std::vector<bool> registerResult{ registerFunction(funcToExecute, keyCombinations) };
-
-    bool allRegistered{ true };
-    for (bool ok : registerResult)
-    {
-      allRegistered = allRegistered && ok;
-    }
-    return allRegistered;
-  }
-
-
-  const bool KeyboardInterceptor::simpleRegisterFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                                                   const Json &keyCombinations)
-  {
-    std::vector<std::array<VK, 3>> keyCombArray{ resolveKeyConfig(keyCombinations) };
-    return simpleRegisterFunction(funcToExecute, keyCombArray);
-  }
-
-
   const bool KeyboardInterceptor::resolveKey(const VK key, const LPARAM lParam)
   {
     bool keyUp{ lParam & 0x80000000 ? true : false };
@@ -310,18 +244,18 @@ namespace modclasses
         // check if other key action used, then change (also includes new "start" for this action
         if (const auto& currIt = currentlyUsedKeys.find(key); currIt != currentlyUsedKeys.end() && currIt->second != actionToPerform)
         {
-          currIt->second->doAction(window, true, false);  // release other key
+          currIt->second->doAction(window, true, false, key);  // release other key
 
           if (!keyUp) // will only move action to other kombination if not key up
           {
-            actionToPerform->doAction(window, false, false); // execute first other action
+            actionToPerform->doAction(window, false, false, key); // execute first other action
             currentlyUsedKeys[key] = actionToPerform;
           }
         }
         else
         {
           // execute if non other active and add to/remove from watch map
-          actionToPerform->doAction(window, keyUp, keyHold);
+          actionToPerform->doAction(window, keyUp, keyHold, key);
           if (keyUp)
           {
             currentlyUsedKeys.erase(key);

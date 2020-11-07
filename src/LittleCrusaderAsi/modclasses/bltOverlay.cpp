@@ -89,6 +89,28 @@ namespace modclasses
         << "If 'true', shows a menu box as indicator that the menu is active, even if closed.";
     }
 
+    confIt = config.find("menuActiveAtStart");
+    if (confIt != config.end() && confIt.value().is_boolean())
+    {
+      menuActive = confIt.value().get<bool>();
+    }
+    else
+    {
+      LOG(WARNING) << "BltOverlay: No valid 'menuActiveAtStart' found. Needs to be boolean. Defaults to 'false'. "
+        << "If 'true', the menu will be open at the start.";
+    }
+
+    confIt = config.find("consoleActiveAtStart");
+    if (confIt != config.end() && confIt.value().is_boolean())
+    {
+      textActive = confIt.value().get<bool>();
+    }
+    else
+    {
+      LOG(WARNING) << "BltOverlay: No valid 'consoleActiveAtStart' found. Needs to be boolean. Defaults to 'false'. "
+        << "If 'true', the console will be visible at start.";
+    }
+
     confIt = config.find("fontConfigs");
     if (confIt != config.end() && confIt.value().is_object())
     {
@@ -97,6 +119,34 @@ namespace modclasses
     else
     {
       LOG(WARNING) << "BltOverlay: No valid 'fontConfigs' found. Needs to be an object with font configs. Using default fonts.";
+    }
+
+    confIt = config.find("keyConfig");
+    if (confIt != config.end())
+    {
+      auto keyIt = confIt.value().find("menu");
+      if (keyIt != confIt.value().end())
+      {
+        menuShortcut = keyIt.value();
+      }
+      else
+      {
+        LOG(WARNING) << "BltOverlay: 'keyConfig': No 'menu' found. Menu can not be opened or closed with the keyboard.";
+      }
+
+      keyIt = confIt.value().find("console");
+      if (keyIt != confIt.value().end())
+      {
+        consoleShortcut = keyIt.value();
+      }
+      else
+      {
+        LOG(WARNING) << "BltOverlay: 'keyConfig': No 'console' found. Console can not be opened or closed with the keyboard.";
+      }
+    }
+    else
+    {
+      LOG(WARNING) << "BltOverlay: No 'keyConfig' found. No keyboard control can be provided.";
     }
   }
 
@@ -150,10 +200,41 @@ namespace modclasses
       *flipMov = 0xBA;
       *flipAddr = reinterpret_cast<int>(FlipFake);
 
+      // initalize position values (only needs update on menu)
+      menuActive = !menuActive;
+      switchMenu(0, false, false);
+
       initialized = true;
     }
 
-    initialized ? LOG(INFO) << "BltOverlay initialized." : LOG(WARNING) << "BltOverlay was not initialized.";
+    // key register should not prevent initialization
+    auto keyInterceptor = getMod<KeyboardInterceptor>();
+    if (keyInterceptor && initialized)
+    {
+      if (!menuShortcut.empty())
+      {
+        std::function<void(const HWND, const bool, const bool)> func =
+          [this](const HWND hw, const bool keyUp, const bool repeat) { this->switchMenu(hw, keyUp, repeat); };
+
+        if (!keyInterceptor->registerFunction<true>(func, menuShortcut))
+        {
+          BltOverlay::sendToConsole("BltOverlay: Menu: At least one key combination was not registered.", el::Level::Warning);
+        }
+      }
+
+      if (!consoleShortcut.empty())
+      {
+        std::function<void(const HWND, const bool, const bool)> func =
+          [this](const HWND hw, const bool keyUp, const bool repeat) { this->switchConsole(hw, keyUp, repeat); };
+
+        if (!keyInterceptor->registerFunction<true>(func, consoleShortcut))
+        {
+          BltOverlay::sendToConsole("BltOverlay: Console: At least one key combination was not registered.", el::Level::Warning);
+        }
+      }
+    }
+
+    initialized ? sendToConsole("BltOverlay initialized.", el::Level::Info) : LOG(WARNING) << "BltOverlay was not initialized.";
   }
 
 
@@ -169,6 +250,37 @@ namespace modclasses
   void BltOverlay::registerDDrawLoadEvent(std::function<void()> &&func)
   {
     funcsForDDrawLoadEvent.push_back(func);
+  }
+
+
+  // keyboard stuff
+
+
+  void BltOverlay::switchMenu(const HWND, const bool keyUp, const bool repeat)
+  {
+    if (keyUp || repeat)
+    {
+      return;
+    }
+
+    // adapt console position
+    if (!menuIndicator)
+    {
+      textPos.first = menuActive ? menuRect.left : menuRect.right;
+    }
+
+    menuActive = !menuActive;
+  }
+
+
+  void BltOverlay::switchConsole(const HWND, const bool keyUp, const bool repeat)
+  {
+    if (keyUp || repeat)
+    {
+      return;
+    }
+
+    textActive = !textActive;
   }
 
 
@@ -373,21 +485,29 @@ namespace modclasses
         LOG(INFO) << msg;
         break;
       default:
+        LOG(WARNING) << "BltOverlay: Requested not supported log level for 'sendToConsole'.";
         break;
     }
 
-    if (!(initialized && dd7BackbufferPtr))
+    // using already forced singelton -> starts to get pretty horrible...
+    if (!overPtr)
     {
       return false;
     }
 
-    if (conQueue.size() >= 30)  // max currently hardcoded
+    BltOverlay& bltRef{ *overPtr };
+    if (!bltRef.initialized)
     {
-      conQueue.pop_back();
+      return false;
     }
-    conQueue.push_front(msg);
 
-    updateConsole();
+    if (bltRef.conQueue.size() >= 30)  // max currently hardcoded
+    {
+      bltRef.conQueue.pop_back();
+    }
+    bltRef.conQueue.push_front(msg);
+
+    bltRef.updateConsole();
 
     return true;
   }

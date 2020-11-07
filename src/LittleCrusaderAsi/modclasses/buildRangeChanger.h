@@ -4,6 +4,8 @@
 #include "modBase.h"
 #include "addressResolver.h"
 #include "keyboardInterceptor.h"
+#include "bltOverlay.h"
+
 
 namespace modclasses
 {

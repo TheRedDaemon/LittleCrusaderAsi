@@ -107,7 +107,8 @@ namespace modclasses
     // check mods and request addresses
     if (!(addressResolver && keyInterceptor && addressResolver->requestAddresses(usedAddresses, *this)))
     {
-      LOG(WARNING) << "AICLoad was not initialized.";
+      // using overlay send to console
+      BltOverlay::sendToConsole("AICLoad was not initialized.", el::Level::Warning);
       return;
     }
 
@@ -131,9 +132,9 @@ namespace modclasses
       std::function<void(const HWND, const bool, const bool)> func =
         [this](const HWND hw, const bool keyUp, const bool repeat){this->activateAICs(hw, keyUp, repeat);};
 
-      if (!keyInterceptor->simpleRegisterFunction(func, keysActivate))
+      if (!keyInterceptor->registerFunction<true>(func, keysActivate))
       {
-        LOG(WARNING) << "AICLoad: Activate: At least one key combination was not registered.";
+        BltOverlay::sendToConsole("AICLoad: Activate: At least one key combination was not registered.", el::Level::Warning);
       }
     }
 
@@ -142,9 +143,9 @@ namespace modclasses
       std::function<void(const HWND, const bool, const bool)> func =
         [this](const HWND hw, const bool keyUp, const bool repeat){this->reloadMainAIC(hw, keyUp, repeat);};
 
-      if (!keyInterceptor->simpleRegisterFunction(func, keysReloadMain))
+      if (!keyInterceptor->registerFunction<true>(func, keysReloadMain))
       {
-        LOG(WARNING) << "AICLoad: ReloadMainAIC: At least one key combination was not registered.";
+        BltOverlay::sendToConsole("AICLoad: ReloadMainAIC: At least one key combination was not registered.", el::Level::Warning);
       }
     }
 
@@ -153,9 +154,9 @@ namespace modclasses
       std::function<void(const HWND, const bool, const bool)> func =
         [this](const HWND hw, const bool keyUp, const bool repeat){this->reloadAllAIC(hw, keyUp, repeat);};
 
-      if (!keyInterceptor->simpleRegisterFunction(func, keysReloadAll))
+      if (!keyInterceptor->registerFunction<true>(func, keysReloadAll))
       {
-        LOG(WARNING) << "AICLoad: KeysReloadAll: At least one key combination was not registered.";
+        BltOverlay::sendToConsole("AICLoad: KeysReloadAll: At least one key combination was not registered.",  el::Level::Warning);
       }
     }
 
@@ -172,7 +173,7 @@ namespace modclasses
     }
 
     initialized = true;
-    LOG(INFO) << "AICLoad initialized.";
+    BltOverlay::sendToConsole("AICLoad initialized.", el::Level::Info);
   }
 
 
@@ -185,19 +186,20 @@ namespace modclasses
 
       if (vanillaAIC.at(0) != 12)
       {
-        LOG(WARNING) << "First thread attached event was seemingly triggerd before AIC initialisation. AICLoad features are likely unreliable. "
-          << "Indicator: first int is not a 12." ;
+        BltOverlay::sendToConsole("First thread attached event was seemingly triggerd before AIC initialisation. AICLoad features are likely unreliable. "
+                                  "Indicator: first int is not a 12.", el::Level::Warning);
       }
 
       // if aics are requested at start, load them in
       if (isChanged)
       {
         applyAICs();
+        BltOverlay::sendToConsole("Activated AICs on start.", el::Level::Info);
       }
 
       // keyboard calls should not be a problem, they overwrite each other at worst -> could however corrupt the vanilla save
 
-      LOG(INFO) << "AICLoad run through initial AIC loading.";
+      BltOverlay::sendToConsole("AICLoad run through initial AIC loading.", el::Level::Warning);
     }
   }
 
@@ -259,7 +261,8 @@ namespace modclasses
 
     isChanged = !isChanged;
 
-    LOG(INFO) << "Changed load status of file AICs to: " << (isChanged ? "true" : "false");
+    std::string msg{ isChanged ? "true" : "false" };
+    BltOverlay::sendToConsole("Changed load status of file AICs to: " + msg, el::Level::Info);
   }
 
 
@@ -278,7 +281,7 @@ namespace modclasses
     auto changedMain{ loadAICFile(mainName, false, mainSize) };
     if (!changedMain)
     {
-      LOG(WARNING) << "Error while reloading main. Loaded AIC data unchanged.";
+      BltOverlay::sendToConsole("Error while reloading main. Loaded AIC data unchanged.", el::Level::Warning);
       return;
     }
 
@@ -292,7 +295,7 @@ namespace modclasses
       applyAICs();
     }
 
-    LOG(INFO) << "Reloaded main AIC '" << mainName << "'.";
+    BltOverlay::sendToConsole("Reloaded main AIC: " + mainName, el::Level::Info);
   }
 
 
@@ -323,7 +326,7 @@ namespace modclasses
       applyAICs();
     }
 
-    LOG(INFO) << "Reloaded all AICs.";
+    BltOverlay::sendToConsole("Reloaded all AICs.", el::Level::Info);
   }
 
 
@@ -746,7 +749,8 @@ namespace modclasses
           (*aicMap)[getAICFieldIndex(aiName, aicField)] = value;
         }
       }
-      LOG(INFO) << "Loaded AIC '" << name << "'.";
+
+      BltOverlay::sendToConsole("Loaded AIC: " + name, el::Level::Info);
     }
     catch (const Json::parse_error& o_O)
     {
