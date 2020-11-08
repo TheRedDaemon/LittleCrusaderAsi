@@ -199,7 +199,7 @@ namespace modclasses
 
       // keyboard calls should not be a problem, they overwrite each other at worst -> could however corrupt the vanilla save
 
-      BltOverlay::sendToConsole("AICLoad run through initial AIC loading.", el::Level::Warning);
+      BltOverlay::sendToConsole("AICLoad run through initial AIC loading.", el::Level::Info);
     }
   }
 

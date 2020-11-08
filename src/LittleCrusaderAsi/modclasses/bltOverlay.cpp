@@ -232,6 +232,11 @@ namespace modclasses
           BltOverlay::sendToConsole("BltOverlay: Console: At least one key combination was not registered.", el::Level::Warning);
         }
       }
+
+      keyInterPtr = keyInterceptor;
+      
+      // test taking everyting away -> works? i guess
+      // enableCharReceive(true);
     }
 
     initialized ? sendToConsole("BltOverlay initialized.", el::Level::Info) : LOG(WARNING) << "BltOverlay was not initialized.";
@@ -428,15 +433,6 @@ namespace modclasses
       LOG(WARNING) << "BltOverlay: At least one font failed to load.";
     }
 
-    // backbuffer is indicator
-    if (dd7BackbufferPtr)
-    {
-      // fill initial
-      updateMenu();
-      updateInput();
-      //updateConsole();
-    }
-
     // should update console
     sendToConsole("BltOverlay: Finished surface prepare.", el::Level::Info);
   }
@@ -571,31 +567,31 @@ namespace modclasses
     textOffSurf->BltFast(0, 0, compSurf, &menuRects.consoleBorder, DDBLTFAST_SRCCOLORKEY);
   }
 
-
-  void BltOverlay::updateInput()
+  void BltOverlay::controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key)
   {
-    if (!dd7BackbufferPtr)
-    {
-      // return if no backbuffer
-      return;
-    }
+
   }
 
-
-  void BltOverlay::updateMenu()
+  bool BltOverlay::enableCharReceive(bool enable)
   {
-    if (!dd7BackbufferPtr)
+    auto interceptor = keyInterPtr.lock();
+    if (!interceptor)
     {
-      // return if no backbuffer
-      return;
+      return false;
     }
 
-    // add basis
-    menuOffSurf->BltFast(0, 0, compSurf, &menuRects.mainMenu, DDBLTFAST_NOCOLORKEY);
-
-    // do all the other stuff
+    std::function<void(char)> func{ [this](char chr){ this->receiveChar(chr); } };
+    return enable ? interceptor->lockChars(this, func, &passage) : interceptor->freeChars(this);
   }
 
+  void BltOverlay::receiveChar(char chr)
+  {
+    std::string s{ chr };
+    if (currentMenu)
+    {
+      currentMenu->executeAction(chr, *this);
+    }
+  }
 
   std::vector<AddressRequest> BltOverlay::usedAddresses{
     {Address::DD_MainSurfaceCreate, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},

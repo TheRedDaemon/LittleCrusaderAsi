@@ -21,7 +21,14 @@ namespace modclasses
     VK activationKey{ VK::HOME };
 
     // keyboard function hook
-    HHOOK keyboardHook{nullptr};
+    HHOOK keyboardHook{ nullptr };
+
+    // char message hook
+    HHOOK charHook{ nullptr };
+    // keeper for ref -> only one at the time is allowed
+    // user of this need to know, that setting this will prevent other inputs until removed
+    // key passage is set, all keyboard inputs are delivered to this object, otherwise, all input will be stopped
+    std::tuple<ModBase*, std::function<void(char)>, KPassage*> charHandlerFunc{ nullptr, nullptr, nullptr };
     
     // stronghold window
     HWND window{ nullptr };
@@ -106,6 +113,16 @@ namespace modclasses
       std::array<bool, 3> allowedKeyComb{ true, false, false }; // only single keys
       return registerKeyComb<simpleReturn, true>(funcToExecute, keyCombinations, allowedKeyComb);
     }
+
+    // register the function to receive chars given by the keyboard
+    // returns if registering was possible
+    // only one mod can receive them at the time and also needs to free them
+    // if a pointer to vaild key passage is given, this object will receive all input
+    // otherwise, the input is devoured
+    const bool lockChars(ModBase* mod, std::function<void(char)> &func, KPassage* passage);
+
+    // frees the char lock
+    const bool freeChars(ModBase* mod);
 
 
     // needs function to add keyboard strokes to use
@@ -214,9 +231,17 @@ namespace modclasses
     // resolves key, also return !true! if key should be !stopped!
     const bool resolveKey(const VK wParam, const LPARAM lParam);
 
+    // hooks and taker functions //
+
+    // normal keyboard intercepter
     LRESULT CALLBACK keyIntercepter(_In_ int code,_In_ WPARAM wParam, _In_ LPARAM lParam);
 
     static LRESULT CALLBACK hookForKeyInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam);
+
+    // message interceptor -> only used for char passage
+    LRESULT CALLBACK charInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam);
+
+    static LRESULT CALLBACK hookForCharInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam);
   };
 }
 

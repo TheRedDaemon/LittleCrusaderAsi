@@ -8,10 +8,15 @@ namespace modclasses
   static KeyboardInterceptor *handlerPointer{ nullptr };
 
 
-  // static hook function
+  // static hook functions
   LRESULT CALLBACK KeyboardInterceptor::hookForKeyInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
     return handlerPointer->keyIntercepter(code, wParam, lParam);
+  }
+
+  LRESULT CALLBACK KeyboardInterceptor::hookForCharInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
+  {
+    return handlerPointer->charInterceptor(code, wParam, lParam);
   }
 
   /*******************************************************/
@@ -89,6 +94,17 @@ namespace modclasses
         LOG(ERROR) << "Failed to unhook keyboard handler. Error code: " << GetLastError();
       }
     }
+
+    if (charHook)
+    {
+      // don't know if concurrent stuff could create issues here?
+      BOOL success{ UnhookWindowsHookEx(charHook) };
+
+      if (!success)
+      {
+        LOG(ERROR) << "Failed to unhook message handler. Error code: " << GetLastError();
+      }
+    }
   }
 
 
@@ -100,7 +116,9 @@ namespace modclasses
 
       keyboardHook = SetWindowsHookEx(WH_KEYBOARD, hookForKeyInterceptor, 0, GetCurrentThreadId());
 
-      if (keyboardHook)
+      charHook = SetWindowsHookEx(WH_GETMESSAGE, hookForCharInterceptor, 0, GetCurrentThreadId());
+
+      if (keyboardHook && charHook)
       {
         initialized = true;
         LOG(INFO) << "KeyboardInterceptor initialized.";
@@ -177,11 +195,19 @@ namespace modclasses
     bool keyUp{ lParam & 0x80000000 ? true : false };
     bool keyHold{ lParam & 0x40000000 ? true : false };
 
-    // for debug
-    //char keyName[30];
-    //GetKeyNameText(lParam, keyName, 30);
-    //LOG(INFO) << "Key used: " << std::bitset<32>(lParam);
-    //LOG(INFO) << "Key used: " << keyName << " " << key;
+    // stopping here if the char receiver is active and and "all" passage exits
+    // NOTE -> currently, all modifier keys are set to false, and all
+    // remaining actions receive a keyUp once the charPassage is set (also, the map is emptied)
+    // however, this 'problem' might not be one (as of writing this, no mod reacts to keyUp or KeyHold)
+    // But: TODO: always remember this and look out if problems arise
+    if (std::get<0>(charHandlerFunc))
+    {
+      if (std::get<2>(charHandlerFunc))
+      {
+        std::get<2>(charHandlerFunc)->doAction(window, keyUp, keyHold, key);
+      }
+      return true;  // devour
+    }
 
     // current approach doesn't allow to mix the keys -> every single one has to be either change or modifier keys
 
@@ -395,6 +421,97 @@ namespace modclasses
     }
 
     return kombinations;
+  }
+
+
+  // member function to handle char messages
+  // these will simply send the char forward
+  // lot of source: https://www.codeproject.com/Articles/50397/System-Wide-Hooking-for-the-WM-CHAR-Message
+  // TODO: if it work good, maybe it is possible to use only the GET_MESSAGE hook?
+  LRESULT CALLBACK KeyboardInterceptor::charInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
+  {
+    bool stopKey{ false }; // unused currently
+
+    if (code < 0)
+    {
+      return CallNextHookEx(nullptr, code, wParam, lParam);
+    }
+
+    switch (code)
+    {
+      // NOREMOVE is never reached -> trying action
+      case HC_ACTION: // HC_NOREMOVE:
+      {
+        MSG* msg = (MSG *)lParam;
+        if (msg->message == WM_CHAR)  // handle only WM_CHAR
+        {
+          if (!window)
+          {
+            window = GetActiveWindow();
+          }
+
+          // two tests to make sure it only executes if GetActiveWindow() found something
+          if (window && std::get<0>(charHandlerFunc))  // for test now not stopping char
+          {
+            // WM_CHAR message -> wParam is the character code of the key pressed
+            std::get<1>(charHandlerFunc)(static_cast<char>(msg->wParam));
+          }
+        }
+
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    return stopKey ? 1 : CallNextHookEx(nullptr, code, wParam, lParam);
+  }
+
+
+  const bool KeyboardInterceptor::lockChars(ModBase* mod, std::function<void(char)> &func, KPassage* passage)
+  {
+    if (std::get<0>(charHandlerFunc) || !mod)
+    {
+      return false;
+    }
+
+    std::get<0>(charHandlerFunc) = mod;
+    std::get<1>(charHandlerFunc) = func;
+
+    if (passage)
+    {
+      std::get<2>(charHandlerFunc) = passage;
+    }
+
+    // remove all status from keys, perform keyUps for watched keys
+    for (auto& status : modifierStatus)
+    {
+      status.second = false; // all unpressed
+    }
+
+    for (auto& watchedKey : currentlyUsedKeys)
+    {
+      if (watchedKey.second)
+      {
+        watchedKey.second->doAction(window, true, false, watchedKey.first);
+      }
+    }
+    currentlyUsedKeys.clear();
+
+    return true;
+  }
+
+
+  const bool KeyboardInterceptor::freeChars(ModBase* mod)
+  {
+    if (std::get<0>(charHandlerFunc) != mod)
+    {
+      return false;
+    }
+
+    charHandlerFunc = { nullptr, nullptr, nullptr };
+    return true;
   }
 }
 // (more sources for input handling (not this) https://stackoverflow.com/a/19802769)

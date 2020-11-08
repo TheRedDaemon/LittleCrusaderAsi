@@ -133,6 +133,8 @@ namespace modclasses
     BACK
   };
 
+  // forward declaration
+  class BltOverlay;
 
   class MenuBase
   {
@@ -169,7 +171,7 @@ namespace modclasses
 
     // key is placeholder, until I know what to send
     // send overlay for fully controll
-    virtual MenuBase* executeAction(VK key, BltOverlay &over)
+    virtual MenuBase* executeAction(char chr, BltOverlay &over)
     {
       return nullptr;
     }
@@ -340,6 +342,18 @@ namespace modclasses
     // keyboard stuff
     Json menuShortcut;
     Json consoleShortcut;
+    std::weak_ptr<KeyboardInterceptor> keyInterPtr;
+    KPassage passage{
+      [this](const HWND window, const bool keyUp, const bool repeat, const VK key)
+      {
+        this->controlMenu(window, keyUp, repeat, key);
+      }
+    };
+
+    // menu ptr;
+    std::unique_ptr<MenuBase> mainMenu{}; // mostly for reference -> will own every menu part at the end
+    MenuBase* currentMenu{ nullptr };  // current menu will receive all inputs if active
+
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -407,19 +421,20 @@ namespace modclasses
     // redraws console based on msg queue
     void updateConsole();
 
-    // redraws input field
-    void updateInput();
-
-    // redraws menu
-    void updateMenu();
-
     // keyboard:
 
     void switchConsole(const HWND window, const bool keyUp, const bool repeat);
     
     void switchMenu(const HWND window, const bool keyUp, const bool repeat);
     
-    void controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK);
+    void controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key);
+
+    // can be called by the input fields -> enables and disabled char receive, if possible
+    // note, if already set, will also return false -> keep memory of status
+    bool enableCharReceive(bool enable);
+
+    // takes the send input chars
+    void receiveChar(char chr);
 
     // static functions: //
 
