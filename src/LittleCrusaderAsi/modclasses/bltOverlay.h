@@ -22,6 +22,27 @@
 // https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw/
 namespace modclasses
 {
+  // small global helper method to zero ddObject (and set size value)
+  template <typename T>
+  void ZeroDDObject(T &ddObject)
+  {
+    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    ZeroMemory(&ddObject, sizeof(ddObject));
+  }
+
+
+  template <typename T>
+  void ZeroDDObjectAndSetSize(T &ddObject)
+  {
+    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    ZeroMemory(&ddObject, sizeof(ddObject));
+    ddObject.dwSize = sizeof(ddObject);
+  }
+
+
+  // FONT SUFF
+
+
   enum class FontTypeEnum
   {
     NONE,             // for config
@@ -40,24 +61,6 @@ namespace modclasses
     {FontTypeEnum::NORMAL, "normal"},
     {FontTypeEnum::NORMAL_BOLD, "normalBold"}
   })
-
-
-  // small global helper method to zero ddObject (and set size value)
-  template <typename T>
-  void ZeroDDObject(T &ddObject)
-  {
-    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
-    ZeroMemory(&ddObject, sizeof(ddObject));
-  }
-
-
-  template <typename T>
-  void ZeroDDObjectAndSetSize(T &ddObject)
-  {
-    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
-    ZeroMemory(&ddObject, sizeof(ddObject));
-    ddObject.dwSize = sizeof(ddObject);
-  }
 
 
   // will contain the fonds to switch to
@@ -115,7 +118,143 @@ namespace modclasses
     void deleteDCObjects(HFONT &hfont, HBITMAP &hBitmap, HDC &hdc);
   };
 
+  
+  // MENU STUFF
 
+
+  enum class MenuAction
+  {
+    NONE,             // for config
+    RIGHT,
+    LEFT,
+    UP,
+    DOWN,
+    ACTION,
+    BACK
+  };
+
+
+  class MenuBase
+  {
+    // headline
+  protected:
+    std::string header;
+    MenuBase* lastMenu{nullptr};
+
+  public:
+    MenuBase(std::string &headerString) : header(headerString) { };
+
+    // peforms any action -> if return != null, set current menu in BltOverlay to this return -> needs interfaces in case redraws are needed
+    // likely needs redesign -> hwo do I send the other keys?
+    MenuBase* executeAction(MenuAction actionType, BltOverlay &over)
+    {
+      switch (actionType)
+      {
+        case MenuAction::ACTION:
+          return action(over);
+        case MenuAction::BACK:
+          return back(over);
+        case MenuAction::UP:
+        case MenuAction::DOWN:
+        case MenuAction::RIGHT:
+        case MenuAction::LEFT:
+          move(actionType, over);
+          break;
+        default:
+          break;
+      }
+
+      return nullptr;
+    }
+
+    // key is placeholder, until I know what to send
+    // send overlay for fully controll
+    virtual MenuBase* executeAction(VK key, BltOverlay &over)
+    {
+      return nullptr;
+    }
+
+    virtual ~MenuBase(){}
+
+  private:
+
+    virtual void move(MenuAction direction, BltOverlay &over) = 0;
+    virtual MenuBase* action(BltOverlay &over) = 0;
+    virtual MenuBase* back(BltOverlay &over) = 0;
+    virtual void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) = 0;
+  };
+
+
+  class MainMenu : public MenuBase
+  {
+  private:
+
+    bool bigMenu;
+    size_t currentSelected{ 0 };
+    std::pair<size_t, size_t> startEndVisible;
+    std::vector<MenuBase> subMenus;
+
+    // will receive ref to header, also, first bool is 'entered', false would be leaving the current menu
+    // needs to return true, if the menu should be enterable (ignored if leave?)
+    std::function<bool(bool, std::string&)> reactFunc;
+
+  private:
+
+    void move(MenuAction direction, BltOverlay &over) override;
+    MenuBase* action(BltOverlay &over) override;
+    MenuBase* back(BltOverlay &over) override;
+    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+  };
+
+
+  class FreeInputMenu : public MenuBase
+  {
+  private:
+
+    bool onlyNumber;
+
+    // will tell the current impl if the keyboard is overtaken (and that it might need to free it)
+    bool overtake;
+    std::string currentInput;
+
+    const std::string defaultValue;
+    std::string currentValue;
+    std::string resultOfEnter;
+
+  private:
+
+
+    void move(MenuAction direction, BltOverlay &over) override;
+    MenuBase* action(BltOverlay &over) override;
+    MenuBase* back(BltOverlay &over) override;
+    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+  };
+
+
+  // template?
+  template<typename T>
+  class ChoiceInputMenu : public MenuBase
+  {
+  private:
+
+    // vector will contain choices -> strings are whats displayed
+    std::vector<std::pair<std::string, T>> choicePairs;
+
+    const std::string defaultValue;
+    std::string currentValue;
+    std::string resultOfEnter;
+
+  private:
+
+    void move(MenuAction direction, BltOverlay &over) override;
+    MenuBase* action(BltOverlay &over) override;
+    MenuBase* back(BltOverlay &over) override;
+    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+  };
+
+
+  // MAIN PART
+  
   // simple proto class, replace all 'ProtoMod' with the new name
   class BltOverlay : public ModBase
   {
@@ -296,6 +435,13 @@ namespace modclasses
 
     // flip is called at a relative constant time -> no menu responsiveness issues
     static HRESULT _stdcall FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags);
+
+    // all menu friend
+    friend class MainMenu;
+    friend class FreeInputMenu;
+    
+    template<typename T>
+    friend class ChoiceInputMenu;
   };
 }
 
