@@ -204,9 +204,9 @@ namespace modclasses
     {
       if (std::get<2>(charHandlerFunc))
       {
-        std::get<2>(charHandlerFunc)->doAction(window, keyUp, keyHold, key);
+        return std::get<2>(charHandlerFunc)(window, keyUp, keyHold, key);
       }
-      return true;  // devour
+      return false;  // let it pass
     }
 
     // current approach doesn't allow to mix the keys -> every single one has to be either change or modifier keys
@@ -308,13 +308,12 @@ namespace modclasses
   // however, since debug this freezes stronghold... I guess it is? -> it seems to be resolved in the main thread
   LRESULT CALLBACK KeyboardInterceptor::keyIntercepter(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
-    bool stopKey{ false };
-
     if (code < 0)
     {
       return CallNextHookEx(nullptr, code, wParam, lParam);
     }
 
+    bool stopKey{ false };
     switch (code)
     {
       // if message removed in case of HC_Action -> slow if many
@@ -350,6 +349,7 @@ namespace modclasses
 
   const VK KeyboardInterceptor::generalToExtendedKey(const WPARAM wParam, const LPARAM lParam)
   {
+    // first solution, using extendedKey flag
     bool keyExtended{ lParam & 0x01000000 ? true : false }; // extended keys are also the right hand shift and alt keys etc.
 
     switch (wParam)
@@ -363,6 +363,26 @@ namespace modclasses
       default:
         return static_cast<VK>(wParam); // overflow possible? -> likely no support for bigger utf keys, hmm?
     }
+
+    // other solution, using MapVirtualKey and scancode
+    // source: https://stackoverflow.com/a/15977613
+    /*
+    UINT scancode = (lParam & 0x00ff0000) >> 16;
+
+    switch (wParam)
+    {
+      case VK_MENU:
+      case VK_CONTROL:
+      case VK_SHIFT:
+        return static_cast<VK>(MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX));
+      default:
+        return static_cast<VK>(wParam);
+    }
+    */
+
+    // while another source for the other solution says that shift will not work, it is an extended key (in my case)
+    // additionally, it turns altgr to left ctrl + right menu, the other solution to left ctrl + left menu
+    // will keep my solution until problems arise
   }
 
 
@@ -430,9 +450,7 @@ namespace modclasses
   // TODO: if it work good, maybe it is possible to use only the GET_MESSAGE hook?
   LRESULT CALLBACK KeyboardInterceptor::charInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
-    bool stopKey{ false }; // unused currently
-
-    if (code < 0)
+    if (!std::get<0>(charHandlerFunc) || code < 0)
     {
       return CallNextHookEx(nullptr, code, wParam, lParam);
     }
@@ -443,33 +461,55 @@ namespace modclasses
       case HC_ACTION: // HC_NOREMOVE:
       {
         MSG* msg = (MSG *)lParam;
-        if (msg->message == WM_CHAR)  // handle only WM_CHAR
+        switch (msg->message)
         {
-          if (!window)
-          {
-            window = GetActiveWindow();
-          }
-
-          // two tests to make sure it only executes if GetActiveWindow() found something
-          if (window && std::get<0>(charHandlerFunc))  // for test now not stopping char
+          case WM_CHAR: // send char further
           {
             // WM_CHAR message -> wParam is the character code of the key pressed
             std::get<1>(charHandlerFunc)(static_cast<char>(msg->wParam));
-          }
-        }
 
-        break;
+            // WH_GETMESSAGE can not stop msg, but it can modify them:
+            msg->message = WM_NULL;
+            // source: https://stackoverflow.com/a/57049028
+          }
+
+          // devour all messages as long as this is active
+          case WM_KEYDOWN:
+            // since crusader can not do this (it would react), we have to translate the message ourselves
+            // to receive the WM_CHAR msg
+            TranslateMessage(msg);
+
+            // maybe TODO: (one day?)
+            // move KeyReacts to this hook -> would require a bit different handling though  
+            // that being said, the msg basically contains every info that the keyboard hook receives
+            // keydown for example should also receive key repeat
+            // might even be possible to change keys and keep the original char + modifier,
+            // since this message could be Translated (with a changed key) and another keydown could be send
+            // (that being said, it might result in sending to keys
+            //   -> if sequential, one could remember to discard the next(?) WM_CHAR
+            //   -> might depend on when the message is translated and when the other key is send+
+            //   -> maybe remembering the char to discard whould be better? (VK to char and other way around is not easy though)
+
+            msg->message = WM_NULL;
+            break;
+          case WM_KEYUP:
+            msg->message = WM_NULL;
+            break;
+          default:
+            break;
+        }
       }
 
       default:
         break;
     }
 
-    return stopKey ? 1 : CallNextHookEx(nullptr, code, wParam, lParam);
+    return CallNextHookEx(nullptr, code, wParam, lParam);
   }
 
 
-  const bool KeyboardInterceptor::lockChars(ModBase* mod, std::function<void(char)> &func, KPassage* passage)
+  const bool KeyboardInterceptor::lockChars(ModBase* mod, std::function<void(char)> &func, 
+                                            std::function<bool(const HWND, const bool, const bool, const VK)> &passage)
   {
     if (std::get<0>(charHandlerFunc) || !mod)
     {

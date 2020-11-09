@@ -133,6 +133,17 @@ namespace modclasses
     BACK
   };
 
+  // used to parse string to enum
+  NLOHMANN_JSON_SERIALIZE_ENUM(MenuAction, {
+    {MenuAction::NONE, nullptr},
+    {MenuAction::RIGHT, "right"},
+    {MenuAction::LEFT, "left"},
+    {MenuAction::UP, "up"},
+    {MenuAction::DOWN, "down"},
+    {MenuAction::ACTION, "action"},
+    {MenuAction::BACK, "back"}
+  })
+
   // forward declaration
   class BltOverlay;
 
@@ -343,12 +354,7 @@ namespace modclasses
     Json menuShortcut;
     Json consoleShortcut;
     std::weak_ptr<KeyboardInterceptor> keyInterPtr;
-    KPassage passage{
-      [this](const HWND window, const bool keyUp, const bool repeat, const VK key)
-      {
-        this->controlMenu(window, keyUp, repeat, key);
-      }
-    };
+    std::unordered_map<VK, MenuAction> menuActions;
 
     // menu ptr;
     std::unique_ptr<MenuBase> mainMenu{}; // mostly for reference -> will own every menu part at the end
@@ -427,7 +433,8 @@ namespace modclasses
     
     void switchMenu(const HWND window, const bool keyUp, const bool repeat);
     
-    void controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key);
+    // returns bool to also control the key passage in input case
+    bool controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key);
 
     // can be called by the input fields -> enables and disabled char receive, if possible
     // note, if already set, will also return false -> keep memory of status

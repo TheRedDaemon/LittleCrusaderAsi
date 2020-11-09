@@ -236,7 +236,7 @@ namespace modclasses
       keyInterPtr = keyInterceptor;
       
       // test taking everyting away -> works? i guess
-      // enableCharReceive(true);
+      //enableCharReceive(true);
     }
 
     initialized ? sendToConsole("BltOverlay initialized.", el::Level::Info) : LOG(WARNING) << "BltOverlay was not initialized.";
@@ -286,6 +286,29 @@ namespace modclasses
     }
 
     textActive = !textActive;
+  }
+
+
+  bool BltOverlay::controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key)
+  {
+    if (keyUp || repeat || !currentMenu)
+    {
+      return false;
+    }
+
+    auto keyIt{ menuActions.find(key) };
+    if (keyIt == menuActions.end())
+    {
+      return false;
+    }
+
+    MenuBase* switchMenu{ currentMenu->executeAction(menuActions[key], *this) };
+    if (switchMenu != nullptr)
+    {
+      currentMenu = switchMenu;
+    }
+
+    return true;
   }
 
 
@@ -567,11 +590,6 @@ namespace modclasses
     textOffSurf->BltFast(0, 0, compSurf, &menuRects.consoleBorder, DDBLTFAST_SRCCOLORKEY);
   }
 
-  void BltOverlay::controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key)
-  {
-
-  }
-
   bool BltOverlay::enableCharReceive(bool enable)
   {
     auto interceptor = keyInterPtr.lock();
@@ -580,8 +598,19 @@ namespace modclasses
       return false;
     }
 
-    std::function<void(char)> func{ [this](char chr){ this->receiveChar(chr); } };
-    return enable ? interceptor->lockChars(this, func, &passage) : interceptor->freeChars(this);
+    std::function<void(char)> func{
+      [this](char chr)
+      { 
+        this->receiveChar(chr); 
+      }
+    };
+    std::function<bool(const HWND, const bool, const bool, const VK)> passage{
+      [this](const HWND window, const bool keyUp, const bool repeat, const VK key)
+      {
+        return this->controlMenu(window, keyUp, repeat, key);
+      }
+    };
+    return enable ? interceptor->lockChars(this, func, passage) : interceptor->freeChars(this);
   }
 
   void BltOverlay::receiveChar(char chr)

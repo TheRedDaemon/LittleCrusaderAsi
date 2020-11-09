@@ -27,8 +27,10 @@ namespace modclasses
     HHOOK charHook{ nullptr };
     // keeper for ref -> only one at the time is allowed
     // user of this need to know, that setting this will prevent other inputs until removed
-    // key passage is set, all keyboard inputs are delivered to this object, otherwise, all input will be stopped
-    std::tuple<ModBase*, std::function<void(char)>, KPassage*> charHandlerFunc{ nullptr, nullptr, nullptr };
+    // if the third func is set, all keyboard inputs are delivered to this object, otherwise, all input will be stopped
+    // unlike a KPassage, this third receiver needs to return a bool -> if true, the input is devoured
+    std::tuple<ModBase*, std::function<void(char)>, std::function<bool(const HWND, const bool, const bool, const VK)>>
+      charHandlerFunc{ nullptr, nullptr, nullptr };
     
     // stronghold window
     HWND window{ nullptr };
@@ -117,9 +119,11 @@ namespace modclasses
     // register the function to receive chars given by the keyboard
     // returns if registering was possible
     // only one mod can receive them at the time and also needs to free them
-    // if a pointer to vaild key passage is given, this object will receive all input
-    // otherwise, the input is devoured
-    const bool lockChars(ModBase* mod, std::function<void(char)> &func, KPassage* passage);
+    // if a valid third func is given, this object will receive all input and can decide if it should reach
+    // the char handler and the program -> the char handler will devour everything that creates chars
+    // if the third in nullptr, all keys are passed to the char handler and the programm
+    const bool lockChars(ModBase* mod, std::function<void(char)> &func,
+                         std::function<bool(const HWND, const bool, const bool, const VK)> &passage);
 
     // frees the char lock
     const bool freeChars(ModBase* mod);
