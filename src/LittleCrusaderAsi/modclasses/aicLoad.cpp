@@ -166,6 +166,56 @@ namespace modclasses
       {
         this->initialAICLoad();
       });
+
+      // add menu stuff (test)
+      auto aicSubMenuVec{ std::make_unique<std::vector<std::unique_ptr<MenuBase>>>() };
+      aicSubMenuVec->push_back(std::move(
+        std::make_unique<MainMenu>(
+          "Reload All",
+          [this](bool leaving, std::string& header)
+          {
+            this->reloadAllAIC(0, false, false);
+            return false;
+          },
+          true,
+          nullptr
+        )
+      ));
+      aicSubMenuVec->push_back(std::move(
+        std::make_unique<MainMenu>(
+          "Reload Main",
+          [this](bool leaving, std::string& header)
+          {
+            this->reloadMainAIC(0, false, false);
+            return false;
+          },
+          true,
+          nullptr
+        )
+      ));
+      aicSubMenuVec->push_back(std::move(
+        std::make_unique<MainMenu>(
+          "AIC active: " + std::string(this->isChanged ? "true" : "false"),
+          [this](bool leaving, std::string& header)
+          {
+            this->activateAICs(0, false, false);
+            header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
+            return false;
+          },
+          true,
+          nullptr
+        )
+      ));
+      bltOverlay->addMenu(  // add the final construction
+        std::make_unique<MainMenu>(
+          "AIC Load",
+          nullptr,
+          true,
+          std::move(aicSubMenuVec)
+        )
+      );
+
+
     }
     else
     {

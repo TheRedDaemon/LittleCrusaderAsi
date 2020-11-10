@@ -143,12 +143,48 @@ namespace modclasses
       {
         LOG(WARNING) << "BltOverlay: 'keyConfig': No 'console' found. Console can not be opened or closed with the keyboard.";
       }
+
+      keyIt = confIt.value().find("menuControl");
+      if (keyIt != confIt.value().end() && keyIt.value().is_object())
+      {
+        auto& consoleControl = keyIt.value();
+        
+        const std::vector<std::string> actions{"right", "left", "up", "down", "action", "back" };
+        for (const auto& act : actions)
+        {
+          // will ignore double entries
+          auto actIt = consoleControl.find(act);
+          if (actIt == consoleControl.end() || !actIt.value().is_string())
+          {
+            LOG(WARNING) << "BltOverlay: 'keyConfig': 'menuControl': No valid entry for menu action '" << act << "' found.";
+            keysValid = false;
+            continue;
+          }
+
+          VK thisAct{ actIt.value().get<VK>() };
+          if (thisAct == VK::NONE)
+          {
+            LOG(WARNING) << "BltOverlay: 'keyConfig': 'menuControl': No valid key for menu action '" << act << "' found.";
+            keysValid = false;
+            continue;
+          }
+
+          // should work, since actions already filtered
+          menuActions.try_emplace(thisAct, getEnumFromString<MenuAction>(act));
+        }
+      }
+      else
+      {
+        LOG(WARNING) << "BltOverlay: 'keyConfig': No valid 'menuControl' found. Needs to be an object. Unable to control menu.";
+        keysValid = false;
+      }
     }
     else
     {
       LOG(WARNING) << "BltOverlay: No 'keyConfig' found. No keyboard control can be provided.";
     }
   }
+
 
   void BltOverlay::initialize()
   {
@@ -204,6 +240,10 @@ namespace modclasses
       menuActive = !menuActive;
       switchMenu(0, false, false);
 
+      // create main menu
+
+      mainMenu = std::make_unique<MainMenu>("Mod Menu", nullptr, true, nullptr);
+      currentMenu = mainMenu.get();
       initialized = true;
     }
 
@@ -233,10 +273,34 @@ namespace modclasses
         }
       }
 
+      // console controls
+      if (!menuActions.empty())
+      {
+        std::vector<std::array<VK, 3>> actionControls;
+        for (auto& keyAction : menuActions)
+        {
+          actionControls.push_back({ VK::NONE, VK::NONE, keyAction.first});
+        }
+
+        std::function<void(const HWND, const bool, const bool, const VK)> func =
+          [this](const HWND hw, const bool keyUp, const bool repeat, const VK key) 
+          { 
+            this->controlMenu(hw, keyUp, repeat, key); 
+          };
+
+        if (!keyInterceptor->registerPassage<true>(func, actionControls))
+        {
+          BltOverlay::sendToConsole("BltOverlay: MenuActions: At least one key was not registered.", el::Level::Warning);
+          keysValid = false;
+        }
+      }
+
+      if (!keysValid)
+      {
+        BltOverlay::sendToConsole("BltOverlay: MenuActions: Problems while initializing menu controls. Some will not work.", el::Level::Warning);
+      }
+
       keyInterPtr = keyInterceptor;
-      
-      // test taking everyting away -> works? i guess
-      //enableCharReceive(true);
     }
 
     initialized ? sendToConsole("BltOverlay initialized.", el::Level::Info) : LOG(WARNING) << "BltOverlay was not initialized.";
@@ -255,6 +319,15 @@ namespace modclasses
   void BltOverlay::registerDDrawLoadEvent(std::function<void()> &&func)
   {
     funcsForDDrawLoadEvent.push_back(func);
+  }
+
+
+  void BltOverlay::addMenu(std::unique_ptr<MenuBase> menu)
+  {
+    if (initialized && mainMenu)
+    {
+      mainMenu->addMenuStructure(menu);
+    }
   }
 
 
@@ -447,13 +520,18 @@ namespace modclasses
     // prepare font -> should write something more fitting with the code given later
     fntHandler.setUseVideoMemory(!disableHardwareTest);
     bool fontOk{ true };
-    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 230));
+    fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 150));
     fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::NORMAL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 150));
     fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 230));
     fontOk = fontOk && fntHandler.loadFont(FontTypeEnum::SMALL_BOLD, fontConfigs, dd7InterfacePtr, TEXTCOLOR(230, 230, 150));
     if (!fontOk)
     {
       LOG(WARNING) << "BltOverlay: At least one font failed to load.";
+    }
+
+    if (dd7BackbufferPtr && currentMenu)
+    {
+      currentMenu->forceDraw(*this);
     }
 
     // should update console

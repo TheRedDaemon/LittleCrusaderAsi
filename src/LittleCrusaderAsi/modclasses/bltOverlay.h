@@ -150,12 +150,17 @@ namespace modclasses
   class MenuBase
   {
     // headline
-  protected:
+  private:
     std::string header;
     MenuBase* lastMenu{nullptr};
 
+    // will receive ref to header, also, first bool is 'leaving', true would be leaving the current menu
+    // needs to return true, if the menu should be enterable (ignored if leave?)
+    std::function<bool(bool leaving, std::string& header)> accessReact{ nullptr };
+
   public:
-    MenuBase(std::string &headerString) : header(headerString) { };
+    MenuBase(const std::string &headerString, std::function<bool(bool leaving, std::string& header)> accessReactFunc)
+      : header(headerString), accessReact(accessReactFunc) { };
 
     // peforms any action -> if return != null, set current menu in BltOverlay to this return -> needs interfaces in case redraws are needed
     // likely needs redesign -> hwo do I send the other keys?
@@ -187,14 +192,38 @@ namespace modclasses
       return nullptr;
     }
 
+    // should only be used by BltOverlay
+    // forces draw of parent (if any) then this
+    // a bit hacky -> either menu is drawn twice, or last menu status of input is restored
+    void forceDraw(BltOverlay &over)
+    {
+      if (lastMenu)
+      {
+        lastMenu->draw(over);
+      }
+      draw(over);
+    }
+
     virtual ~MenuBase(){}
+
+    // prevent copy and assign (not sure how necessary)
+    MenuBase(const MenuBase&) = delete;
+    MenuBase& operator= (const MenuBase&) = delete;
 
   private:
 
+    virtual MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) = 0;
     virtual void move(MenuAction direction, BltOverlay &over) = 0;
     virtual MenuBase* action(BltOverlay &over) = 0;
     virtual MenuBase* back(BltOverlay &over) = 0;
-    virtual void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) = 0;
+    virtual void draw(BltOverlay &over) = 0;
+
+    // derived are all friend of the BaseClass, to access the private variables
+    friend class MainMenu;
+    friend class FreeInputMenu;
+
+    template<typename T>
+    friend class ChoiceInputMenu;
   };
 
 
@@ -205,18 +234,32 @@ namespace modclasses
     bool bigMenu;
     size_t currentSelected{ 0 };
     std::pair<size_t, size_t> startEndVisible;
-    std::vector<MenuBase> subMenus;
+    std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenus;
 
-    // will receive ref to header, also, first bool is 'entered', false would be leaving the current menu
-    // needs to return true, if the menu should be enterable (ignored if leave?)
-    std::function<bool(bool, std::string&)> reactFunc;
+  public:
+
+    MainMenu(const std::string &headerString, const std::function<bool(bool leaving, std::string& header)> accessReactFunc,
+             bool isItBigMenu, std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenusObj);
+
+    // should only be used by BltOverlay
+    // adds menu by move
+    // note, the given structure will not be valid after this function
+    void addMenuStructure(std::unique_ptr<MenuBase> &menu);
+
+    // prevent copy and assign (not sure how necessary)
+    MainMenu(const MainMenu&) = delete;
+    MainMenu& operator= (const MainMenu&) = delete;
 
   private:
 
+    void computeStartEndVisible();
+    void menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over);
+
+    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
-    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+    void draw(BltOverlay &over) override;
   };
 
 
@@ -234,13 +277,18 @@ namespace modclasses
     std::string currentValue;
     std::string resultOfEnter;
 
+  public:
+    // prevent copy and assign (not sure how necessary)
+    FreeInputMenu(const FreeInputMenu&) = delete;
+    FreeInputMenu& operator= (const FreeInputMenu&) = delete;
+
   private:
 
-
+    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
-    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+    void draw(BltOverlay &over) override;
   };
 
 
@@ -256,13 +304,19 @@ namespace modclasses
     const std::string defaultValue;
     std::string currentValue;
     std::string resultOfEnter;
+  
+  public:
+    // prevent copy and assign (not sure how necessary)
+    ChoiceInputMenu(const ChoiceInputMenu&) = delete;
+    ChoiceInputMenu& operator= (const ChoiceInputMenu&) = delete;
 
   private:
 
+    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
-    void draw(IDirectDrawSurface7* menuSurface, BltOverlay &over) override;
+    void draw(BltOverlay &over) override;
   };
 
 
@@ -282,7 +336,7 @@ namespace modclasses
       inline static RECT consoleBorder{ 300, 0, 800, 250 };
       inline static RECT msgIcon{ 800, 0, 812, 12 };
       inline static RECT bigButton{ 0, 500, 280, 560 };
-      inline static RECT bigButtonPressed{ 0, 560, 280, 560 };
+      inline static RECT bigButtonPressed{ 0, 560, 280, 620 };
       inline static RECT smallButton{ 300, 250, 580, 282 };
       inline static RECT smallButtonPressed{ 300, 282, 580, 314 };
       inline static RECT smallInputBox{ 300, 314, 600, 464 };
@@ -355,9 +409,10 @@ namespace modclasses
     Json consoleShortcut;
     std::weak_ptr<KeyboardInterceptor> keyInterPtr;
     std::unordered_map<VK, MenuAction> menuActions;
+    bool keysValid{ true };
 
     // menu ptr;
-    std::unique_ptr<MenuBase> mainMenu{}; // mostly for reference -> will own every menu part at the end
+    std::unique_ptr<MainMenu> mainMenu{}; // mostly for reference -> will own every menu part at the end
     MenuBase* currentMenu{ nullptr };  // current menu will receive all inputs if active
 
 
@@ -399,6 +454,9 @@ namespace modclasses
     // TODO: this might need a better place (event handler?)
     // event fired when ddraw is loaded in stronghold (at least for GetProcAddress for Create calls)
     void registerDDrawLoadEvent(std::function<void()> &&func);
+
+    // warning -> takes of cause ownership
+    void addMenu(std::unique_ptr<MenuBase> menu);
 
     /**misc**/
 

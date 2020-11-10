@@ -93,7 +93,7 @@ namespace modclasses
     // also, multiple key combinations result in the ability to "open" multiple calls (multiple key downs before the first lift)
     template<bool simpleReturn, typename KeyComb>
     const auto registerFunction(const std::function<void(const HWND, const bool, const bool)> &funcToExecute,
-                                const KeyComb &keyCombinations)
+                                KeyComb &keyCombinations)
     {
       std::array<bool, 3> allowedKeyComb{ false, true, true };
       return registerKeyComb<simpleReturn, false>(funcToExecute, keyCombinations, allowedKeyComb);
@@ -110,7 +110,7 @@ namespace modclasses
     // also, multiple key combinations result in the ability to "open" multiple calls (multiple key downs before the first lift)
     template<bool simpleReturn, typename KeyComb>
     const auto registerPassage(const std::function<void(const HWND, const bool, const bool, const VK)> &funcToExecute,
-                               const KeyComb &keyCombinations)
+                               KeyComb &keyCombinations)
     {
       std::array<bool, 3> allowedKeyComb{ true, false, false }; // only single keys
       return registerKeyComb<simpleReturn, true>(funcToExecute, keyCombinations, allowedKeyComb);
@@ -144,7 +144,7 @@ namespace modclasses
 
     // main template for both register functions
     template<bool simpleReturn, bool passage, typename Func, typename KeyComb>
-    const auto registerKeyComb(const Func &funcToExecute, const KeyComb &keyCombinations, std::array<bool, 3> &allowedKeyComb)
+    const auto registerKeyComb(const Func &funcToExecute, KeyComb &keyCombinations, std::array<bool, 3> &allowedKeyComb)
     {
       std::vector<std::array<VK, 3>>* combPtr{ nullptr };
 

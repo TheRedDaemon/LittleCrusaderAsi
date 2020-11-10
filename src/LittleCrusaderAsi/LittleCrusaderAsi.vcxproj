@@ -212,6 +212,7 @@
     <ClCompile Include="modclasses\util\fontUtil.cpp" />
     <ClCompile Include="modclasses\util\keyboardUtil.cpp" />
     <ClCompile Include="modclasses\keyboardInterceptor.cpp" />
+    <ClCompile Include="modclasses\util\menuClassImpl.cpp" />
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
     <ClCompile Include="Modcore\modConstructors.cpp" />

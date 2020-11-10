@@ -164,6 +164,9 @@
     <ClCompile Include="modclasses\util\fontUtil.cpp">
       <Filter>Quelldateien\ModClasses\Util</Filter>
     </ClCompile>
+    <ClCompile Include="modclasses\util\menuClassImpl.cpp">
+      <Filter>Quelldateien\ModClasses\Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\Resource.rc">
