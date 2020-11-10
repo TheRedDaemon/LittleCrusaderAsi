@@ -242,7 +242,7 @@ namespace modclasses
 
       // create main menu
 
-      mainMenu = std::make_unique<MainMenu>("Mod Menu", nullptr, true, nullptr);
+      mainMenu = std::make_unique<MainMenu>("Mod Menu", nullptr, true);
       currentMenu = mainMenu.get();
       initialized = true;
     }
@@ -322,12 +322,13 @@ namespace modclasses
   }
 
 
-  void BltOverlay::addMenu(std::unique_ptr<MenuBase> menu)
+  MenuBase* BltOverlay::getMainMenu()
   {
     if (initialized && mainMenu)
     {
-      mainMenu->addMenuStructure(menu);
+      return mainMenu.get();
     }
+    return nullptr;
   }
 
 
@@ -362,9 +363,9 @@ namespace modclasses
   }
 
 
-  bool BltOverlay::controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key)
+  bool BltOverlay::controlMenu(const HWND, const bool keyUp, const bool repeat, const VK key)
   {
-    if (keyUp || repeat || !currentMenu)
+    if (!menuActive || keyUp || repeat || !currentMenu)
     {
       return false;
     }

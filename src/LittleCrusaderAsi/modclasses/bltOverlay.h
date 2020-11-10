@@ -149,18 +149,23 @@ namespace modclasses
 
   class MenuBase
   {
-    // headline
+    using HeaderReact = std::function<bool(bool leaving, std::string& header)>;
+  
+
   private:
     std::string header;
     MenuBase* lastMenu{nullptr};
 
     // will receive ref to header, also, first bool is 'leaving', true would be leaving the current menu
     // needs to return true, if the menu should be enterable (ignored if leave?)
-    std::function<bool(bool leaving, std::string& header)> accessReact{ nullptr };
+    HeaderReact accessReact{ nullptr };
 
   public:
-    MenuBase(const std::string &headerString, std::function<bool(bool leaving, std::string& header)> accessReactFunc)
+    MenuBase(const std::string &headerString, HeaderReact accessReactFunc)
       : header(headerString), accessReact(accessReactFunc) { };
+
+    MenuBase(std::string &&headerString, HeaderReact &&accessReactFunc)
+      : header(std::move(headerString)), accessReact(std::move(accessReactFunc)) { };
 
     // peforms any action -> if return != null, set current menu in BltOverlay to this return -> needs interfaces in case redraws are needed
     // likely needs redesign -> hwo do I send the other keys?
@@ -187,7 +192,7 @@ namespace modclasses
 
     // key is placeholder, until I know what to send
     // send overlay for fully controll
-    virtual MenuBase* executeAction(char chr, BltOverlay &over)
+    virtual MenuBase* executeAction(char, BltOverlay&)
     {
       return nullptr;
     }
@@ -204,15 +209,56 @@ namespace modclasses
       draw(over);
     }
 
+    // create MenuObject and return reference either to decend or to keep
+    // I do not know what I am doing
+    // (if there is someone who understands more about moves, forwarding, etc.
+    // -> please, rework)
+    template<typename T, bool descend, typename... Args>
+    MenuBase& createMenu(Args&&... args){
+      static_assert(!descend || T::DESCENDABLE, "Tried to descend to non descendable menu.");
+
+      std::unique_ptr<T> newMenu{ std::make_unique<T>(std::forward<Args>(args)...) };
+      MenuBase* menuPtr{ newMenu.get() };
+      addChild(std::forward<std::unique_ptr<T>>(newMenu));
+
+      // use ptr, because the unique is moved
+      menuPtr->lastMenu = this;
+      if constexpr (descend)
+      {
+        return *menuPtr;
+      }
+      else
+      {
+        return *this;
+      }
+    }
+
+    // return ref to higher menuBase
+    // if no exists, return this and writes log message
+    virtual MenuBase& ascend() final
+    {
+      if (lastMenu)
+      {
+        return *lastMenu;
+      }
+
+      LOG(WARNING) << "BltOverlay: Tried to ascend menu without a higher menu. Staying on level.";
+      return *this;
+    }
+
     virtual ~MenuBase(){}
 
     // prevent copy and assign (not sure how necessary)
     MenuBase(const MenuBase&) = delete;
     MenuBase& operator= (const MenuBase&) = delete;
 
+  protected:
+
+    virtual void addChild(std::unique_ptr<MenuBase> &&menu) = 0;
+
   private:
 
-    virtual MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) = 0;
+    virtual MenuBase* access(bool callerLeaving, BltOverlay &over) = 0;
     virtual void move(MenuAction direction, BltOverlay &over) = 0;
     virtual MenuBase* action(BltOverlay &over) = 0;
     virtual MenuBase* back(BltOverlay &over) = 0;
@@ -229,33 +275,35 @@ namespace modclasses
 
   class MainMenu : public MenuBase
   {
+  public:
+
+    static constexpr bool DESCENDABLE{ true };
+
   private:
 
     bool bigMenu;
     size_t currentSelected{ 0 };
-    std::pair<size_t, size_t> startEndVisible;
+    std::pair<size_t, size_t> startEndVisible{0, 0};
     std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenus;
 
   public:
-
-    MainMenu(const std::string &headerString, const std::function<bool(bool leaving, std::string& header)> accessReactFunc,
-             bool isItBigMenu, std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenusObj);
-
-    // should only be used by BltOverlay
-    // adds menu by move
-    // note, the given structure will not be valid after this function
-    void addMenuStructure(std::unique_ptr<MenuBase> &menu);
+    
+    MainMenu(std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu);
 
     // prevent copy and assign (not sure how necessary)
     MainMenu(const MainMenu&) = delete;
     MainMenu& operator= (const MainMenu&) = delete;
+
+  protected:
+
+    void addChild(std::unique_ptr<MenuBase> &&menu) override;
 
   private:
 
     void computeStartEndVisible();
     void menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over);
 
-    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
@@ -265,6 +313,10 @@ namespace modclasses
 
   class FreeInputMenu : public MenuBase
   {
+  public:
+
+    static constexpr bool DESCENDABLE{ false };
+
   private:
 
     bool onlyNumber;
@@ -284,7 +336,7 @@ namespace modclasses
 
   private:
 
-    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
@@ -293,9 +345,13 @@ namespace modclasses
 
 
   // template?
-  template<typename T>
+  template<class T>
   class ChoiceInputMenu : public MenuBase
   {
+  public:
+
+    static constexpr bool DESCENDABLE{ false };
+
   private:
 
     // vector will contain choices -> strings are whats displayed
@@ -312,7 +368,7 @@ namespace modclasses
 
   private:
 
-    MenuBase* access(MenuBase* caller, bool callerLeaving, BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
     MenuBase* action(BltOverlay &over) override;
     MenuBase* back(BltOverlay &over) override;
@@ -455,8 +511,9 @@ namespace modclasses
     // event fired when ddraw is loaded in stronghold (at least for GetProcAddress for Create calls)
     void registerDDrawLoadEvent(std::function<void()> &&func);
 
-    // warning -> takes of cause ownership
-    void addMenu(std::unique_ptr<MenuBase> menu);
+    // returns main menu to construct submenus
+    // NOTE: all functions of this take ownership of the given values
+    MenuBase* getMainMenu();
 
     /**misc**/
 

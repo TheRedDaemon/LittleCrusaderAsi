@@ -6,8 +6,7 @@ namespace modclasses
   // NOTE: basically all hardcoded currently
   // MainMenu
 
-  // should only be called during init
-  void MainMenu::addMenuStructure(std::unique_ptr<MenuBase> &menu)
+  void MainMenu::addChild(std::unique_ptr<MenuBase> &&menu)
   {
     subMenus->push_back(std::move(menu));
     computeStartEndVisible();
@@ -77,7 +76,7 @@ namespace modclasses
     }
     
     // status of menu can stay
-    MenuBase* newBase{ subMenus->at(currentSelected)->access(this, false, over) };
+    MenuBase* newBase{ subMenus->at(currentSelected)->access(false, over) };
     if (!newBase)
     {
       // redraw in case the teyt changed
@@ -105,7 +104,7 @@ namespace modclasses
       accessReact(true, header);
     }
 
-    return lastMenu->access(this, true, over);
+    return lastMenu->access(true, over);
   }
 
 
@@ -166,14 +165,9 @@ namespace modclasses
     }
   }
 
-  MenuBase* MainMenu::access(MenuBase* caller, bool callerLeaving, BltOverlay &over)
+  MenuBase* MainMenu::access(bool callerLeaving, BltOverlay &over)
   {
     bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
-
-    if (!callerLeaving)
-    {
-      lastMenu = caller;
-    }
 
     if (!moveToThis)
     {
@@ -185,15 +179,7 @@ namespace modclasses
     return this;
   }
 
-  MainMenu::MainMenu(const std::string &headerString, const std::function<bool(bool leaving, std::string& header)> accessReactFunc,
-                     bool isItBigMenu, std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenusObj)
-                     : MenuBase(headerString, accessReactFunc), bigMenu(isItBigMenu), subMenus(std::move(subMenusObj)) // hope this works
-  {
-    if (!subMenus)
-    {
-      subMenus = std::make_unique<std::vector<std::unique_ptr<MenuBase>>>();
-    }
-    computeStartEndVisible();
-    LOG(INFO) << "HI";
-  }
+  MainMenu::MainMenu(std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu)
+                     : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)), 
+                       bigMenu(std::move(isItBigMenu)), subMenus(std::make_unique<std::vector<std::unique_ptr<MenuBase>>>()) {}
 }

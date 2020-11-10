@@ -168,53 +168,52 @@ namespace modclasses
       });
 
       // add menu stuff (test)
-      auto aicSubMenuVec{ std::make_unique<std::vector<std::unique_ptr<MenuBase>>>() };
-      aicSubMenuVec->push_back(std::move(
-        std::make_unique<MainMenu>(
-          "Reload All",
-          [this](bool leaving, std::string& header)
-          {
-            this->reloadAllAIC(0, false, false);
-            return false;
-          },
-          true,
-          nullptr
-        )
-      ));
-      aicSubMenuVec->push_back(std::move(
-        std::make_unique<MainMenu>(
-          "Reload Main",
-          [this](bool leaving, std::string& header)
-          {
-            this->reloadMainAIC(0, false, false);
-            return false;
-          },
-          true,
-          nullptr
-        )
-      ));
-      aicSubMenuVec->push_back(std::move(
-        std::make_unique<MainMenu>(
-          "AIC active: " + std::string(this->isChanged ? "true" : "false"),
-          [this](bool leaving, std::string& header)
-          {
-            this->activateAICs(0, false, false);
-            header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
-            return false;
-          },
-          true,
-          nullptr
-        )
-      ));
-      bltOverlay->addMenu(  // add the final construction
-        std::make_unique<MainMenu>(
+      
+      MenuBase* basPtr{ bltOverlay->getMainMenu() };
+      if (basPtr)
+      {
+        MenuBase& base{ *basPtr };
+
+        base.createMenu<MainMenu, true>(
           "AIC Load",
           nullptr,
-          true,
-          std::move(aicSubMenuVec)
+          true
         )
-      );
-
+          // NOTE -> Main Menu is descendable, but child will be hidden by func
+          // they could be added though
+          .createMenu<MainMenu, false>(
+            "Reload All",
+            [this](bool, std::string&)
+            {
+              this->reloadAllAIC(0, false, false);
+              return false;
+            },
+            true
+          )
+          .createMenu<MainMenu, false>(
+            "Reload Main",
+            [this](bool, std::string&)
+            {
+              this->reloadMainAIC(0, false, false);
+              return false;
+            },
+            true
+          )
+          .createMenu<MainMenu, false>(
+            "AIC active: " + std::string(this->isChanged ? "true" : "false"),
+            [this](bool, std::string& header)
+            {
+              this->activateAICs(0, false, false);
+              header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
+              return false;
+            },
+            true
+          );
+      }
+      else
+      {
+        BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
+      }
 
     }
     else
