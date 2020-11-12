@@ -511,9 +511,11 @@ namespace modclasses
     }
     
     // set input pos to middle
-    DDSURFACEDESC2 surfaceInfos;
-    ZeroDDObjectAndSetSize<DDSURFACEDESC2>(surfaceInfos);
-    dd7SurfacePtr->GetSurfaceDesc(&surfaceInfos);
+    // hacking a bit -> without d7tod9 active, sending a LPDDSURFACEDESC2 returned invalid parameters
+    DDSURFACEDESC surfaceInfos;
+    ZeroDDObjectAndSetSize<DDSURFACEDESC>(surfaceInfos);
+    dd7SurfacePtr->GetSurfaceDesc(reinterpret_cast<LPDDSURFACEDESC2>(&surfaceInfos));
+
 
     inputPos.first = surfaceInfos.dwWidth / 2 - inputRect.right / 2;
     inputPos.second = surfaceInfos.dwHeight / 2 - inputRect.bottom / 2;
