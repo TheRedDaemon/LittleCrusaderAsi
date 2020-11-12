@@ -143,7 +143,7 @@ namespace modclasses
     // NOTE: for this to work, String transformations need to be created with NLOHMANN_JSON_SERIALIZE_ENUM()
     // for every enum intended to use, also, the enums apparently must be accessible form the scope of the caller(?)
     template<typename T>
-    const T getEnumFromString(const std::string enumString) const
+    T getEnumFromString(const std::string enumString) const
     {
       try
       {
@@ -163,12 +163,12 @@ namespace modclasses
     // for every enum intended to use, also, the enums apparently must be accessible form the scope of the caller(?)
     // returns "none" if enum transforms to nullptr, other inputs might turn to numbers...
     template<typename T>
-    const std::string getStringFromEnum(const T enumValue) const
+    std::string getStringFromEnum(const T enumValue) const
     {
       try
       {
         Json key = enumValue;
-        return key.is_null() ? "none" : key.get<std::string>();
+        return key.is_null() ? "NULL" : key.get<std::string>();
       }
       catch (const std::exception&)
       {

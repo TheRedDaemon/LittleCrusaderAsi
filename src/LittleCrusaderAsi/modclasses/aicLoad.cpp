@@ -166,55 +166,6 @@ namespace modclasses
       {
         this->initialAICLoad();
       });
-
-      // add menu stuff (test)
-      
-      MenuBase* basPtr{ bltOverlay->getMainMenu() };
-      if (basPtr)
-      {
-        MenuBase& base{ *basPtr };
-
-        base.createMenu<MainMenu, true>(
-          "AIC Load",
-          nullptr,
-          true
-        )
-          // NOTE -> Main Menu is descendable, but child will be hidden by func
-          // they could be added though
-          .createMenu<MainMenu, false>(
-            "Reload All",
-            [this](bool, std::string&)
-            {
-              this->reloadAllAIC(0, false, false);
-              return false;
-            },
-            true
-          )
-          .createMenu<MainMenu, false>(
-            "Reload Main",
-            [this](bool, std::string&)
-            {
-              this->reloadMainAIC(0, false, false);
-              return false;
-            },
-            true
-          )
-          .createMenu<MainMenu, false>(
-            "AIC active: " + std::string(this->isChanged ? "true" : "false"),
-            [this](bool, std::string& header)
-            {
-              this->activateAICs(0, false, false);
-              header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
-              return false;
-            },
-            true
-          );
-      }
-      else
-      {
-        BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
-      }
-
     }
     else
     {
@@ -238,6 +189,107 @@ namespace modclasses
         BltOverlay::sendToConsole("First thread attached event was seemingly triggerd before AIC initialisation. AICLoad features are likely unreliable. "
                                   "Indicator: first int is not a 12.", el::Level::Warning);
       }
+
+      // add menu stuff (test)
+      if (auto bltOverlay = getMod<BltOverlay>(); bltOverlay)
+      {
+        MenuBase* basPtr{ bltOverlay->getMainMenu() };
+        if (basPtr)
+        {
+          MenuBase& base{ *basPtr };
+
+          base.createMenu<MainMenu, true>(
+            "AIC Load",
+            nullptr,
+            true
+          )
+            // NOTE -> Main Menu is descendable, but child will be hidden by func
+            // they could be added though
+            .createMenu<MainMenu, false>(
+              "Reload All",
+              [this](bool, std::string&)
+              {
+                this->reloadAllAIC(0, false, false);
+                return false;
+              },
+              true
+            )
+            .createMenu<MainMenu, false>(
+              "Reload Main",
+              [this](bool, std::string&)
+              {
+                this->reloadMainAIC(0, false, false);
+                return false;
+              },
+              true
+            )
+            .createMenu<MainMenu, false>(
+              "AIC active: " + std::string(this->isChanged ? "true" : "false"),
+              [this](bool, std::string& header)
+              {
+                this->activateAICs(0, false, false);
+                header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
+                return false;
+              },
+              true
+            )
+            .createMenu<MainMenu, true>(
+              "Editor",
+              nullptr,
+              true
+            )
+              .createMenu<MainMenu, true>(
+                "Rat",
+                nullptr,
+                false
+              )
+                .createMenu<ChoiceInputMenu, false>(
+                  "Farm1",
+                  nullptr,
+                  getStringFromEnum(static_cast<FarmBuilding>(vanillaAIC[getAICFieldIndex(AICharacterName::RAT, AIC::FARM_1)])),
+                  std::vector<std::pair<std::string, int32_t>>{
+                    { getStringFromEnum(FarmBuilding::NO_FARM), static_cast<int32_t>(FarmBuilding::NO_FARM) },
+                    { getStringFromEnum(FarmBuilding::WHEAT_FARM), static_cast<int32_t>(FarmBuilding::WHEAT_FARM) },
+                    { getStringFromEnum(FarmBuilding::HOP_FARM), static_cast<int32_t>(FarmBuilding::HOP_FARM) },
+                    { getStringFromEnum(FarmBuilding::APPLE_FARM), static_cast<int32_t>(FarmBuilding::APPLE_FARM) },
+                    { getStringFromEnum(FarmBuilding::DAIRY_FARM), static_cast<int32_t>(FarmBuilding::DAIRY_FARM) }
+                  },
+                  [this](int32_t newValue, std::string& resultMessage, bool onlyUpdateCurrent, std::string& currentValue)
+                  {
+                    if (onlyUpdateCurrent)
+                    {
+                      currentValue = this->getStringFromEnum(
+                        static_cast<FarmBuilding>(
+                          (*(this->aicMemoryPtr))[getAICFieldIndex(AICharacterName::RAT, AIC::FARM_1)]
+                        )
+                      );
+                      return false;
+                    }
+
+                    // no need for extra check -> should be ok by definition
+                    if (this->setPersonalityValueUnchecked(AICharacterName::RAT, AIC::FARM_1, newValue))
+                    {
+                      resultMessage = "Success.";
+                      return true;
+                    }
+                    else
+                    {
+                      resultMessage = "Failed.";
+                      return false;
+                    }
+                  }
+                );
+        }
+        else
+        {
+          BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
+        }
+      }
+      else
+      {
+        BltOverlay::sendToConsole("AICLoad: Unable to get BltOverlay for menu create.", el::Level::Warning);
+      }
+
 
       // if aics are requested at start, load them in
       if (isChanged)

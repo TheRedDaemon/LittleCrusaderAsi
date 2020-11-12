@@ -215,7 +215,7 @@ namespace modclasses
     // -> please, rework)
     template<typename T, bool descend, typename... Args>
     MenuBase& createMenu(Args&&... args){
-      static_assert(!descend || T::DESCENDABLE, "Tried to descend to non descendable menu.");
+      static_assert(!descend || T::DESCENDABLE, "Tried to descend to non-descendable menu.");
 
       std::unique_ptr<T> newMenu{ std::make_unique<T>(std::forward<Args>(args)...) };
       MenuBase* menuPtr{ newMenu.get() };
@@ -267,8 +267,6 @@ namespace modclasses
     // derived are all friend of the BaseClass, to access the private variables
     friend class MainMenu;
     friend class FreeInputMenu;
-
-    template<typename T>
     friend class ChoiceInputMenu;
   };
 
@@ -334,6 +332,10 @@ namespace modclasses
     FreeInputMenu(const FreeInputMenu&) = delete;
     FreeInputMenu& operator= (const FreeInputMenu&) = delete;
 
+  protected:
+
+    void addChild(std::unique_ptr<MenuBase>&&) override { };
+
   private:
 
     MenuBase* access(bool callerLeaving, BltOverlay &over) override;
@@ -344,10 +346,13 @@ namespace modclasses
   };
 
 
-  // template?
-  template<class T>
+  // no template
+  // uses int32_t as general value
   class ChoiceInputMenu : public MenuBase
   {
+    using SelectReact = std::function<bool(int32_t, std::string&, bool, std::string&)>;
+
+
   public:
 
     static constexpr bool DESCENDABLE{ false };
@@ -355,18 +360,42 @@ namespace modclasses
   private:
 
     // vector will contain choices -> strings are whats displayed
-    std::vector<std::pair<std::string, T>> choicePairs;
+    // the in32_t can be an specific value -> the react func is resposible for reaction
+    std::vector<std::pair<std::string, int32_t>> choicePairs;
 
+    // function reacts to enter on selected value
+    // receives the value, a ref to the 'resultOfEnter'- string (can be changed)
+    // a bool indicating that it only should update the current value string (if true)
+    // and a ref to that string -> if the bool is set, the send value will be meaningless
+    // the return value indicates if the menu should use the already given pair string for the new current value
+    // should only be true if the value was changed; return is ignored if only a change is requested
+    SelectReact selectReact;
+
+    // movement
+    size_t currentSelected{ 0 };
+    std::pair<size_t, size_t> startEndVisible{ 0, 0 };
+    
     const std::string defaultValue;
     std::string currentValue;
     std::string resultOfEnter;
   
   public:
+
+    ChoiceInputMenu(std::string &&headerString, HeaderReact &&accessReactFunc, std::string &&defaultValueStr,
+                    std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc);
+
     // prevent copy and assign (not sure how necessary)
     ChoiceInputMenu(const ChoiceInputMenu&) = delete;
     ChoiceInputMenu& operator= (const ChoiceInputMenu&) = delete;
+  
+  protected:
+
+    void addChild(std::unique_ptr<MenuBase>&&) override { };
 
   private:
+
+    void computeStartEndVisible();
+    void menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over);
 
     MenuBase* access(bool callerLeaving, BltOverlay &over) override;
     void move(MenuAction direction, BltOverlay &over) override;
@@ -576,8 +605,6 @@ namespace modclasses
     // all menu friend
     friend class MainMenu;
     friend class FreeInputMenu;
-    
-    template<typename T>
     friend class ChoiceInputMenu;
   };
 }

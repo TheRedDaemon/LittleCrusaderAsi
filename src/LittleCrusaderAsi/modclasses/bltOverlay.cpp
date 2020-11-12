@@ -550,15 +550,15 @@ namespace modclasses
     if (menuActive)
     {
       dd7BackbufferPtr->BltFast(menuPos.first, menuPos.second, menuOffSurf, &menuRect, DDBLTFAST_NOCOLORKEY);
+
+      if (inputActive)
+      {
+        dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_SRCCOLORKEY);
+      }
     }
     else if (menuIndicator)
     {
       dd7BackbufferPtr->BltFast(menuPos.first + 10, menuPos.second + 10, menuOffSurf, &menuSmallRect, DDBLTFAST_NOCOLORKEY);
-    }
-
-    if (inputActive)
-    {
-      dd7BackbufferPtr->BltFast(inputPos.first, inputPos.second, inputOffSurf, &inputRect, DDBLTFAST_SRCCOLORKEY);
     }
   }
 
