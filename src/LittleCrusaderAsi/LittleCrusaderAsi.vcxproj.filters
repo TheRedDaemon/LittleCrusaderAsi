@@ -114,6 +114,9 @@
     <ClInclude Include="resources\resource.h">
       <Filter>Headerdateien\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="modcore\enumBase.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">

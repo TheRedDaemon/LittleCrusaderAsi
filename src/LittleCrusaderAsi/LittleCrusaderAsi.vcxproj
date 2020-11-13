@@ -195,6 +195,7 @@
     <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
     <ClInclude Include="modclasses\versionGetter.h" />
+    <ClInclude Include="modcore\enumBase.h" />
     <ClInclude Include="modcore\logUtility.h" />
     <ClInclude Include="modcore\modKeeper.h" />
     <ClInclude Include="modcore\modLoader.h" />

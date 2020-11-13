@@ -2,6 +2,8 @@
 #include "bltOverlay.h"
 #include "../resources/resource.h"
 
+#include "../modcore/enumBase.h"
+
 // main source ddraw: https://www.codeproject.com/Articles/2370/Introduction-to-DirectDraw-and-Surface-Blitting
 // another: http://www.visualbasicworld.de/tutorial-directx-directdraw.html
 namespace modclasses

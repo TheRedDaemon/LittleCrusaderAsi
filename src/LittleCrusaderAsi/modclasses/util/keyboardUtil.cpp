@@ -3,7 +3,7 @@
 
 namespace modclasses
 {
-  void KChange::doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const
+  void KChange::doAction(const HWND window, const bool keyUp, const bool repeat, const VK) const
   {
     // for now ignoring lparam, also doesn't send letters at the moment
     // adding restructure to use char modifiers would require additional structure changes
@@ -30,7 +30,7 @@ namespace modclasses
     }
   }
 
-  void KFunction::doAction(const HWND window, const bool keyUp, const bool repeat, const VK key) const
+  void KFunction::doAction(const HWND window, const bool keyUp, const bool repeat, const VK) const
   {
     funcToUse(window, keyUp, repeat);
   }
