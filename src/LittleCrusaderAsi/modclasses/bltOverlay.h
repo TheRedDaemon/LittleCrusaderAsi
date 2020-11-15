@@ -15,7 +15,7 @@
 
 // conains func for PNG load
 // TODO?: GDI+ comes with great overhead, even its own thread
-// if there ever happens to be a better solution, use it (pure bitmaps would bloat the exe)
+// if there ever happens to be a better solution, use it (pure bitmaps would bloat the dll)
 #include "../misc/copiedFunc.h"
 
 // all font loading structures were contructed using the DDFontEngine
@@ -26,7 +26,7 @@ namespace modclasses
   template <typename T>
   void ZeroDDObject(T &ddObject)
   {
-    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    // zero memory can be optimized away -> should there ever be bugs, use SecureZeroMemory
     ZeroMemory(&ddObject, sizeof(ddObject));
   }
 
@@ -34,7 +34,7 @@ namespace modclasses
   template <typename T>
   void ZeroDDObjectAndSetSize(T &ddObject)
   {
-    // zero memory can be optimized away -> should there every be bugs, use SecureZeroMemory
+    // zero memory can be optimized away -> should there ever be bugs, use SecureZeroMemory
     ZeroMemory(&ddObject, sizeof(ddObject));
     ddObject.dwSize = sizeof(ddObject);
   }

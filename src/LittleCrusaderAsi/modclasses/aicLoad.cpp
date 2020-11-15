@@ -246,28 +246,24 @@ namespace modclasses
                 .createMenu<ChoiceInputMenu, false>(
                   "Farm1",
                   nullptr,
-                  getStringFromEnum(static_cast<FarmBuilding>(vanillaAIC[getAICFieldIndex(AICharacterName::RAT, AIC::FARM_1)])),
+                  getNameOrNULL<Farm>(vanillaAIC[getAICFieldIndex(AIName::RAT, AIC::FARM_1)]),
                   std::vector<std::pair<std::string, int32_t>>{
-                    { getStringFromEnum(FarmBuilding::NO_FARM), static_cast<int32_t>(FarmBuilding::NO_FARM) },
-                    { getStringFromEnum(FarmBuilding::WHEAT_FARM), static_cast<int32_t>(FarmBuilding::WHEAT_FARM) },
-                    { getStringFromEnum(FarmBuilding::HOP_FARM), static_cast<int32_t>(FarmBuilding::HOP_FARM) },
-                    { getStringFromEnum(FarmBuilding::APPLE_FARM), static_cast<int32_t>(FarmBuilding::APPLE_FARM) },
-                    { getStringFromEnum(FarmBuilding::DAIRY_FARM), static_cast<int32_t>(FarmBuilding::DAIRY_FARM) }
+                    { Farm::NO_FARM->getName(), Farm::NO_FARM->getValue() },
+                    { Farm::WHEAT_FARM->getName(), Farm::WHEAT_FARM->getValue() },
+                    { Farm::HOP_FARM->getName(), Farm::HOP_FARM->getValue() },
+                    { Farm::APPLE_FARM->getName(), Farm::APPLE_FARM->getValue() },
+                    { Farm::DAIRY_FARM->getName(), Farm::DAIRY_FARM->getValue() }
                   },
                   [this](int32_t newValue, std::string& resultMessage, bool onlyUpdateCurrent, std::string& currentValue)
                   {
                     if (onlyUpdateCurrent)
                     {
-                      currentValue = this->getStringFromEnum(
-                        static_cast<FarmBuilding>(
-                          (*(this->aicMemoryPtr))[getAICFieldIndex(AICharacterName::RAT, AIC::FARM_1)]
-                        )
-                      );
+                      currentValue = getNameOrNULL<Farm>((*(this->aicMemoryPtr))[getAICFieldIndex(AIName::RAT, AIC::FARM_1)]);
                       return false;
                     }
 
                     // no need for extra check -> should be ok by definition
-                    if (this->setPersonalityValueUnchecked(AICharacterName::RAT, AIC::FARM_1, newValue))
+                    if (this->setPersonalityValueUnchecked(AIName::RAT, AIC::FARM_1, newValue))
                     {
                       resultMessage = "Success.";
                       return true;
@@ -308,9 +304,9 @@ namespace modclasses
   // functions for others to use
 
   
-  const bool AICLoad::setPersonalityValue(const AICharacterName aiName, const AIC field, const Json value)
+  const bool AICLoad::setPersonalityValue(AINameEnum aiName, AICEnum field, const Json value)
   {
-    if (aiName == AICharacterName::NONE || field == AIC::NONE || !initialized)
+    if (aiName == AIName::NONE || field == AIC::NONE || !initialized)
     {
       return false;
     }
@@ -327,9 +323,9 @@ namespace modclasses
   }
 
 
-  const bool AICLoad::setPersonalityValueUnchecked(const AICharacterName aiName, const AIC field, const int32_t value)
+  const bool AICLoad::setPersonalityValueUnchecked(AINameEnum aiName, AICEnum field, const int32_t value)
   {
-    if (aiName == AICharacterName::NONE || field == AIC::NONE || !initialized)
+    if (aiName == AIName::NONE || field == AIC::NONE || !initialized)
     {
       return false;
     }
@@ -450,59 +446,52 @@ namespace modclasses
   }
 
 
-  const int32_t AICLoad::getAICFieldIndex(const AICharacterName aiName, const AIC field) const
+  const int32_t AICLoad::getAICFieldIndex(AINameEnum aiName, AICEnum field) const
   {
     // 169 for every ai, minus 169 to get in range (aiName min 1, max 16; field min 0, max 168)
-    return static_cast<int32_t>(aiName) * 169 + static_cast<int32_t>(field) - 169;
+    return aiName->getValue() * 169 + field->getValue() - 169;
   }
 
 
   // small helper (maybe I should not use this file contained functions too much...)
 
-
-  const std::string getAICString(const AIPersonalityFieldsEnum field)
-  {
-    Json jField = field;
-    return jField.get<std::string>();
-  }
-
-
   // enums require NONE at least
   template<typename T>
-  const bool validEnumHelper(const AIPersonalityFieldsEnum field, const Json &value, int32_t &validValue, const std::string& warningEnd)
+  static const bool validEnumHelper(AICEnum field, const Json &value, int32_t &validValue, const std::string& warningEnd)
   {
     if (!value.is_string())
     {
-      LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a string.";
+      LOG(WARNING) << "Field '" << field->getName() << "' did not contain a string.";
       return false;
     }
 
-    T enumValue{ value.get<T>() };
-    if (enumValue == T::NONE) // every enum should have a none
+
+    typename T::EnumType valueEnum{ T::GetEnumByName(value.get_ref<const Json::string_t&>()) };
+    if (!valueEnum || valueEnum == T::NONE) // every enum should have a none
     {
-      LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a valid " << warningEnd << ".";
+      LOG(WARNING) << "Field '" << field->getName() << "' did not contain a valid " << warningEnd << ".";
       return false;
     }
 
-    validValue = static_cast<int32_t>(enumValue);
+    validValue = valueEnum->getValue();
     return true;
   }
 
 
   // does not even need template
-  const bool validIntRangeHelper(const AIPersonalityFieldsEnum field, const Json &value, int32_t &validValue, const int32_t lowerEndIncl,
+  static const bool validIntRangeHelper(AICEnum field, const Json &value, int32_t &validValue, const int32_t lowerEndIncl,
                                  const int32_t upperEndIncl, const std::string& warningEndRange)
   {
     if (!value.is_number_integer())
     {
-      LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a number.";
+      LOG(WARNING) << "Field '" << field->getName() << "' did not contain a number.";
       return false;
     }
 
     int32_t numValue = value.get<int32_t>();
     if (numValue < lowerEndIncl || numValue > upperEndIncl)
     {
-      LOG(WARNING) << "Field '" << getAICString(field) << "' is not a number " << warningEndRange << ".";
+      LOG(WARNING) << "Field '" << field->getName() << "' is not a number " << warningEndRange << ".";
       return false;
     }
 
@@ -514,176 +503,239 @@ namespace modclasses
   // will use switch statement to decide, since many have the same range
   // could be a bit smaller...
   // some are marked with cheating, which mean I changed the checks so the vanilla values pass... why is this so?
-  const bool AICLoad::isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue) const
+  const bool AICLoad::isValidPersonalityValue(AICEnum field, const Json &value, int32_t &validValue) const
   {
+    // limit
     static const int32_t int32Max{ (std::numeric_limits<int32_t>::max)() };
 
+    // static map for function types, returns int for switch
     // only basic value tests
-    switch (field)
+    // mapping int32_t ids to int32_t -> could also use switch again, hm?
+    // issue -> there was no constructor for const T* const value types it seems (map might work, but again, I could use the switch again
+    static const std::unordered_map<int32_t, int32_t> switchMap{
+      { AIC::UNKNOWN_000                        ->getValue() , 0  },
+      { AIC::UNKNOWN_001                        ->getValue() , 0  },
+      { AIC::UNKNOWN_002                        ->getValue() , 0  },
+      { AIC::UNKNOWN_003                        ->getValue() , 0  },
+      { AIC::UNKNOWN_004                        ->getValue() , 0  },
+      { AIC::UNKNOWN_005                        ->getValue() , 0  },
+      { AIC::UNKNOWN_011                        ->getValue() , 0  },
+      { AIC::POPULATION_PER_FARM                ->getValue() , 0  },
+      { AIC::POPULATION_PER_WOODCUTTER          ->getValue() , 0  },
+      { AIC::POPULATION_PER_QUARRY              ->getValue() , 0  },
+      { AIC::POPULATION_PER_IRONMINE            ->getValue() , 0  },
+      { AIC::POPULATION_PER_PITCHRIG            ->getValue() , 0  },
+      { AIC::BUILD_INTERVAL                     ->getValue() , 0  },
+      { AIC::RESOURCE_REBUILD_DELAY             ->getValue() , 0  },
+      { AIC::MAX_FOOD                           ->getValue() , 0  },
+      { AIC::TRADE_AMOUNT_FOOD                  ->getValue() , 0  },
+      { AIC::TRADE_AMOUNT_EQUIPMENT             ->getValue() , 0  },
+      { AIC::UNKNOWN_040                        ->getValue() , 0  },
+      { AIC::MINIMUM_GOODS_REQUIRED_AFTER_TRADE ->getValue() , 0  },
+      { AIC::DOUBLE_RATIONS_FOOD_THRESHOLD      ->getValue() , 0  },
+      { AIC::MAX_WOOD                           ->getValue() , 0  },
+      { AIC::MAX_STONE                          ->getValue() , 0  },
+      { AIC::MAX_RESOURCE_OTHER                 ->getValue() , 0  },
+      { AIC::MAX_EQUIPMENT                      ->getValue() , 0  },
+      { AIC::MAX_BEER                           ->getValue() , 0  },
+      { AIC::MAX_RESOURCE_VARIANCE              ->getValue() , 0  },
+      { AIC::RECRUIT_GOLD_THRESHOLD             ->getValue() , 0  },
+      { AIC::DEF_WALLPATROL_RALLYTIME           ->getValue() , 0  },
+      { AIC::DEF_WALLPATROL_GROUPS              ->getValue() , 0  },
+      { AIC::DEF_SIEGEENGINE_GOLD_THRESHOLD     ->getValue() , 0  },
+      { AIC::DEF_SIEGEENGINE_BUILD_DELAY        ->getValue() , 0  },
+      { AIC::UNKNOWN_072                        ->getValue() , 0  },
+      { AIC::UNKNOWN_073                        ->getValue() , 0  },
+      { AIC::SORTIE_UNIT_RANGED_MIN             ->getValue() , 0  },
+      { AIC::SORTIE_UNIT_MELEE_MIN              ->getValue() , 0  },
+      { AIC::DEF_DIGGING_UNIT_MAX               ->getValue() , 0  },
+      { AIC::RECRUIT_INTERVAL                   ->getValue() , 0  },
+      { AIC::RECRUIT_INTERVAL_WEAK              ->getValue() , 0  },
+      { AIC::RECRUIT_INTERVAL_STRONG            ->getValue() , 0  },
+      { AIC::DEF_TOTAL                          ->getValue() , 0  },
+      { AIC::OUTER_PATROL_GROUPS_COUNT          ->getValue() , 0  },
+      { AIC::OUTER_PATROL_RALLY_DELAY           ->getValue() , 0  },
+      { AIC::DEF_WALLS                          ->getValue() , 0  },
+      { AIC::RAID_UNITS_BASE                    ->getValue() , 0  },
+      { AIC::RAID_UNITS_RANDOM                  ->getValue() , 0  },
+      { AIC::UNKNOWN_124                        ->getValue() , 0  },
+      { AIC::ATT_FORCE_BASE                     ->getValue() , 0  },
+      { AIC::ATT_FORCE_RANDOM                   ->getValue() , 0  },
+      { AIC::ATT_FORCE_SUPPORT_ALLY_THRESHOLD   ->getValue() , 0  },
+      { AIC::UNKNOWN_129                        ->getValue() , 0  },
+      { AIC::UNKNOWN_130                        ->getValue() , 0  },
+      { AIC::ATT_UNIT_PATROL_RECOMMAND_DELAY    ->getValue() , 0  },
+      { AIC::UNKNOWN_132                        ->getValue() , 0  },
+      { AIC::COW_THROW_INTERVAL                 ->getValue() , 0  },
+      { AIC::UNKNOWN_142                        ->getValue() , 0  },
+      { AIC::ATT_MAX_ENGINEERS                  ->getValue() , 0  },
+      { AIC::ATT_DIGGING_UNIT_MAX               ->getValue() , 0  },
+      { AIC::ATT_UNIT_2_MAX                     ->getValue() , 0  },
+      { AIC::ATT_MAX_ASSASSINS                  ->getValue() , 0  },
+      { AIC::ATT_MAX_LADDERMEN                  ->getValue() , 0  },
+      { AIC::ATT_MAX_TUNNELERS                  ->getValue() , 0  },
+      { AIC::ATT_UNIT_PATROL_MAX                ->getValue() , 0  },
+      { AIC::ATT_UNIT_PATROL_GROUPS_COUNT       ->getValue() , 0  },
+      { AIC::ATT_UNIT_BACKUP_MAX                ->getValue() , 0  },
+      { AIC::ATT_UNIT_BACKUP_GROUPS_COUNT       ->getValue() , 0  },
+      { AIC::ATT_UNIT_ENGAGE_MAX                ->getValue() , 0  },
+      { AIC::ATT_UNIT_SIEGE_DEF_MAX             ->getValue() , 0  },
+      { AIC::ATT_UNIT_SIEGE_DEF_GROUPS_COUNT    ->getValue() , 0  },
+      { AIC::ATT_MAX_DEFAULT                    ->getValue() , 0  },
+      
+      { AIC::CRITICAL_POPULARITY                ->getValue() , 1  },
+      { AIC::LOWEST_POPULARITY                  ->getValue() , 1  },
+      { AIC::HIGHEST_POPULARITY                 ->getValue() , 1  },
+      
+      { AIC::TAXES_MIN                          ->getValue() , 2  },
+      { AIC::TAXES_MAX                          ->getValue() , 2  },
+   
+      { AIC::FARM_1                             ->getValue() , 3  },
+      { AIC::FARM_2                             ->getValue() , 3  },
+      { AIC::FARM_3                             ->getValue() , 3  },
+      { AIC::FARM_4                             ->getValue() , 3  },
+      { AIC::FARM_5                             ->getValue() , 3  },
+      { AIC::FARM_6                             ->getValue() , 3  },
+      { AIC::FARM_7                             ->getValue() , 3  },
+      { AIC::FARM_8                             ->getValue() , 3  },
+      
+      { AIC::MAX_QUARRIES                       ->getValue() , 4  },
+      { AIC::MAX_IRONMINES                      ->getValue() , 4  },
+      { AIC::MAX_WOODCUTTERS                    ->getValue() , 4  },
+      { AIC::MAX_PITCHRIGS                      ->getValue() , 4  },
+      { AIC::MAX_FARMS                          ->getValue() , 4  },
+     
+      { AIC::MINIMUM_APPLES                     ->getValue() , 5  },
+      { AIC::MINIMUM_CHEESE                     ->getValue() , 5  },
+      { AIC::MINIMUM_BREAD                      ->getValue() , 5  },
+      { AIC::MINIMUM_WHEAT                      ->getValue() , 5  },
+      { AIC::MINIMUM_HOP                        ->getValue() , 5  },
+    
+      { AIC::BLACKSMITH_SETTING                 ->getValue() , 6  },
+      { AIC::FLETCHER_SETTING                   ->getValue() , 7  },
+      { AIC::POLETURNER_SETTING                 ->getValue() , 8  },
+    
+      { AIC::SELL_RESOURCE_01                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_02                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_03                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_04                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_05                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_06                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_07                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_08                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_09                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_10                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_11                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_12                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_13                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_14                   ->getValue() , 9  },
+      { AIC::SELL_RESOURCE_15                   ->getValue() , 9  },
+
+      { AIC::RECRUIT_PROB_DEF_DEFAULT           ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_DEF_WEAK              ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_DEF_STRONG            ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_RAID_DEFAULT          ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_RAID_WEAK             ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_RAID_STRONG           ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_ATTACK_DEFAULT        ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_ATTACK_WEAK           ->getValue() , 10 },
+      { AIC::RECRUIT_PROB_ATTACK_STRONG         ->getValue() , 10 },
+      { AIC::ATT_FORCE_RALLY_PERCENTAGE         ->getValue() , 10 },
+
+      { AIC::SORTIE_UNIT_RANGED                 ->getValue() , 11 },
+      { AIC::SORTIE_UNIT_MELEE                  ->getValue() , 11 },
+      { AIC::DEF_UNIT_1                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_2                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_3                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_4                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_5                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_6                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_7                         ->getValue() , 11 },
+      { AIC::DEF_UNIT_8                         ->getValue() , 11 },
+      { AIC::RAID_UNIT_1                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_2                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_3                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_4                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_5                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_6                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_7                        ->getValue() , 11 },
+      { AIC::RAID_UNIT_8                        ->getValue() , 11 },
+      { AIC::ATT_UNIT_2                         ->getValue() , 11 },
+      { AIC::ATT_UNIT_PATROL                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_BACKUP                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_ENGAGE                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_SIEGE_DEF                 ->getValue() , 11 },
+      { AIC::ATT_UNIT_MAIN_1                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_MAIN_2                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_MAIN_3                    ->getValue() , 11 },
+      { AIC::ATT_UNIT_MAIN_4                    ->getValue() , 11 },
+
+      { AIC::DEF_DIGGING_UNIT                   ->getValue() , 12 },
+      { AIC::ATT_DIGGING_UNIT                   ->getValue() , 12 },
+
+      { AIC::OUTER_PATROL_GROUPS_MOVE           ->getValue() , 13 },
+
+      { AIC::HARASSING_SIEGE_ENGINE_1           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_2           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_3           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_4           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_5           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_6           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_7           ->getValue() , 14 },
+      { AIC::HARASSING_SIEGE_ENGINE_8           ->getValue() , 14 },
+
+      { AIC::HARASSING_SIEGE_ENGINES_MAX        ->getValue() , 15 },
+ 
+      { AIC::SIEGE_ENGINE_1                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_2                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_3                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_4                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_5                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_6                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_7                     ->getValue() , 16 },
+      { AIC::SIEGE_ENGINE_8                     ->getValue() , 16 },
+
+      { AIC::ATT_MAIN_GROUPS_COUNT              ->getValue() , 17 },
+
+      { AIC::TARGET_CHOICE                      ->getValue() , 18 }
+    };
+
+    auto it{ switchMap.find(field->getValue()) };
+    if (it == switchMap.end())
     {
-      case AIC::UNKNOWN_000:
-      case AIC::UNKNOWN_001:
-      case AIC::UNKNOWN_002:
-      case AIC::UNKNOWN_003:
-      case AIC::UNKNOWN_004:
-      case AIC::UNKNOWN_005:
-      case AIC::UNKNOWN_011:
-      case AIC::POPULATION_PER_FARM:
-      case AIC::POPULATION_PER_WOODCUTTER:
-      case AIC::POPULATION_PER_QUARRY:
-      case AIC::POPULATION_PER_IRONMINE:
-      case AIC::POPULATION_PER_PITCHRIG:
-      case AIC::BUILD_INTERVAL:
-      case AIC::RESOURCE_REBUILD_DELAY:
-      case AIC::MAX_FOOD:
-      case AIC::TRADE_AMOUNT_FOOD:
-      case AIC::TRADE_AMOUNT_EQUIPMENT:
-      case AIC::UNKNOWN_040:
-      case AIC::MINIMUM_GOODS_REQUIRED_AFTER_TRADE:
-      case AIC::DOUBLE_RATIONS_FOOD_THRESHOLD:
-      case AIC::MAX_WOOD:
-      case AIC::MAX_STONE:
-      case AIC::MAX_RESOURCE_OTHER:
-      case AIC::MAX_EQUIPMENT:
-      case AIC::MAX_BEER:
-      case AIC::MAX_RESOURCE_VARIANCE:
-      case AIC::RECRUIT_GOLD_THRESHOLD:
-      case AIC::DEF_WALLPATROL_RALLYTIME:
-      case AIC::DEF_WALLPATROL_GROUPS:
-      case AIC::DEF_SIEGEENGINE_GOLD_THRESHOLD:
-      case AIC::DEF_SIEGEENGINE_BUILD_DELAY:
-      case AIC::UNKNOWN_072:
-      case AIC::UNKNOWN_073:
-      case AIC::SORTIE_UNIT_RANGED_MIN:
-      case AIC::SORTIE_UNIT_MELEE_MIN:
-      case AIC::DEF_DIGGING_UNIT_MAX:
-      case AIC::RECRUIT_INTERVAL:
-      case AIC::RECRUIT_INTERVAL_WEAK:
-      case AIC::RECRUIT_INTERVAL_STRONG:
-      case AIC::DEF_TOTAL:
-      case AIC::OUTER_PATROL_GROUPS_COUNT:
-      case AIC::OUTER_PATROL_RALLY_DELAY:
-      case AIC::DEF_WALLS:
-      case AIC::RAID_UNITS_BASE:
-      case AIC::RAID_UNITS_RANDOM:
-      case AIC::UNKNOWN_124:
-      case AIC::ATT_FORCE_BASE:
-      case AIC::ATT_FORCE_RANDOM:
-      case AIC::ATT_FORCE_SUPPORT_ALLY_THRESHOLD:
-      case AIC::UNKNOWN_129:
-      case AIC::UNKNOWN_130:
-      case AIC::ATT_UNIT_PATROL_RECOMMAND_DELAY:
-      case AIC::UNKNOWN_132:
-      case AIC::COW_THROW_INTERVAL:
-      case AIC::UNKNOWN_142:
-      case AIC::ATT_MAX_ENGINEERS:
-      case AIC::ATT_DIGGING_UNIT_MAX:
-      case AIC::ATT_UNIT_2_MAX:
-      case AIC::ATT_MAX_ASSASSINS:
-      case AIC::ATT_MAX_LADDERMEN:
-      case AIC::ATT_MAX_TUNNELERS:
-      case AIC::ATT_UNIT_PATROL_MAX:
-      case AIC::ATT_UNIT_PATROL_GROUPS_COUNT:
-      case AIC::ATT_UNIT_BACKUP_MAX:
-      case AIC::ATT_UNIT_BACKUP_GROUPS_COUNT:
-      case AIC::ATT_UNIT_ENGAGE_MAX:
-      case AIC::ATT_UNIT_SIEGE_DEF_MAX:
-      case AIC::ATT_UNIT_SIEGE_DEF_GROUPS_COUNT:
-      case AIC::ATT_MAX_DEFAULT:
+      LOG(ERROR) << "AICLoad: Personality value test received non valid field. This should not happen. Is a handler missing?";
+      return false;
+    }
+
+    switch (it->second)
+    {
+      case 0: // full 0 to int range
         return validIntRangeHelper(field, value, validValue, 0, int32Max, "0 to 2 ^ 31 - 1");
-      case AIC::CRITICAL_POPULARITY:
-      case AIC::LOWEST_POPULARITY:
-      case AIC::HIGHEST_POPULARITY:
+      case 1: // up to 10000
         return validIntRangeHelper(field, value, validValue, 0, 10000, "0 to 10000");
-      case AIC::TAXES_MIN:
-      case AIC::TAXES_MAX:  // despite saying 11 is max, vanilla includes taxesMax up to 12?
-        return validIntRangeHelper(field, value, validValue, 0, 12, "0 to 11"); // cheating
-      case AIC::FARM_1:
-      case AIC::FARM_2:
-      case AIC::FARM_3:
-      case AIC::FARM_4:
-      case AIC::FARM_5:
-      case AIC::FARM_6:
-      case AIC::FARM_7:
-      case AIC::FARM_8:
-        return validEnumHelper<FarmBuilding>(field, value, validValue, "farm");
-      case AIC::MAX_QUARRIES:
-      case AIC::MAX_IRONMINES:
-      case AIC::MAX_WOODCUTTERS:
-      case AIC::MAX_PITCHRIGS:  // vanilla has at least the abbot with a 0 here?
-      case AIC::MAX_FARMS:
-        return validIntRangeHelper(field, value, validValue, 0, int32Max, "1 to 2^31 -1"); // cheating
-      case AIC::MINIMUM_APPLES:
-      case AIC::MINIMUM_CHEESE:
-      case AIC::MINIMUM_BREAD:
-      case AIC::MINIMUM_WHEAT:
-      case AIC::MINIMUM_HOP:
+      case 2: // tax -> despite saying 11 is max, vanilla includes taxesMax up to 12?
+        return validIntRangeHelper(field, value, validValue, 0, 12, "0 to 11"); // cheating to allow vanilla
+      case 3: // Farms
+        return validEnumHelper<Farm>(field, value, validValue, "farm");
+      case 4: // max buildings
+        return validIntRangeHelper(field, value, validValue, 0, int32Max, "1 to 2^31 -1"); // cheating to allow about pitchrig 0
+      case 5: // min food kinda
         return validIntRangeHelper(field, value, validValue, -1, int32Max, "-1 to 2^31 -1");
-      case AIC::BLACKSMITH_SETTING:
-        return validEnumHelper<BlacksmithSetting>(field, value, validValue, "blacksmith setting");
-      case AIC::FLETCHER_SETTING:
-        return validEnumHelper<FletcherSetting>(field, value, validValue, "fletcher setting");
-      case AIC::POLETURNER_SETTING:
-        return validEnumHelper<PoleturnerSetting>(field, value, validValue, "poleturner setting");
-      case AIC::SELL_RESOURCE_01:
-      case AIC::SELL_RESOURCE_02:
-      case AIC::SELL_RESOURCE_03:
-      case AIC::SELL_RESOURCE_04:
-      case AIC::SELL_RESOURCE_05:
-      case AIC::SELL_RESOURCE_06:
-      case AIC::SELL_RESOURCE_07:
-      case AIC::SELL_RESOURCE_08:
-      case AIC::SELL_RESOURCE_09:
-      case AIC::SELL_RESOURCE_10:
-      case AIC::SELL_RESOURCE_11:
-      case AIC::SELL_RESOURCE_12:
-      case AIC::SELL_RESOURCE_13:
-      case AIC::SELL_RESOURCE_14:
-      case AIC::SELL_RESOURCE_15:
+      case 6:
+        return validEnumHelper<Smith>(field, value, validValue, "blacksmith setting");
+      case 7:
+        return validEnumHelper<Fletcher>(field, value, validValue, "fletcher setting");
+      case 8:
+        return validEnumHelper<Pole>(field, value, validValue, "poleturner setting");
+      case 9: // resource sell
         return validEnumHelper<Resource>(field, value, validValue, "resource");
-      case AIC::RECRUIT_PROB_DEF_DEFAULT:
-      case AIC::RECRUIT_PROB_DEF_WEAK:
-      case AIC::RECRUIT_PROB_DEF_STRONG:
-      case AIC::RECRUIT_PROB_RAID_DEFAULT:
-      case AIC::RECRUIT_PROB_RAID_WEAK:
-      case AIC::RECRUIT_PROB_RAID_STRONG:
-      case AIC::RECRUIT_PROB_ATTACK_DEFAULT:
-      case AIC::RECRUIT_PROB_ATTACK_WEAK:
-      case AIC::RECRUIT_PROB_ATTACK_STRONG:
-      case AIC::ATT_FORCE_RALLY_PERCENTAGE:
+      case 10: // percent stuff
         return validIntRangeHelper(field, value, validValue, 0, 100, "0 to 100");
-      case AIC::SORTIE_UNIT_RANGED:
-      case AIC::SORTIE_UNIT_MELEE:
-      case AIC::DEF_UNIT_1:
-      case AIC::DEF_UNIT_2:
-      case AIC::DEF_UNIT_3:
-      case AIC::DEF_UNIT_4:
-      case AIC::DEF_UNIT_5:
-      case AIC::DEF_UNIT_6:
-      case AIC::DEF_UNIT_7:
-      case AIC::DEF_UNIT_8:
-      case AIC::RAID_UNIT_1:
-      case AIC::RAID_UNIT_2:
-      case AIC::RAID_UNIT_3:
-      case AIC::RAID_UNIT_4:
-      case AIC::RAID_UNIT_5:
-      case AIC::RAID_UNIT_6:
-      case AIC::RAID_UNIT_7:
-      case AIC::RAID_UNIT_8:
-      case AIC::ATT_UNIT_2:
-      case AIC::ATT_UNIT_PATROL:
-      case AIC::ATT_UNIT_BACKUP:
-      case AIC::ATT_UNIT_ENGAGE:
-      case AIC::ATT_UNIT_SIEGE_DEF:
-      case AIC::ATT_UNIT_MAIN_1:
-      case AIC::ATT_UNIT_MAIN_2:
-      case AIC::ATT_UNIT_MAIN_3:
-      case AIC::ATT_UNIT_MAIN_4:
+      case 11:
         return validEnumHelper<Unit>(field, value, validValue, "unit");
-      case AIC::DEF_DIGGING_UNIT:
-      case AIC::ATT_DIGGING_UNIT:
-        return validEnumHelper<DiggingUnit>(field, value, validValue, "digging unit");
-      case AIC::OUTER_PATROL_GROUPS_MOVE: // this thing has to stay...
+      case 12:
+        return validEnumHelper<DUnit>(field, value, validValue, "digging unit");
+      case 13: // this thing has to stay..., outer troups move
       {
         if (value.is_boolean())
         {
@@ -693,7 +745,7 @@ namespace modclasses
 
         if (!value.is_string())
         {
-          LOG(WARNING) << "Field '" << getAICString(field) << "' did not contain a string or boolean.";
+          LOG(WARNING) << "Field '" << field->getName() << "' did not contain a string or boolean.";
           return false;
         }
 
@@ -702,7 +754,10 @@ namespace modclasses
         try
         {
           // may produce errors (stringcode, etc.), however, the error will hopefully be catched
-          std::transform(boolString.begin(), boolString.end(), boolString.begin(), [](char c){return static_cast<char>(std::tolower(c));});
+          std::transform(boolString.begin(), boolString.end(), boolString.begin(), [](char c)
+          {
+            return static_cast<char>(std::tolower(c));
+          });
           if (boolString == "true")
           {
             boolValue = true;
@@ -718,41 +773,27 @@ namespace modclasses
         }
         catch (const std::exception&) // hope this catches
         {
-          LOG(WARNING) << "Field '" << getAICString(field) << "' is not a valid boolean string.";
+          LOG(WARNING) << "Field '" << field->getName() << "' is not a valid boolean string.";
           return false;
         }
 
         validValue = static_cast<int32_t>(boolValue);
         return true;
       }
-      case AIC::HARASSING_SIEGE_ENGINE_1:
-      case AIC::HARASSING_SIEGE_ENGINE_2:
-      case AIC::HARASSING_SIEGE_ENGINE_3:
-      case AIC::HARASSING_SIEGE_ENGINE_4:
-      case AIC::HARASSING_SIEGE_ENGINE_5:
-      case AIC::HARASSING_SIEGE_ENGINE_6:
-      case AIC::HARASSING_SIEGE_ENGINE_7:
-      case AIC::HARASSING_SIEGE_ENGINE_8:
-        return validEnumHelper<HarassingSiegeEngine>(field, value, validValue, "harassing siege engine");
-      case AIC::HARASSING_SIEGE_ENGINES_MAX:
+      case 14: // HarassingSiegeEngine
+        return validEnumHelper<HSE>(field, value, validValue, "harassing siege engine");
+      case 15: // HarassingSiegeEngine max
         return validIntRangeHelper(field, value, validValue, 0, 10, "0 to 10");
-      case AIC::SIEGE_ENGINE_1:
-      case AIC::SIEGE_ENGINE_2:
-      case AIC::SIEGE_ENGINE_3:
-      case AIC::SIEGE_ENGINE_4:
-      case AIC::SIEGE_ENGINE_5:
-      case AIC::SIEGE_ENGINE_6:
-      case AIC::SIEGE_ENGINE_7:
-      case AIC::SIEGE_ENGINE_8:
-        return validEnumHelper<SiegeEngine>(field, value, validValue, "siege engine");
-      case AIC::ATT_MAIN_GROUPS_COUNT:
+      case 16: // SiegeEngine
+        return validEnumHelper<SE>(field, value, validValue, "siege engine");
+      case 17: // ATT_MAIN_GROUPS_COUNT
         // cheating... I think I also remember that someone wrote there is something broken, and more then 3 create issues..
         return validIntRangeHelper(field, value, validValue, 0, 5, "0 to 3");
-      case AIC::TARGET_CHOICE:
-        return validEnumHelper<TargetingType>(field, value, validValue, "targeting type");
+      case 18:
+        return validEnumHelper<Target>(field, value, validValue, "targeting type");
       default:
       {
-        LOG(ERROR) << "AICLoad: Personality value test received non valid field. This should not happen. Is a handler missing?";
+        LOG(ERROR) << "AICLoad: Personality value test found no valid handling. This should not happen. Is a handler missing?";
         return false;
       }
     }
@@ -813,9 +854,9 @@ namespace modclasses
           continue;
         }
 
-        std::string aiNameString{ charIt.value().get<std::string>() };
-        AICharacterName aiName{ charIt.value().get<AICharacterName>() };
-        if (aiName == AICharacterName::NONE)
+        const std::string& aiNameString{ charIt.value().get_ref<const Json::string_t&>() };
+        AINameEnum aiName{ AIName::GetEnumByName(charIt.value().get_ref<const Json::string_t&>()) };
+        if (!aiName || aiName == AIName::NONE)
         {
           LOG(WARNING) << "AICLoad: The character name '" << aiNameString << "' is no valid name. Skipping the object.";
           continue;
@@ -831,8 +872,8 @@ namespace modclasses
         // it might also be possible to directly convert to a multimap, but the info which values are strange might be harder to receive
         for (auto& valuePair : perIt.value().items())
         {
-          AIC aicField{ getEnumFromString<AIC>(valuePair.key()) };
-          if (aicField == AIC::NONE)
+          AICEnum aicField{ AIC::GetEnumByName(valuePair.key()) };
+          if (!aicField || aicField == AIC::NONE)
           {
             LOG(WARNING) << "AICLoad: The field '" << valuePair.key() << "' of the character '" << aiNameString << "' is no valid AIC field. "
               << "Skipping the field.";

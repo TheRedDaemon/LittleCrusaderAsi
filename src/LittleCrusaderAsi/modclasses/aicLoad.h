@@ -7,7 +7,8 @@
 #include "modBase.h"
 
 // all enums
-#include "enumheaders/aiAndPersonalityEnums.h"
+//#include "enumheaders/aiAndPersonalityEnums.h"
+#include "enumheaders/pseudoEnumsAI.h"
 
 // needed mods:
 #include "addressResolver.h"
@@ -20,7 +21,6 @@ namespace modclasses
   // NOTE: current approach expects 16 AIs, so Versions less then 1.3 (or 1.31 ?) will need additional handling
   class AICLoad : public ModBase
   {
-    using AIC = AIPersonalityFieldsEnum;
 
   private:
     
@@ -78,13 +78,13 @@ namespace modclasses
     // current AICLoad settings, like if AICs are applied or deactivated, are ignored and not changed
     // returns bool indicating whether the function was successful
     // NOTE: "false" likely means an invalid value, ai-char or field were NONE, or the mod was not initialized
-    const bool setPersonalityValue(const AICharacterName aiName, const AIC field, const Json value);
+    const bool setPersonalityValue(AINameEnum aiName, AICEnum field, const Json value);
 
     // basically a raw value edit with (a little?) less overhead then setPersonalityValue
     // tests only if the ai-char or field are NONE, or if the mod was not initialized
     // the use of static casted enums might make this a bit safer, but only if the right field is chosen
     // returns bool indicating whether the function was successful
-    const bool setPersonalityValueUnchecked(const AICharacterName aiName, const AIC field, const int32_t value);
+    const bool setPersonalityValueUnchecked(AINameEnum aiName, AICEnum field, const int32_t value);
 
     // name should be the direct file name, fileRelativeToMod should be true if the function is executed by initialization code
     // false for calls using the keyboard interceptor (and maybe one day an event handler?), they are executed by stronghold directly
@@ -124,8 +124,16 @@ namespace modclasses
     // returns if the value is valid, at the same time it fills an int32_t with the right value
     // this is necessary for some fields that use enum values
     // the int32_t will be unchanged, if the value is not valid
-    const bool isValidPersonalityValue(const AIC field, const Json &value, int32_t &validValue) const;
-    const int32_t getAICFieldIndex(const AICharacterName aiName, const AIC field) const;
+    const bool isValidPersonalityValue(AICEnum field, const Json &value, int32_t &validValue) const;
+    const int32_t getAICFieldIndex(AINameEnum aiName, AICEnum field) const;
+
+    // to safe space in the menu defintion
+    template<typename PseudoEnumClass>
+    std::string getNameOrNULL(int32_t value)
+    {
+      const std::string* const ref{ PseudoEnumClass::GetName(value) };
+      return ref ? *ref : PseudoEnumClass::NONE->getName();
+    }
   };
 }
 
