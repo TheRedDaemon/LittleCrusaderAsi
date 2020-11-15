@@ -2,41 +2,57 @@
 #define ENUMBASE
 
 #include <string>
-#include <map>
+#include <unordered_map>
+#include <functional>
 
 // template for EnumType structure
 template<typename T>
 class EnumContainer
 {
-  using ConIter = typename std::map<std::string, std::unique_ptr<EnumContainer<T>>>::iterator;
-
 private:
 
-  const std::pair<ConIter, T> enumPair;
+  const std::string* namePtr{ nullptr };
+  const T value;
 
 public:
 
-  EnumContainer(ConIter it, T &&value) : enumPair(std::move(it), std::forward<T>(value)){};
+  EnumContainer(T &&valueIn) : value(std::forward<T>(valueIn)){};
 
   // returns const reference to name
-  // should be stable -> all positions created after start
   const std::string& getName() const
   {
-    return enumPair.first->first;
+    if (namePtr)
+    {
+      return *(namePtr);
+    }
+    else
+    {
+      abort(); // -> should burst in this case
+    }
   }
 
   // returns const reference to value
   const T& getValue() const
   {
-    return enumPair.second;
+    return value;
   }
 
 private:
+  
+  // needs to be called
+  void setNamePtr(const std::string* nameRef)
+  {
+    namePtr = nameRef;
+  }
 
   // TODO: maybe delete other stuff?
   // prevent copy and assign (not sure how necessary)
   EnumContainer(const EnumContainer &base) = delete;
-  virtual EnumContainer& operator=(const EnumContainer &base) final = delete;
+  EnumContainer& operator=(const EnumContainer &base) = delete;
+
+  // needs to be friend:
+  template<const char desc[], typename U, bool enumClassLike, bool uniqueValues>
+  friend class EnumBase;
 };
 
 
@@ -44,7 +60,11 @@ private:
 // NOTE: desc pointer just guarantees the uniqueness of the template
 // can however be used to store some description
 // these strings can be created using: static constexpr char ...[]{ ... };
-template<const char desc[], typename T, bool enumClassLike>
+// typename       -> type of value
+// enumClassLike  -> if true, uses pointer to EnumContainer as values, instead of the values itself
+// uniqueValues   -> fails if value repeats, adds additional map structure that uses values as keys, allows getEnum (if classlike and getName by value)
+//                -> however, needs more space and stores another copy of values -> should not be complex, need to be compareable
+template<const char desc[], typename T, bool enumClassLike, bool uniqueValues = false>
 class EnumBase
 {
 
@@ -52,8 +72,16 @@ private:
   // for intern use
   using _EnumTypeObj = typename std::conditional<enumClassLike, EnumContainer<T>, T>::type;
 
-  // now pointers are stable (map iterator stable + T obj pointer)
-  inline static std::map<std::string, std::unique_ptr<_EnumTypeObj>> enumMap;
+  // was reading stuff again -> elements (pairs of keys, values) have stable references, so
+  // the map can be and unordered map
+  //inline static std::map<std::string, std::unique_ptr<_EnumTypeObj>> enumMap;
+  inline static std::unordered_map<std::string, _EnumTypeObj> enumMap;
+
+  // adds funcs and support for unique value restriction and functions
+  // turns map into little bool, if this structure is not needed
+  inline static typename std::conditional<uniqueValues,
+    std::unordered_map<T, std::pair<const std::string*, const _EnumTypeObj*>>,
+    bool>::type uniqueValueMap;
 
 public:
   // will be used as type to create static variables
@@ -67,6 +95,7 @@ public:
 
   // receives an identifier string and returns a pointer to the value
   // if no value is found, the pointer will be empty
+  // in case of not class like, this is also the enum
   static const T* const GetValue(const std::string& name)
   {
     auto it{ enumMap.find(name) };
@@ -74,16 +103,110 @@ public:
     {
       if constexpr (enumClassLike)
       {
-        return &(it->second->getValue());
+        return &(it->second.getValue());
       }
       else
       {
-        return it->second.get();
+        return &(it->second);
       }
     }
     
     return nullptr;
   }
+
+
+  // executes a function for every pseudo enum pair (in order of the names (stored via map))
+  // the given paramters are a const reference to the name and a version of the pseudo enum
+  // NOTE: for non class like, this will copy the value, so be careful with complex objects
+  static void WithEachEnum(const std::function<void(const std::string&, EnumType)> &func)
+  {
+    for (const auto&[name, value] : enumMap)
+    {
+      if constexpr (enumClassLike)
+      {
+        func(name, *value);
+      }
+      else
+      {
+        func(name, value);
+      }
+    }
+  }
+
+
+  // executes a function for every pseudo enum name/value pair (in order of the names (stored via map))
+  // the given paramters are a const reference to the name and a const reference to the value
+  // in case of a class like, the enum value itself is missing (no pointer)
+  // for a non class like, this behaves almost the same as WithEachEnum, but uses a reference to the value
+  // this might be preferred for complex objects, however, they were already copied for the value creation
+  // so this only prevents unnecessary copies
+  static void WithEachValue(const std::function<void(const std::string&, const T&)> &func)
+  {
+    for (const auto&[name, value] : enumMap)
+    {
+      if constexpr (enumClassLike)
+      {
+        func(name, value.getValue());
+      }
+      else
+      {
+        func(name, value);
+      }
+    }
+  }
+
+
+  // additional func for enumClassLike
+  // receives an identifier string and returns EnumType
+  // only supported by enumClassLike, since there is no reliable way to return an invalid only type Enum
+  // if no value is found, the EnumType will be nullptr
+  template<typename U = T>
+  static typename std::enable_if_t<enumClassLike, const U* const>
+  GetEnumByName(const std::string& name)
+  {
+    auto it{ enumMap.find(name) };
+    if (it != enumMap.end())
+    {
+      return &(it->second);
+    }
+
+    return nullptr;
+  }
+
+
+  // adds funcs and support for unique value restriction and functions
+  // receives a value and returns a pointer to the name
+  // if no value is found, the pointer will be empty
+  template<typename U = std::string>
+  static typename std::enable_if_t<uniqueValues, const U* const>
+  GetName(const T& value)
+  {
+    auto it{ uniqueValueMap.find(value) };
+    if (it != uniqueValueMap.end())
+    {
+      return it->second.first;
+    }
+
+    return nullptr;
+  }
+
+
+  // adds getEnumByValue if enumClasslike and uniqueValue
+  // receives a value and returns a EnumType
+  // if no value is found, the EnumType will be empty
+  template<typename U = EnumType>
+  static typename std::enable_if_t<enumClassLike && uniqueValues, U>
+  GetEnumByValue(const T& value)
+  {
+    auto it{ uniqueValueMap.find(value) };
+    if (it != uniqueValueMap.end())
+    {
+      return it->second.second;
+    }
+
+    return nullptr;
+  }
+
 
 protected:
 
@@ -94,26 +217,37 @@ protected:
   // (I sadly do not know any way to validate this during compile everything would need to be constexpr
   static EnumType CreateEnum(std::string &&name, T &&value)
   {
-    auto it{ enumMap.find(name) };
-    if (it != enumMap.end())
+    // NOTE:
+    // uses abort if name is added a second time -> want valid enum, everything else should crash
+    // this should never be reached by normal run and is more for debug, and if it happens, it should burst
+
+    auto res{ enumMap.try_emplace(std::forward<std::string>(name), std::move(value)) };
+    if (!res.second)
     {
-      // crash it -> want valid enum, everything else should crash
-      // exit(1);
-      abort(); // this should never be reached by normal run and is more for debug, and i f it happens, it should burst
+      abort();
     }
 
-    // create iterator
-    auto res{ enumMap.emplace(std::make_pair(std::move(name), nullptr)) };
     if constexpr (enumClassLike)
     {
-      // creates string and then swaps container in place
-      res.first->second = std::make_unique<_EnumTypeObj>(res.first, std::forward<T>(value));
-      return res.first->second.get();
+      res.first->second.setNamePtr(&(res.first->first));
+    }
+
+    if constexpr (uniqueValues)
+    {
+      auto vRes{ uniqueValueMap.try_emplace(*GetValue(res.first->first), &(res.first->first), &(res.first->second)) };
+      if (!vRes.second)
+      {
+        abort();
+      }
+    }
+
+    if constexpr (enumClassLike)
+    {
+      return &(res.first->second);
     }
     else
     {
-      res.first->second = std::make_unique<_EnumTypeObj>(std::forward<T>(value));
-      return *(res.first->second);
+      return res.first->second;
     }
   }
 
@@ -125,13 +259,13 @@ private:
 
 /*
 static constexpr char testName[]{ "Test" };
-class Test : public EnumBase<testName, int32_t, false>
+class Test : public EnumBase<testName, int32_t, true, true>
 {
 public:
 
   inline static EnumType TEST{ CreateEnum("Test", 32) };
 
-  inline static EnumType TEST2{ CreateEnum("Test", 43) };
+  inline static EnumType TEST2{ CreateEnum("Test2", 43) };
 
 };
 */

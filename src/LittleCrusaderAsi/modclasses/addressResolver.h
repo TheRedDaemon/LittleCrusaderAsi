@@ -42,6 +42,7 @@ namespace modclasses
     // returns true if all addresses were registered, else false
     // nature of conflicts is logged
     // AddressRequests need to be persistent for the lifetime of the class, since currently pointers are used to store references
+    // NOTE: vector pointers are only stable until it runs out of space and needs to allocate more, so take this into account
     // requesting multiple small address amounts should be possible, however (to be honest) I am not as sure
     // also, requesting the same address from the same mod twice might produce unwanted behaviour
     // (ex. requesting a successful request again together with a failing will delete both -> the first will fail)

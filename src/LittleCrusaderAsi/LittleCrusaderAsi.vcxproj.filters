@@ -117,6 +117,9 @@
     <ClInclude Include="modcore\enumBase.h">
       <Filter>Headerdateien\ModCore</Filter>
     </ClInclude>
+    <ClInclude Include="modclasses\enumheaders\pseudoEnumsAI.h">
+      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">

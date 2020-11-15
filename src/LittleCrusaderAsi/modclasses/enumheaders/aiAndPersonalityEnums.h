@@ -113,6 +113,7 @@ namespace modclasses
     {Resource::PITCH, "Pitch"},
     {Resource::WHEAT, "Wheat"},
     {Resource::BREAD, "Bread"},
+    {Resource::CHEESE, "Cheese"},
     {Resource::MEAT, "Meat"},
     {Resource::APPLES, "Apples"},
     {Resource::BEER, "Beer"},
