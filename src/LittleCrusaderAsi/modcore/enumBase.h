@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <functional>
 
 // template for EnumType structure
@@ -18,9 +19,7 @@ namespace modcore
 
   public:
 
-    EnumContainer(T &&valueIn) : value(std::forward<T>(valueIn))
-    {
-    };
+    EnumContainer(T &&valueIn) : value(std::forward<T>(valueIn)){}
 
     // returns const reference to name
     const std::string& getName() const
@@ -55,20 +54,28 @@ namespace modcore
     EnumContainer& operator=(const EnumContainer &base) = delete;
 
     // needs to be friend:
-    template<const char desc[], typename U, bool enumClassLike, bool uniqueValues>
+    template<const char desc[], typename U, bool enumClassLike,
+      bool uniqueValues, bool sortByValue, bool sortByName>
     friend struct EnumBase;
   };
 
-
-  // uses no namespace -> is template to derived from anyway
-  // NOTE: desc pointer just guarantees the uniqueness of the template
-  // can however be used to store some description
-  // these strings can be created using: static constexpr char ...[]{ ... };
-  // typename       -> type of value
-  // enumClassLike  -> if true, uses pointer to EnumContainer as values, instead of the values itself
-  // uniqueValues   -> fails if value repeats, adds additional map structure that uses values as keys, allows getEnum (if classlike and getName by value)
-  //                -> however, needs more space and stores another copy of values -> should not be complex, need to be compareable
-  template<const char desc[], typename T, bool enumClassLike, bool uniqueValues = false>
+  /*
+  * NOTE: desc pointer just guarantees the uniqueness of the template
+  * can however be used to store some description
+  * these strings can be created using: inline static constexpr char ...[]{ ... };
+  * typename       -> type of value
+  * enumClassLike  -> if true, uses pointer to EnumContainer as values, instead of the values itself
+  * uniqueValues   -> fails if value repeats, adds additional unordered map structure that uses values as keys,
+  *                   allows getEnum (if classlike and getName by value)
+  *                   -> however, needs more space and stores another copy of values
+  *                   -> should not be complex, need to be compare- and hashable
+  * sortByValue    -> if unique values active, will store value refs in map (not unsordered_map) and
+  *                   allow a special function to run over them in value order
+  * sortByName     -> will put names in map instead of unsorted map,
+  *                   as a result, WithEachEnum and WithEachValue will run in the natural string order
+  */
+  template<const char desc[], typename T, bool enumClassLike,
+    bool uniqueValues = false, bool sortByValue = false, bool sortByName = false>
   struct EnumBase
   {
 
@@ -79,13 +86,20 @@ namespace modcore
     // was reading stuff again -> elements (pairs of keys, values) have stable references, so
     // the map can be and unordered map
     //inline static std::map<std::string, std::unique_ptr<_EnumTypeObj>> enumMap;
-    inline static std::unordered_map<std::string, _EnumTypeObj> enumMap;
+    inline static typename std::conditional<sortByName,
+      std::map<std::string, _EnumTypeObj>,
+      std::unordered_map<std::string, _EnumTypeObj>
+    >::type enumMap;
 
     // adds funcs and support for unique value restriction and functions
     // turns map into little bool, if this structure is not needed
     inline static typename std::conditional<uniqueValues,
-      std::unordered_map<T, std::pair<const std::string*, const _EnumTypeObj*>>,
-      bool>::type uniqueValueMap;
+      typename std::conditional<sortByValue,
+        std::map<T, std::pair<const std::string*, const _EnumTypeObj*>>,
+        std::unordered_map<T, std::pair<const std::string*, const _EnumTypeObj*>>
+      >::type,
+      bool
+    >::type uniqueValueMap;
 
   public:
     // will be used as type to create static variables
@@ -155,6 +169,44 @@ namespace modcore
         else
         {
           func(name, value);
+        }
+      }
+    }
+
+
+    // like WithEachEnum, but runs in value order
+    template<typename U = void>
+    static typename std::enable_if_t<uniqueValues && sortByValue, U>
+    WithEachEnumInValueOrder(const std::function<void(const std::string&, EnumType)>& func)
+    {
+      for (const auto& [name, value] : uniqueValueMap)
+      {
+        if constexpr (enumClassLike)
+        {
+          func(*name, value);
+        }
+        else
+        {
+          func(*name, *value);
+        }
+      }
+    }
+
+
+    // like WithEachValue, but runs in value order
+    template<typename U = void>
+    static typename std::enable_if_t<uniqueValues && sortByValue, U>
+    WithEachValueInValueOrder(const std::function<void(const std::string&, const T&)>& func)
+    {
+      for (const auto& [name, value] : uniqueValueMap)
+      {
+        if constexpr (enumClassLike)
+        {
+          func(*name, value->getValue());
+        }
+        else
+        {
+          func(*name, *value);
         }
       }
     }
@@ -276,7 +328,8 @@ namespace modcore
   */
 }
 
-template<const char desc[], typename T, bool enumClassLike, bool uniqueValues = false>
-using PseudoEnum = modcore::EnumBase<desc, T, enumClassLike, uniqueValues>;
+template<const char desc[], typename T, bool enumClassLike,
+  bool uniqueValues = false, bool sortByValue = false, bool sortByName = false>
+using PseudoEnum = modcore::EnumBase<desc, T, enumClassLike, uniqueValues, sortByValue, sortByName>;
 
 #endif // ENUMBASE

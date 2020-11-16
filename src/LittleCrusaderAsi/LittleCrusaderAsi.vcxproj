@@ -188,7 +188,6 @@
     <ClInclude Include="modclasses\dummyStuff\protoMod.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
-    <ClInclude Include="modclasses\enumheaders\aiAndPersonalityEnums.h" />
     <ClInclude Include="modclasses\enumheaders\keyboardEnumsAndUtil.h" />
     <ClInclude Include="modclasses\enumheaders\pseudoEnumsAI.h" />
     <ClInclude Include="modclasses\keyboardInterceptor.h" />

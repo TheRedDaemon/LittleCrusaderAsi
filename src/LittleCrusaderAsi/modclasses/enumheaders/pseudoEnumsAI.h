@@ -11,11 +11,11 @@ namespace modclasses
   // Version of the ENUMs should be from the UCP 2.14
 
   // since often name, value and Id are required, and not easy accessable, re-impl with new pseudo enums
-  // also need to be the heavy ones, to allow retransform
+  // also need to be the even heavier ones, to allow retransform
 
   //* CharNames, including the ingame ids *//
   inline static constexpr char aiCharacterName[]{ "AICharacterName" };
-  struct AICharacterName : PseudoEnum<aiCharacterName, int32_t, true, true>
+  struct AICharacterName : PseudoEnum<aiCharacterName, int32_t, true, true, true>
   {
     inline static EnumType NONE       { CreateEnum( "NULL"       , 99 ) };
     inline static EnumType RAT        { CreateEnum( "Rat"        , 1  ) };
@@ -39,7 +39,7 @@ namespace modclasses
 
   //* Farm-Ids, used to define which are build *//
   inline static constexpr char farmBuilding[]{ "FarmBuilding" };
-  struct FarmBuilding : PseudoEnum<farmBuilding, int32_t, true, true>
+  struct FarmBuilding : PseudoEnum<farmBuilding, int32_t, true, true, true>
   {
     inline static EnumType NONE         { CreateEnum( "NULL"        , 0xFF ) };
     inline static EnumType NO_FARM      { CreateEnum( "None"        , 0x00 ) };
@@ -52,7 +52,7 @@ namespace modclasses
 
   //* Resource-Ids *//
   inline static constexpr char resource[]{ "Resource" };
-  struct Resource : PseudoEnum<resource, int32_t, true, true>
+  struct Resource : PseudoEnum<resource, int32_t, true, true, true>
   {
     inline static EnumType NONE           { CreateEnum( "NULL"            , 0xFF ) };
     inline static EnumType NO_RESOURCE    { CreateEnum( "None"            , 0x00 ) };
@@ -81,7 +81,7 @@ namespace modclasses
 
   //* Siege-Engine-Ids *//
   inline static constexpr char siegeEngine[]{ "SiegeEngine" };
-  struct SiegeEngine : PseudoEnum<siegeEngine, int32_t, true, true>
+  struct SiegeEngine : PseudoEnum<siegeEngine, int32_t, true, true, true>
   {
     inline static EnumType NONE             { CreateEnum( "NULL"          , 0xFF ) };
     inline static EnumType NO_SIEGE_ENGINE  { CreateEnum( "None"          , 0x00 ) };
@@ -98,7 +98,7 @@ namespace modclasses
 
 
   inline static constexpr char harassingSiegeEngine[]{ "HarassingSiegeEngine" };
-  struct HarassingSiegeEngine : PseudoEnum<harassingSiegeEngine, int32_t, true, true>
+  struct HarassingSiegeEngine : PseudoEnum<harassingSiegeEngine, int32_t, true, true, true>
   {
     inline static EnumType NONE              { CreateEnum( "NULL"          , 0xFFFF ) };
     inline static EnumType NO_SIEGE_ENGINE   { CreateEnum( "None"          , 0x00   ) };
@@ -109,7 +109,7 @@ namespace modclasses
 
   //* Target IDs -> what will the ai attack *//
   inline static constexpr char targetingType[]{ "TargetingType" };
-  struct TargetingType : PseudoEnum<targetingType, int32_t, true, true>
+  struct TargetingType : PseudoEnum<targetingType, int32_t, true, true, true>
   {
     inline static EnumType NONE        { CreateEnum( "NULL"      , 99 ) };    // wrong input
     inline static EnumType GOLD        { CreateEnum( "Gold"      , 0  ) };    // Highest gold
@@ -122,7 +122,7 @@ namespace modclasses
 
   //* Settings for weapon workshops *//
   inline static constexpr char fletcherSetting[]{ "FletcherSetting" };
-  struct FletcherSetting : PseudoEnum<fletcherSetting, int32_t, true, true>
+  struct FletcherSetting : PseudoEnum<fletcherSetting, int32_t, true, true, true>
   {
     inline static EnumType NONE         { CreateEnum( "NULL"      , 0xFFFF ) }; // wrong input
     inline static EnumType BOWS         { CreateEnum( "Bows"      , 0x11   ) };
@@ -132,7 +132,7 @@ namespace modclasses
 
 
   inline static constexpr char poleturnerSetting[]{ "PoleturnerSetting" };
-  struct PoleturnerSetting : PseudoEnum<poleturnerSetting, int32_t, true, true>
+  struct PoleturnerSetting : PseudoEnum<poleturnerSetting, int32_t, true, true, true>
   {
     inline static EnumType NONE        { CreateEnum( "NULL"     , 0xFFFF ) }; // wrong input
     inline static EnumType SPEARS      { CreateEnum( "Spears"   , 0x13   ) };
@@ -142,7 +142,7 @@ namespace modclasses
 
 
   inline static constexpr char blacksmithSetting[]{ "BlacksmithSetting" };
-  struct BlacksmithSetting : PseudoEnum<blacksmithSetting, int32_t, true, true>
+  struct BlacksmithSetting : PseudoEnum<blacksmithSetting, int32_t, true, true, true>
   {
     inline static EnumType NONE       { CreateEnum( "NULL"      , 0xFFFF ) };  // wrong input
     inline static EnumType MACES      { CreateEnum( "Maces"     , 0x15   ) };
@@ -153,7 +153,7 @@ namespace modclasses
 
   //* Unit and npc ids *//
   inline static constexpr char unit[]{ "Unit" };
-  struct Unit : PseudoEnum<unit, int32_t, true, true>
+  struct Unit : PseudoEnum<unit, int32_t, true, true, true>
   {
     inline static EnumType NONE             { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
     inline static EnumType NO_UNIT          { CreateEnum( "None"            , 0x00   ) };
@@ -179,7 +179,7 @@ namespace modclasses
 
 
   inline static constexpr char diggingUnit[]{ "DiggingUnit" };
-  struct DiggingUnit : PseudoEnum<diggingUnit, int32_t, true, true>
+  struct DiggingUnit : PseudoEnum<diggingUnit, int32_t, true, true, true>
   {
     inline static EnumType NONE              { CreateEnum( "NULL"          , 0xFFFF ) }; // wrong input
     inline static EnumType NO_DIGGING_UNIT   { CreateEnum( "None"          , 0x00   ) };
@@ -193,7 +193,7 @@ namespace modclasses
 
 
   inline static constexpr char meleeUnit[]{ "MeleeUnit" };
-  struct MeleeUnit : PseudoEnum<meleeUnit, int32_t, true, true>
+  struct MeleeUnit : PseudoEnum<meleeUnit, int32_t, true, true, true>
   {
     inline static EnumType NONE              { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
     inline static EnumType NO_MELEE_UNIT     { CreateEnum( "None"            , 0x00   ) };
@@ -213,7 +213,7 @@ namespace modclasses
 
 
   inline static constexpr char rangedUnit[]{ "RangedUnit" };
-  struct RangedUnit : PseudoEnum<rangedUnit, int32_t, true, true>
+  struct RangedUnit : PseudoEnum<rangedUnit, int32_t, true, true, true>
   {
     inline static EnumType NONE              { CreateEnum( "NULL"           , 0xFFFF ) }; // wrong input
     inline static EnumType NO_RANGED_UNIT    { CreateEnum( "None"           , 0x00   ) };
@@ -227,7 +227,7 @@ namespace modclasses
 
 
   inline static constexpr char npc[]{ "NPC" };
-  struct NPC : PseudoEnum<npc, int32_t, true, true>
+  struct NPC : PseudoEnum<npc, int32_t, true, true, true>
   {
     inline static EnumType NONE              { CreateEnum( "NULL"               , 0x00 ) };
     inline static EnumType PEASANT           { CreateEnum( "Peasant"            , 1    ) };
@@ -312,7 +312,7 @@ namespace modclasses
 
   //* AI Personality Fields *//
   inline static constexpr char aIPersonalityFieldsEnum[]{ "AIPersonalityFieldsEnum" };
-  struct AIPersonalityFieldsEnum : PseudoEnum<aIPersonalityFieldsEnum, int32_t, true, true>
+  struct AIPersonalityFieldsEnum : PseudoEnum<aIPersonalityFieldsEnum, int32_t, true, true, true>
   {
     inline static EnumType UNKNOWN_000                            { CreateEnum( "Unknown000"                      , 0   ) };
     inline static EnumType UNKNOWN_001                            { CreateEnum( "Unknown001"                      , 1   ) };
