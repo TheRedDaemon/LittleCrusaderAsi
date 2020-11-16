@@ -166,7 +166,7 @@ namespace modcore
     // if no value is found, the EnumType will be nullptr
     template<typename U = EnumType>
     static typename std::enable_if_t<enumClassLike, U>
-      GetEnumByName(const std::string& name)
+    GetEnumByName(const std::string& name)
     {
       auto it{ enumMap.find(name) };
       if (it != enumMap.end())
@@ -183,7 +183,7 @@ namespace modcore
     // if no value is found, the pointer will be empty
     template<typename U = std::string>
     static typename std::enable_if_t<uniqueValues, const U* const>
-      GetName(const T& value)
+    GetName(const T& value)
     {
       auto it{ uniqueValueMap.find(value) };
       if (it != uniqueValueMap.end())
@@ -200,7 +200,7 @@ namespace modcore
     // if no value is found, the EnumType will be empty
     template<typename U = EnumType>
     static typename std::enable_if_t<enumClassLike && uniqueValues, U>
-      GetEnumByValue(const T& value)
+    GetEnumByValue(const T& value)
     {
       auto it{ uniqueValueMap.find(value) };
       if (it != uniqueValueMap.end())
