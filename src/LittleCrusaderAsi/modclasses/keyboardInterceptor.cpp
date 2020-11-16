@@ -450,7 +450,8 @@ namespace modclasses
   // TODO: if it work good, maybe it is possible to use only the GET_MESSAGE hook?
   LRESULT CALLBACK KeyboardInterceptor::charInterceptor(_In_ int code, _In_ WPARAM wParam, _In_ LPARAM lParam)
   {
-    if (!std::get<0>(charHandlerFunc) || code < 0)
+    // wParam contains if the message was removed or not -> only trigger if GetMessage is called (wParam == PM_REMOVE)
+    if (!std::get<0>(charHandlerFunc) || code < 0 || !wParam)
     {
       return CallNextHookEx(nullptr, code, wParam, lParam);
     }
@@ -471,10 +472,13 @@ namespace modclasses
             // WH_GETMESSAGE can not stop msg, but it can modify them:
             msg->message = WM_NULL;
             // source: https://stackoverflow.com/a/57049028
+
+            break;
           }
 
           // devour all messages as long as this is active
           case WM_KEYDOWN:
+          {
             // since crusader can not do this (it would react), we have to translate the message ourselves
             // to receive the WM_CHAR msg
             TranslateMessage(msg);
@@ -492,12 +496,16 @@ namespace modclasses
 
             msg->message = WM_NULL;
             break;
+          }
           case WM_KEYUP:
+          {
             msg->message = WM_NULL;
             break;
+          }
           default:
             break;
         }
+        break;
       }
 
       default:
@@ -527,7 +535,10 @@ namespace modclasses
     // remove all status from keys, perform keyUps for watched keys
     for (auto& status : modifierStatus)
     {
-      status.second = false; // all unpressed
+      if (status.first != VK::NONE)
+      {
+        status.second = false; // all unpressed, except NONE
+      }
     }
 
     for (auto& watchedKey : currentlyUsedKeys)

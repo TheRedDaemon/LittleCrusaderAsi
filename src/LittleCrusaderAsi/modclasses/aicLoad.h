@@ -28,7 +28,7 @@ namespace modclasses
     int32_t (*aicMemoryPtr)[2704]{ 0x0 };
 
     // stores a copy of the original values for quick swaps
-    std::array<int32_t, 2704> vanillaAIC;
+    std::array<int32_t, 2704> vanillaAIC{};
 
     // config data safe:
     
@@ -132,7 +132,7 @@ namespace modclasses
     std::string getNameOrNULL(int32_t value)
     {
       const std::string* const ref{ PseudoEnumClass::GetName(value) };
-      return ref ? *ref : PseudoEnumClass::NONE->getName();
+      return ref ? *ref : PseudoEnumClass::None->getName();
     }
   };
 }

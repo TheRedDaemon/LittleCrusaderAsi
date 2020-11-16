@@ -311,23 +311,53 @@ namespace modclasses
 
   class FreeInputMenu : public MenuBase
   {
+    using InputValueReact = std::function<void(const std::string&, std::string&, bool, std::string&)>;
+    using InputReact = std::function<void(const std::string&, std::string&)>;
+  
   public:
 
     static constexpr bool DESCENDABLE{ false };
 
   private:
 
-    bool onlyNumber;
+    // hardcoded max string lenght -> might not be able to display far earlier
+    inline static constexpr size_t maxInputLength{ 30 };
 
-    // will tell the current impl if the keyboard is overtaken (and that it might need to free it)
-    bool overtake;
-    std::string currentInput;
+    // will simply run over it and see if it exists -> Hash for something like this overkill
+    // if onlyNumber, will only work with this chars
+    inline static constexpr std::array<char, 13> numberChars{
+      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '-', '.'
+    };
+    const bool onlyNumber{ false };
 
-    const std::string defaultValue;
-    std::string currentValue;
-    std::string resultOfEnter;
+    // function reacts to general input
+    // receives the const ref to the current input and a ref to the 'resultOfEnter'- string (can be changed)
+    // if this is in use, defaultValue and current value are not displayed
+    const InputReact inputReact{ nullptr };
+
+    // function reacts to enter on input value
+    // receives the const ref to the current input, a ref to the 'resultOfEnter'- string (can be changed)
+    // a bool indicating that it only should update the current value string (if true)
+    // and a ref to that string -> if the bool is set, the string ref will still be unchanged
+    const InputValueReact inputValueReact{ nullptr };
+
+    size_t cursorPos{ 0 };  // where to edit and where the cursor stands
+    std::string currentInput{ "" };
+
+    const std::string defaultValue{ "" };
+    std::string currentValue{ "" };
+    std::string resultOfEnter{ "" };
 
   public:
+
+    FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
+      std::string&& defaultValueStr, InputValueReact&& inputValueReactFunc);
+
+    FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc,
+      bool onlyNumbers, InputReact&& inputReactFunc);
+
+    MenuBase* executeAction(char newChar, BltOverlay& over) override;
+
     // prevent copy and assign (not sure how necessary)
     FreeInputMenu(const FreeInputMenu&) = delete;
     FreeInputMenu& operator= (const FreeInputMenu&) = delete;
@@ -455,9 +485,9 @@ namespace modclasses
     // -> so plan changed -> text stuff smaller and everything opaque menu
 
     // main surfaces applied per fast blt
-    IDirectDrawSurface7* menuOffSurf; // menu
-    IDirectDrawSurface7* textOffSurf; // display text
-    IDirectDrawSurface7* inputOffSurf; // input field in the middle of screen
+    IDirectDrawSurface7* menuOffSurf{ nullptr }; // menu
+    IDirectDrawSurface7* textOffSurf{ nullptr }; // display text
+    IDirectDrawSurface7* inputOffSurf{ nullptr }; // input field in the middle of screen
     // and the rect structures (contain also size for them) (hardcoded currently)
     RECT menuRect{0, 0, 300, 500 };
     RECT textRect{ 0, 0, 500, 250 };
@@ -495,6 +525,9 @@ namespace modclasses
     std::weak_ptr<KeyboardInterceptor> keyInterPtr;
     std::unordered_map<VK, MenuAction> menuActions;
     bool keysValid{ true };
+    // indicates that value is currently edited
+    // will tell the current impl if the keyboard is overtaken (and that it might need to free it)
+    bool editing{ false };  // variable for menu use
 
     // menu ptr;
     std::unique_ptr<MainMenu> mainMenu{}; // mostly for reference -> will own every menu part at the end

@@ -17,23 +17,23 @@ namespace modclasses
   inline static constexpr char aiCharacterName[]{ "AICharacterName" };
   struct AICharacterName : PseudoEnum<aiCharacterName, int32_t, true, true, true>
   {
-    inline static EnumType NONE       { CreateEnum( "NULL"       , 99 ) };
-    inline static EnumType RAT        { CreateEnum( "Rat"        , 1  ) };
-    inline static EnumType SNAKE      { CreateEnum( "Snake"      , 2  ) };
-    inline static EnumType PIG        { CreateEnum( "Pig"        , 3  ) };
-    inline static EnumType WOLF       { CreateEnum( "Wolf"       , 4  ) };
-    inline static EnumType SALADIN    { CreateEnum( "Saladin"    , 5  ) };
-    inline static EnumType CALIPH     { CreateEnum( "Caliph"     , 6  ) };
-    inline static EnumType SULTAN     { CreateEnum( "Sultan"     , 7  ) };
-    inline static EnumType RICHARD    { CreateEnum( "Richard"    , 8  ) };
-    inline static EnumType FREDERICK  { CreateEnum( "Frederick"  , 9  ) };
-    inline static EnumType PHILLIP    { CreateEnum( "Phillip"    , 10 ) };
-    inline static EnumType WAZIR      { CreateEnum( "Wazir"      , 11 ) };
-    inline static EnumType EMIR       { CreateEnum( "Emir"       , 12 ) };
-    inline static EnumType NIZAR      { CreateEnum( "Nizar"      , 13 ) };
-    inline static EnumType SHERIFF    { CreateEnum( "Sheriff"    , 14 ) };
-    inline static EnumType MARSHAL    { CreateEnum( "Marshal"    , 15 ) };
-    inline static EnumType ABBOT      { CreateEnum( "Abbot"      , 16 ) };
+    inline static EnumType None       { CreateEnum( "NULL"       , 99 ) };
+    inline static EnumType Rat        { CreateEnum( "Rat"        , 1  ) };
+    inline static EnumType Snake      { CreateEnum( "Snake"      , 2  ) };
+    inline static EnumType Pig        { CreateEnum( "Pig"        , 3  ) };
+    inline static EnumType Wolf       { CreateEnum( "Wolf"       , 4  ) };
+    inline static EnumType Saladin    { CreateEnum( "Saladin"    , 5  ) };
+    inline static EnumType Caliph     { CreateEnum( "Caliph"     , 6  ) };
+    inline static EnumType Sultan     { CreateEnum( "Sultan"     , 7  ) };
+    inline static EnumType Richard    { CreateEnum( "Richard"    , 8  ) };
+    inline static EnumType Frederick  { CreateEnum( "Frederick"  , 9  ) };
+    inline static EnumType Phillip    { CreateEnum( "Phillip"    , 10 ) };
+    inline static EnumType Wazir      { CreateEnum( "Wazir"      , 11 ) };
+    inline static EnumType Emir       { CreateEnum( "Emir"       , 12 ) };
+    inline static EnumType Nizar      { CreateEnum( "Nizar"      , 13 ) };
+    inline static EnumType Sheriff    { CreateEnum( "Sheriff"    , 14 ) };
+    inline static EnumType Marshal    { CreateEnum( "Marshal"    , 15 ) };
+    inline static EnumType Abbot      { CreateEnum( "Abbot"      , 16 ) };
   };
 
 
@@ -41,12 +41,12 @@ namespace modclasses
   inline static constexpr char farmBuilding[]{ "FarmBuilding" };
   struct FarmBuilding : PseudoEnum<farmBuilding, int32_t, true, true, true>
   {
-    inline static EnumType NONE         { CreateEnum( "NULL"        , 0xFF ) };
-    inline static EnumType NO_FARM      { CreateEnum( "None"        , 0x00 ) };
-    inline static EnumType WHEAT_FARM   { CreateEnum( "WheatFarm"   , 0x1E ) };
-    inline static EnumType HOP_FARM     { CreateEnum( "HopFarm"     , 0x1F ) };
-    inline static EnumType APPLE_FARM   { CreateEnum( "AppleFarm"   , 0x20 ) };
-    inline static EnumType DAIRY_FARM   { CreateEnum( "DairyFarm"   , 0x21 ) };
+    inline static EnumType None        { CreateEnum( "NULL"        , 0xFF ) };
+    inline static EnumType NoFarm      { CreateEnum( "None"        , 0x00 ) };
+    inline static EnumType WheatFarm   { CreateEnum( "WheatFarm"   , 0x1E ) };
+    inline static EnumType HopFarm     { CreateEnum( "HopFarm"     , 0x1F ) };
+    inline static EnumType AppleFarm   { CreateEnum( "AppleFarm"   , 0x20 ) };
+    inline static EnumType DairyFarm   { CreateEnum( "DairyFarm"   , 0x21 ) };
   };
 
 
@@ -54,28 +54,28 @@ namespace modclasses
   inline static constexpr char resource[]{ "Resource" };
   struct Resource : PseudoEnum<resource, int32_t, true, true, true>
   {
-    inline static EnumType NONE           { CreateEnum( "NULL"            , 0xFF ) };
-    inline static EnumType NO_RESOURCE    { CreateEnum( "None"            , 0x00 ) };
-    inline static EnumType WOOD           { CreateEnum( "Wood"            , 0x02 ) };
-    inline static EnumType HOP            { CreateEnum( "Hop"             , 0x03 ) };
-    inline static EnumType STONE          { CreateEnum( "Stone"           , 0x04 ) };
-    inline static EnumType IRON           { CreateEnum( "Iron"            , 0x06 ) };
-    inline static EnumType PITCH          { CreateEnum( "Pitch"           , 0x07 ) };
-    inline static EnumType WHEAT          { CreateEnum( "Wheat"           , 0x09 ) };
-    inline static EnumType BREAD          { CreateEnum( "Bread"           , 0x0A ) };
-    inline static EnumType CHEESE         { CreateEnum( "Cheese"          , 0x0B ) };
-    inline static EnumType MEAT           { CreateEnum( "Meat"            , 0x0C ) };
-    inline static EnumType APPLES         { CreateEnum( "Apples"          , 0x0D ) };
-    inline static EnumType BEER           { CreateEnum( "Beer"            , 0x0E ) };
-    inline static EnumType FLOUR          { CreateEnum( "Flour"           , 0x10 ) };
-    inline static EnumType BOWS           { CreateEnum( "Bows"            , 0x11 ) };
-    inline static EnumType CROSSBOWS      { CreateEnum( "Crossbows"       , 0x12 ) };
-    inline static EnumType SPEARS         { CreateEnum( "Spears"          , 0x13 ) };
-    inline static EnumType PIKES          { CreateEnum( "Pikes"           , 0x14 ) };
-    inline static EnumType MACES          { CreateEnum( "Maces"           , 0x15 ) };
-    inline static EnumType SWORDS         { CreateEnum( "Swords"          , 0x16 ) };
-    inline static EnumType LEATHERARMORS  { CreateEnum( "LeatherArmors"   , 0x17 ) };
-    inline static EnumType IRONARMORS     { CreateEnum( "IronArmors"      , 0x18 ) };
+    inline static EnumType None           { CreateEnum( "NULL"            , 0xFF ) };
+    inline static EnumType NoResource     { CreateEnum( "None"            , 0x00 ) };
+    inline static EnumType Wood           { CreateEnum( "Wood"            , 0x02 ) };
+    inline static EnumType Hop            { CreateEnum( "Hop"             , 0x03 ) };
+    inline static EnumType Stone          { CreateEnum( "Stone"           , 0x04 ) };
+    inline static EnumType Iron           { CreateEnum( "Iron"            , 0x06 ) };
+    inline static EnumType Pitch          { CreateEnum( "Pitch"           , 0x07 ) };
+    inline static EnumType Wheat          { CreateEnum( "Wheat"           , 0x09 ) };
+    inline static EnumType Bread          { CreateEnum( "Bread"           , 0x0A ) };
+    inline static EnumType Cheese         { CreateEnum( "Cheese"          , 0x0B ) };
+    inline static EnumType Meat           { CreateEnum( "Meat"            , 0x0C ) };
+    inline static EnumType Apples         { CreateEnum( "Apples"          , 0x0D ) };
+    inline static EnumType Beer           { CreateEnum( "Beer"            , 0x0E ) };
+    inline static EnumType Flour          { CreateEnum( "Flour"           , 0x10 ) };
+    inline static EnumType Bows           { CreateEnum( "Bows"            , 0x11 ) };
+    inline static EnumType Crossbows      { CreateEnum( "Crossbows"       , 0x12 ) };
+    inline static EnumType Spears         { CreateEnum( "Spears"          , 0x13 ) };
+    inline static EnumType Pikes          { CreateEnum( "Pikes"           , 0x14 ) };
+    inline static EnumType Maces          { CreateEnum( "Maces"           , 0x15 ) };
+    inline static EnumType Swords         { CreateEnum( "Swords"          , 0x16 ) };
+    inline static EnumType LeatherArmors  { CreateEnum( "LeatherArmors"   , 0x17 ) };
+    inline static EnumType IronArmors     { CreateEnum( "IronArmors"      , 0x18 ) };
   };
 
 
@@ -83,27 +83,27 @@ namespace modclasses
   inline static constexpr char siegeEngine[]{ "SiegeEngine" };
   struct SiegeEngine : PseudoEnum<siegeEngine, int32_t, true, true, true>
   {
-    inline static EnumType NONE             { CreateEnum( "NULL"          , 0xFF ) };
-    inline static EnumType NO_SIEGE_ENGINE  { CreateEnum( "None"          , 0x00 ) };
-    inline static EnumType CATAPULT         { CreateEnum( "Catapult"      , 0x27 ) }; 
-    inline static EnumType TREBUCHET        { CreateEnum( "Trebuchet"     , 0x28 ) }; 
-    inline static EnumType MANGONEL         { CreateEnum( "Mangonel"      , 0x29 ) }; 
-    inline static EnumType TENT             { CreateEnum( "Tent"          , 0x32 ) }; 
-    inline static EnumType SIEGETOWER       { CreateEnum( "SiegeTower"    , 0x3A ) }; 
-    inline static EnumType BATTERINGRAM     { CreateEnum( "BatteringRam"  , 0x3B ) }; 
-    inline static EnumType SHIELD           { CreateEnum( "Shield"        , 0x3C ) }; 
-    inline static EnumType TOWERBALLISTA    { CreateEnum( "TowerBallista" , 0x3D ) }; 
-    inline static EnumType FIREBALLISTA     { CreateEnum( "FireBallista"  , 0x4D ) };
+    inline static EnumType None             { CreateEnum( "NULL"          , 0xFF ) };
+    inline static EnumType NoSiegeEngine    { CreateEnum( "None"          , 0x00 ) };
+    inline static EnumType Catapult         { CreateEnum( "Catapult"      , 0x27 ) }; 
+    inline static EnumType Trebuchet        { CreateEnum( "Trebuchet"     , 0x28 ) }; 
+    inline static EnumType Mangonel         { CreateEnum( "Mangonel"      , 0x29 ) }; 
+    inline static EnumType Tent             { CreateEnum( "Tent"          , 0x32 ) }; 
+    inline static EnumType SiegeTower       { CreateEnum( "SiegeTower"    , 0x3A ) }; 
+    inline static EnumType BatteringRam     { CreateEnum( "BatteringRam"  , 0x3B ) }; 
+    inline static EnumType Shield           { CreateEnum( "Shield"        , 0x3C ) }; 
+    inline static EnumType TowerBallista    { CreateEnum( "TowerBallista" , 0x3D ) }; 
+    inline static EnumType FireBallista     { CreateEnum( "FireBallista"  , 0x4D ) };
   };
 
 
   inline static constexpr char harassingSiegeEngine[]{ "HarassingSiegeEngine" };
   struct HarassingSiegeEngine : PseudoEnum<harassingSiegeEngine, int32_t, true, true, true>
   {
-    inline static EnumType NONE              { CreateEnum( "NULL"          , 0xFFFF ) };
-    inline static EnumType NO_SIEGE_ENGINE   { CreateEnum( "None"          , 0x00   ) };
-    inline static EnumType CATAPULT          { CreateEnum( "Catapult"      , 0xBE   ) };
-    inline static EnumType FIREBALLISTA      { CreateEnum( "FireBallista"  , 0x166  ) };
+    inline static EnumType None              { CreateEnum( "NULL"          , 0xFFFF ) };
+    inline static EnumType NoSiegeEngine     { CreateEnum( "None"          , 0x00   ) };
+    inline static EnumType Catapult          { CreateEnum( "Catapult"      , 0xBE   ) };
+    inline static EnumType FireBallista      { CreateEnum( "FireBallista"  , 0x166  ) };
   };
 
 
@@ -111,12 +111,12 @@ namespace modclasses
   inline static constexpr char targetingType[]{ "TargetingType" };
   struct TargetingType : PseudoEnum<targetingType, int32_t, true, true, true>
   {
-    inline static EnumType NONE        { CreateEnum( "NULL"      , 99 ) };    // wrong input
-    inline static EnumType GOLD        { CreateEnum( "Gold"      , 0  ) };    // Highest gold
-    inline static EnumType BALANCED    { CreateEnum( "Balanced"  , 1  ) };    // average of weakest / closest enemy
-    inline static EnumType CLOSEST     { CreateEnum( "Closest"   , 2  ) };    // closest enemy
-    inline static EnumType ANY         { CreateEnum( "Any"       , 3  ) };    // Nothing specified
-    inline static EnumType PLAYER      { CreateEnum( "Player"    , 4  ) };    // player or if no players are left for the closest AI
+    inline static EnumType None        { CreateEnum( "NULL"      , 99 ) };    // wrong input
+    inline static EnumType Gold        { CreateEnum( "Gold"      , 0  ) };    // Highest gold
+    inline static EnumType Balanced    { CreateEnum( "Balanced"  , 1  ) };    // average of weakest / closest enemy
+    inline static EnumType Closest     { CreateEnum( "Closest"   , 2  ) };    // closest enemy
+    inline static EnumType Any         { CreateEnum( "Any"       , 3  ) };    // Nothing specified
+    inline static EnumType Player      { CreateEnum( "Player"    , 4  ) };    // player or if no players are left for the closest AI
   };
 
 
@@ -124,30 +124,30 @@ namespace modclasses
   inline static constexpr char fletcherSetting[]{ "FletcherSetting" };
   struct FletcherSetting : PseudoEnum<fletcherSetting, int32_t, true, true, true>
   {
-    inline static EnumType NONE         { CreateEnum( "NULL"      , 0xFFFF ) }; // wrong input
-    inline static EnumType BOWS         { CreateEnum( "Bows"      , 0x11   ) };
-    inline static EnumType CROSSBOWS    { CreateEnum( "Crossbows" , 0x12   ) };
-    inline static EnumType BOTH         { CreateEnum( "Both"      , -999   ) };
+    inline static EnumType None         { CreateEnum( "NULL"      , 0xFFFF ) }; // wrong input
+    inline static EnumType Bows         { CreateEnum( "Bows"      , 0x11   ) };
+    inline static EnumType Crossbows    { CreateEnum( "Crossbows" , 0x12   ) };
+    inline static EnumType Both         { CreateEnum( "Both"      , -999   ) };
   };
 
 
   inline static constexpr char poleturnerSetting[]{ "PoleturnerSetting" };
   struct PoleturnerSetting : PseudoEnum<poleturnerSetting, int32_t, true, true, true>
   {
-    inline static EnumType NONE        { CreateEnum( "NULL"     , 0xFFFF ) }; // wrong input
-    inline static EnumType SPEARS      { CreateEnum( "Spears"   , 0x13   ) };
-    inline static EnumType PIKES       { CreateEnum( "Pikes"    , 0x14   ) };
-    inline static EnumType BOTH        { CreateEnum( "Both"     , -999   ) };
+    inline static EnumType None        { CreateEnum( "NULL"     , 0xFFFF ) }; // wrong input
+    inline static EnumType Spears      { CreateEnum( "Spears"   , 0x13   ) };
+    inline static EnumType Pikes       { CreateEnum( "Pikes"    , 0x14   ) };
+    inline static EnumType Both        { CreateEnum( "Both"     , -999   ) };
   };
 
 
   inline static constexpr char blacksmithSetting[]{ "BlacksmithSetting" };
   struct BlacksmithSetting : PseudoEnum<blacksmithSetting, int32_t, true, true, true>
   {
-    inline static EnumType NONE       { CreateEnum( "NULL"      , 0xFFFF ) };  // wrong input
-    inline static EnumType MACES      { CreateEnum( "Maces"     , 0x15   ) };
-    inline static EnumType SWORD      { CreateEnum( "Swords"    , 0x16   ) };
-    inline static EnumType BOTH       { CreateEnum( "Both"      , -999   ) };
+    inline static EnumType None       { CreateEnum( "NULL"      , 0xFFFF ) };  // wrong input
+    inline static EnumType Maces      { CreateEnum( "Maces"     , 0x15   ) };
+    inline static EnumType Sword      { CreateEnum( "Swords"    , 0x16   ) };
+    inline static EnumType Both       { CreateEnum( "Both"      , -999   ) };
   };
 
 
@@ -155,158 +155,158 @@ namespace modclasses
   inline static constexpr char unit[]{ "Unit" };
   struct Unit : PseudoEnum<unit, int32_t, true, true, true>
   {
-    inline static EnumType NONE             { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
-    inline static EnumType NO_UNIT          { CreateEnum( "None"            , 0x00   ) };
-    inline static EnumType TUNNELER         { CreateEnum( "Tunneler"        , 0x05   ) };
-    inline static EnumType EUROPARCHER      { CreateEnum( "EuropArcher"     , 0x16   ) };
-    inline static EnumType CROSSBOWMAN      { CreateEnum( "Crossbowman"     , 0x17   ) };
-    inline static EnumType SPEARMAN         { CreateEnum( "Spearman"        , 0x18   ) };
-    inline static EnumType PIKEMAN          { CreateEnum( "Pikeman"         , 0x19   ) };
-    inline static EnumType MACEMAN          { CreateEnum( "Maceman"         , 0x1A   ) };
-    inline static EnumType SWORDSMAN        { CreateEnum( "Swordsman"       , 0x1B   ) };
-    inline static EnumType KNIGHT           { CreateEnum( "Knight"          , 0x1C   ) };
-    inline static EnumType LADDERMAN        { CreateEnum( "Ladderman"       , 0x1D   ) };
-    inline static EnumType ENGINEER         { CreateEnum( "Engineer"        , 0x1E   ) };
-    inline static EnumType MONK             { CreateEnum( "Monk"            , 0x25   ) };
-    inline static EnumType ARABARCHER       { CreateEnum( "ArabArcher"      , 0x46   ) };
-    inline static EnumType SLAVE            { CreateEnum( "Slave"           , 0x47   ) };
-    inline static EnumType SLINGER          { CreateEnum( "Slinger"         , 0x48   ) };
-    inline static EnumType ASSASSIN         { CreateEnum( "Assassin"        , 0x49   ) };
-    inline static EnumType HORSEARCHER      { CreateEnum( "HorseArcher"     , 0x4A   ) };
-    inline static EnumType ARABSWORDSMAN    { CreateEnum( "ArabSwordsman"   , 0x4B   ) };
-    inline static EnumType FIRETHROWER      { CreateEnum( "FireThrower"     , 0x4C   ) };
+    inline static EnumType None             { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
+    inline static EnumType NoUnit           { CreateEnum( "None"            , 0x00   ) };
+    inline static EnumType Tunneler         { CreateEnum( "Tunneler"        , 0x05   ) };
+    inline static EnumType EuropArcher      { CreateEnum( "EuropArcher"     , 0x16   ) };
+    inline static EnumType Crossbowman      { CreateEnum( "Crossbowman"     , 0x17   ) };
+    inline static EnumType Spearman         { CreateEnum( "Spearman"        , 0x18   ) };
+    inline static EnumType Pikeman          { CreateEnum( "Pikeman"         , 0x19   ) };
+    inline static EnumType Maceman          { CreateEnum( "Maceman"         , 0x1A   ) };
+    inline static EnumType Swordsman        { CreateEnum( "Swordsman"       , 0x1B   ) };
+    inline static EnumType Knight           { CreateEnum( "Knight"          , 0x1C   ) };
+    inline static EnumType Ladderman        { CreateEnum( "Ladderman"       , 0x1D   ) };
+    inline static EnumType Engineer         { CreateEnum( "Engineer"        , 0x1E   ) };
+    inline static EnumType Monk             { CreateEnum( "Monk"            , 0x25   ) };
+    inline static EnumType ArabArcher       { CreateEnum( "ArabArcher"      , 0x46   ) };
+    inline static EnumType Slave            { CreateEnum( "Slave"           , 0x47   ) };
+    inline static EnumType Slinger          { CreateEnum( "Slinger"         , 0x48   ) };
+    inline static EnumType Assassin         { CreateEnum( "Assassin"        , 0x49   ) };
+    inline static EnumType HorseArcher      { CreateEnum( "HorseArcher"     , 0x4A   ) };
+    inline static EnumType ArabSwordsman    { CreateEnum( "ArabSwordsman"   , 0x4B   ) };
+    inline static EnumType FireThrower      { CreateEnum( "FireThrower"     , 0x4C   ) };
   };
 
 
   inline static constexpr char diggingUnit[]{ "DiggingUnit" };
   struct DiggingUnit : PseudoEnum<diggingUnit, int32_t, true, true, true>
   {
-    inline static EnumType NONE              { CreateEnum( "NULL"          , 0xFFFF ) }; // wrong input
-    inline static EnumType NO_DIGGING_UNIT   { CreateEnum( "None"          , 0x00   ) };
-    inline static EnumType EUROPARCHER       { CreateEnum( "EuropArcher"   , 0x16   ) };
-    inline static EnumType SPEARMAN          { CreateEnum( "Spearman"      , 0x18   ) };
-    inline static EnumType PIKEMAN           { CreateEnum( "Pikeman"       , 0x19   ) };
-    inline static EnumType MACEMAN           { CreateEnum( "Maceman"       , 0x1A   ) };
-    inline static EnumType ENGINEER          { CreateEnum( "Engineer"      , 0x1E   ) };
-    inline static EnumType SLAVE             { CreateEnum( "Slave"         , 0x47   ) };
+    inline static EnumType None              { CreateEnum( "NULL"          , 0xFFFF ) }; // wrong input
+    inline static EnumType NoDiggingUnit     { CreateEnum( "None"          , 0x00   ) };
+    inline static EnumType EuropArcher       { CreateEnum( "EuropArcher"   , 0x16   ) };
+    inline static EnumType Spearman          { CreateEnum( "Spearman"      , 0x18   ) };
+    inline static EnumType Pikeman           { CreateEnum( "Pikeman"       , 0x19   ) };
+    inline static EnumType Maceman           { CreateEnum( "Maceman"       , 0x1A   ) };
+    inline static EnumType Engineer          { CreateEnum( "Engineer"      , 0x1E   ) };
+    inline static EnumType Slave             { CreateEnum( "Slave"         , 0x47   ) };
   };
 
 
   inline static constexpr char meleeUnit[]{ "MeleeUnit" };
   struct MeleeUnit : PseudoEnum<meleeUnit, int32_t, true, true, true>
   {
-    inline static EnumType NONE              { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
-    inline static EnumType NO_MELEE_UNIT     { CreateEnum( "None"            , 0x00   ) };
-    inline static EnumType TUNNELER          { CreateEnum( "Tunneler"        , 0x05   ) };
-    inline static EnumType SPEARMAN          { CreateEnum( "Spearman"        , 0x18   ) };
-    inline static EnumType PIKEMAN           { CreateEnum( "Pikeman"         , 0x19   ) };
-    inline static EnumType MACEMAN           { CreateEnum( "Maceman"         , 0x1A   ) };
-    inline static EnumType SWORDSMAN         { CreateEnum( "Swordsman"       , 0x1B   ) };
-    inline static EnumType KNIGHT            { CreateEnum( "Knight"          , 0x1C   ) };
-  //inline static EnumType LADDERMAN         { CreateEnum( "Ladderman"       , 0x1D   ) };
-  //inline static EnumType ENGINEER          { CreateEnum( "Engineer"        , 0x1E   ) };
-    inline static EnumType MONK              { CreateEnum( "Monk"            , 0x25   ) };
-    inline static EnumType SLAVE             { CreateEnum( "Slave"           , 0x47   ) };
-    inline static EnumType ASSASSIN          { CreateEnum( "Assassin"        , 0x49   ) };
-    inline static EnumType ARABSWORDSMAN     { CreateEnum( "ArabSwordsman"   , 0x4B   ) };
+    inline static EnumType None              { CreateEnum( "NULL"            , 0xFFFF ) }; // wrong input
+    inline static EnumType NoMeleeUnit       { CreateEnum( "None"            , 0x00   ) };
+    inline static EnumType Tunneler          { CreateEnum( "Tunneler"        , 0x05   ) };
+    inline static EnumType Spearman          { CreateEnum( "Spearman"        , 0x18   ) };
+    inline static EnumType Pikeman           { CreateEnum( "Pikeman"         , 0x19   ) };
+    inline static EnumType Maceman           { CreateEnum( "Maceman"         , 0x1A   ) };
+    inline static EnumType Swordsman         { CreateEnum( "Swordsman"       , 0x1B   ) };
+    inline static EnumType Knight            { CreateEnum( "Knight"          , 0x1C   ) };
+  //inline static EnumType Ladderman         { CreateEnum( "Ladderman"       , 0x1D   ) };
+  //inline static EnumType Engineer          { CreateEnum( "Engineer"        , 0x1E   ) };
+    inline static EnumType Monk              { CreateEnum( "Monk"            , 0x25   ) };
+    inline static EnumType Slave             { CreateEnum( "Slave"           , 0x47   ) };
+    inline static EnumType Assassin          { CreateEnum( "Assassin"        , 0x49   ) };
+    inline static EnumType ArabSwordsman     { CreateEnum( "ArabSwordsman"   , 0x4B   ) };
   };
 
 
   inline static constexpr char rangedUnit[]{ "RangedUnit" };
   struct RangedUnit : PseudoEnum<rangedUnit, int32_t, true, true, true>
   {
-    inline static EnumType NONE              { CreateEnum( "NULL"           , 0xFFFF ) }; // wrong input
-    inline static EnumType NO_RANGED_UNIT    { CreateEnum( "None"           , 0x00   ) };
-    inline static EnumType EUROPARCHER       { CreateEnum( "EuropArcher"    , 0x16   ) };
-    inline static EnumType CROSSBOWMAN       { CreateEnum( "Crossbowman"    , 0x17   ) };
-    inline static EnumType ARABARCHER        { CreateEnum( "ArabArcher"     , 0x46   ) };
-    inline static EnumType SLINGER           { CreateEnum( "Slinger"        , 0x48   ) };
-    inline static EnumType HORSEARCHER       { CreateEnum( "HorseArcher"    , 0x4A   ) };
-    inline static EnumType FIRETHROWER       { CreateEnum( "FireThrower"    , 0x4C   ) };
+    inline static EnumType None              { CreateEnum( "NULL"           , 0xFFFF ) }; // wrong input
+    inline static EnumType NoRangedUnit      { CreateEnum( "None"           , 0x00   ) };
+    inline static EnumType EuropArcher       { CreateEnum( "EuropArcher"    , 0x16   ) };
+    inline static EnumType Crossbowman       { CreateEnum( "Crossbowman"    , 0x17   ) };
+    inline static EnumType ArabArcher        { CreateEnum( "ArabArcher"     , 0x46   ) };
+    inline static EnumType Slinger           { CreateEnum( "Slinger"        , 0x48   ) };
+    inline static EnumType HorseArcher       { CreateEnum( "HorseArcher"    , 0x4A   ) };
+    inline static EnumType FireThrower       { CreateEnum( "FireThrower"    , 0x4C   ) };
   };
 
 
   inline static constexpr char npc[]{ "NPC" };
   struct NPC : PseudoEnum<npc, int32_t, true, true, true>
   {
-    inline static EnumType NONE              { CreateEnum( "NULL"               , 0x00 ) };
-    inline static EnumType PEASANT           { CreateEnum( "Peasant"            , 1    ) };
-    inline static EnumType BURNINGMAN        { CreateEnum( "BurningMan"         , 2    ) };
-    inline static EnumType LUMBERJACK        { CreateEnum( "Lumberjack"         , 3    ) };
-    inline static EnumType FLETCHER          { CreateEnum( "Fletcher"           , 4    ) };
-    inline static EnumType TUNNELER          { CreateEnum( "Tunneler"           , 5    ) };
-    inline static EnumType HUNTER            { CreateEnum( "Hunter"             , 6    ) };
-    inline static EnumType UNKNOWN_7         { CreateEnum( "Unknown7"           , 7    ) };
-    inline static EnumType UNKNOWN_8         { CreateEnum( "Unknown8"           , 8    ) };
-    inline static EnumType UNKNOWN_9         { CreateEnum( "Unknown9"           , 9    ) };
-    inline static EnumType PITCHWORKER       { CreateEnum( "PitchWorker"        , 10   ) };
-    inline static EnumType UNKNOWN_11        { CreateEnum( "Unknown11"          , 11   ) };
-    inline static EnumType UNKNOWN_12        { CreateEnum( "Unknown12"          , 12   ) };
-    inline static EnumType UNKNOWN_13        { CreateEnum( "Unknown13"          , 13   ) };
-    inline static EnumType UNKNOWN_14        { CreateEnum( "Unknown14"          , 14   ) };
-    inline static EnumType CHILD             { CreateEnum( "Child"              , 15   ) };
-    inline static EnumType BAKER             { CreateEnum( "Baker"              , 16   ) };
-    inline static EnumType WOMAN             { CreateEnum( "Woman"              , 17   ) };
-    inline static EnumType POLETURNER        { CreateEnum( "Poleturner"         , 18   ) };
-    inline static EnumType SMITH             { CreateEnum( "Smith"              , 19   ) };
-    inline static EnumType ARMORER           { CreateEnum( "Armorer"            , 20   ) };
-    inline static EnumType TANNER            { CreateEnum( "Tanner"             , 21   ) };
-    inline static EnumType EUROPARCHER       { CreateEnum( "EuropArcher"        , 22   ) };
-    inline static EnumType CROSSBOWMAN       { CreateEnum( "CrossbowMan"        , 23   ) };
-    inline static EnumType SPEARMAN          { CreateEnum( "Spearman"           , 24   ) };
-    inline static EnumType PIKEMAN           { CreateEnum( "Pikeman"            , 25   ) };
-    inline static EnumType MACEMAN           { CreateEnum( "Maceman"            , 26   ) };
-    inline static EnumType SWORDSMAN         { CreateEnum( "Swordsman"          , 27   ) };
-    inline static EnumType KNIGHT            { CreateEnum( "Knight"             , 28   ) };
-    inline static EnumType LADDERMAN         { CreateEnum( "Ladderman"          , 29   ) };
-    inline static EnumType ENGINEER          { CreateEnum( "Engineer"           , 30   ) };
-    inline static EnumType UNKNOWN_31        { CreateEnum( "Unknown31"          , 31   ) };
-    inline static EnumType UNKNOWN_32        { CreateEnum( "Unknown32"          , 32   ) };
-    inline static EnumType PRIEST            { CreateEnum( "Priest"             , 33   ) };
-    inline static EnumType UNKNOWN_34        { CreateEnum( "Unknown34"          , 34   ) };
-    inline static EnumType DRUNKARD          { CreateEnum( "Drunkard"           , 35   ) };
-    inline static EnumType INNKEEPER         { CreateEnum( "Innkeeper"          , 36   ) };
-    inline static EnumType MONK              { CreateEnum( "Monk"               , 37   ) };
-    inline static EnumType UNKNOWN_38        { CreateEnum( "Unknown38"          , 38   ) };
-    inline static EnumType CATAPULT          { CreateEnum( "Catapult"           , 39   ) };
-    inline static EnumType TREBUCHET         { CreateEnum( "Trebuchet"          , 40   ) };
-    inline static EnumType MANGONEL          { CreateEnum( "Mangonel"           , 41   ) };
-    inline static EnumType UNKNOWN_42        { CreateEnum( "Unknown42"          , 42   ) };
-    inline static EnumType UNKNOWN_43        { CreateEnum( "Unknown43"          , 43   ) };
-    inline static EnumType ANTELOPE          { CreateEnum( "Antelope"           , 44   ) };
-    inline static EnumType LION              { CreateEnum( "Lion"               , 45   ) };
-    inline static EnumType RABBIT            { CreateEnum( "Rabbit"             , 46   ) };
-    inline static EnumType CAMEL             { CreateEnum( "Camel"              , 47   ) };
-    inline static EnumType UNKNOWN_48        { CreateEnum( "Unknown48"          , 48   ) };
-    inline static EnumType UNKNOWN_49        { CreateEnum( "Unknown49"          , 49   ) };
-    inline static EnumType SIEGETENT         { CreateEnum( "SiegeTent"          , 50   ) };
-    inline static EnumType UNKNOWN_51        { CreateEnum( "Unknown51"          , 51   ) };
-    inline static EnumType UNKNOWN_52        { CreateEnum( "Unknown52"          , 52   ) };
-    inline static EnumType FIREMAN           { CreateEnum( "Fireman"            , 53   ) };
-    inline static EnumType GHOST             { CreateEnum( "Ghost"              , 54   ) };
-    inline static EnumType LORD              { CreateEnum( "Lord"               , 55   ) };
-    inline static EnumType LADY              { CreateEnum( "Lady"               , 56   ) };
-    inline static EnumType JESTER            { CreateEnum( "Jester"             , 57   ) };
-    inline static EnumType SIEGETOWER        { CreateEnum( "Siegetower"         , 58   ) };
-    inline static EnumType RAM               { CreateEnum( "Ram"                , 59   ) };
-    inline static EnumType SHIELD            { CreateEnum( "Shield"             , 60   ) };
-    inline static EnumType BALLISTA          { CreateEnum( "Ballista"           , 61   ) };
-    inline static EnumType CHICKEN           { CreateEnum( "Chicken"            , 62   ) };
-    inline static EnumType UNKNOWN_63        { CreateEnum( "Unknown63"          , 63   ) };
-    inline static EnumType UNKNOWN_64        { CreateEnum( "Unknown64"          , 64   ) };
-    inline static EnumType JUGGLER           { CreateEnum( "Juggler"            , 65   ) };
-    inline static EnumType FIREEATER         { CreateEnum( "FireEater"          , 66   ) };
-    inline static EnumType DOG               { CreateEnum( "Dog"                , 67   ) };
-    inline static EnumType UNKNOWN_68        { CreateEnum( "Unknown68"          , 68   ) };
-    inline static EnumType UNKNOWN_69        { CreateEnum( "Unknown69"          , 69   ) };
-    inline static EnumType ARABARCHER        { CreateEnum( "ArabArcher"         , 70   ) };
-    inline static EnumType SLAVE             { CreateEnum( "Slave"              , 71   ) };
-    inline static EnumType SLINGER           { CreateEnum( "Slinger"            , 72   ) };
-    inline static EnumType ASSASSIN          { CreateEnum( "Assassin"           , 73   ) };
-    inline static EnumType HORSEARCHER       { CreateEnum( "HorseArcher"        , 74   ) };
-    inline static EnumType ARABSWORDSMAN     { CreateEnum( "ArabSwordsman"      , 75   ) };
-    inline static EnumType FIRETHROWER       { CreateEnum( "FireThrower"        , 76   ) };
-    inline static EnumType FIREBALLISTA      { CreateEnum( "FireBallista"       , 77   ) };                                                     
+    inline static EnumType None              { CreateEnum( "NULL"               , 0x00 ) };
+    inline static EnumType Peasant           { CreateEnum( "Peasant"            , 1    ) };
+    inline static EnumType BurningMan        { CreateEnum( "BurningMan"         , 2    ) };
+    inline static EnumType Lumberjack        { CreateEnum( "Lumberjack"         , 3    ) };
+    inline static EnumType Fletcher          { CreateEnum( "Fletcher"           , 4    ) };
+    inline static EnumType Tunneler          { CreateEnum( "Tunneler"           , 5    ) };
+    inline static EnumType Hunter            { CreateEnum( "Hunter"             , 6    ) };
+    inline static EnumType Unknown7          { CreateEnum( "Unknown7"           , 7    ) };
+    inline static EnumType Unknown8          { CreateEnum( "Unknown8"           , 8    ) };
+    inline static EnumType Unknown9          { CreateEnum( "Unknown9"           , 9    ) };
+    inline static EnumType PitchWorker       { CreateEnum( "PitchWorker"        , 10   ) };
+    inline static EnumType Unknown11         { CreateEnum( "Unknown11"          , 11   ) };
+    inline static EnumType Unknown12         { CreateEnum( "Unknown12"          , 12   ) };
+    inline static EnumType Unknown13         { CreateEnum( "Unknown13"          , 13   ) };
+    inline static EnumType Unknown14         { CreateEnum( "Unknown14"          , 14   ) };
+    inline static EnumType Child             { CreateEnum( "Child"              , 15   ) };
+    inline static EnumType Baker             { CreateEnum( "Baker"              , 16   ) };
+    inline static EnumType Woman             { CreateEnum( "Woman"              , 17   ) };
+    inline static EnumType Poleturner        { CreateEnum( "Poleturner"         , 18   ) };
+    inline static EnumType Smith             { CreateEnum( "Smith"              , 19   ) };
+    inline static EnumType Armorer           { CreateEnum( "Armorer"            , 20   ) };
+    inline static EnumType Tanner            { CreateEnum( "Tanner"             , 21   ) };
+    inline static EnumType EuropArcher       { CreateEnum( "EuropArcher"        , 22   ) };
+    inline static EnumType Crossbowman       { CreateEnum( "CrossbowMan"        , 23   ) };
+    inline static EnumType Spearman          { CreateEnum( "Spearman"           , 24   ) };
+    inline static EnumType Pikeman           { CreateEnum( "Pikeman"            , 25   ) };
+    inline static EnumType Maceman           { CreateEnum( "Maceman"            , 26   ) };
+    inline static EnumType Swordsman         { CreateEnum( "Swordsman"          , 27   ) };
+    inline static EnumType Knight            { CreateEnum( "Knight"             , 28   ) };
+    inline static EnumType Ladderman         { CreateEnum( "Ladderman"          , 29   ) };
+    inline static EnumType Engineer          { CreateEnum( "Engineer"           , 30   ) };
+    inline static EnumType Unknown31         { CreateEnum( "Unknown31"          , 31   ) };
+    inline static EnumType Unknown32         { CreateEnum( "Unknown32"          , 32   ) };
+    inline static EnumType Priest            { CreateEnum( "Priest"             , 33   ) };
+    inline static EnumType Unknown34         { CreateEnum( "Unknown34"          , 34   ) };
+    inline static EnumType Drunkard          { CreateEnum( "Drunkard"           , 35   ) };
+    inline static EnumType Innkeeper         { CreateEnum( "Innkeeper"          , 36   ) };
+    inline static EnumType Monk              { CreateEnum( "Monk"               , 37   ) };
+    inline static EnumType Unknown38         { CreateEnum( "Unknown38"          , 38   ) };
+    inline static EnumType Catapult          { CreateEnum( "Catapult"           , 39   ) };
+    inline static EnumType Trebuchet         { CreateEnum( "Trebuchet"          , 40   ) };
+    inline static EnumType Mangonel          { CreateEnum( "Mangonel"           , 41   ) };
+    inline static EnumType Unknown42         { CreateEnum( "Unknown42"          , 42   ) };
+    inline static EnumType Unknown43         { CreateEnum( "Unknown43"          , 43   ) };
+    inline static EnumType Antelope          { CreateEnum( "Antelope"           , 44   ) };
+    inline static EnumType Lion              { CreateEnum( "Lion"               , 45   ) };
+    inline static EnumType Rabbit            { CreateEnum( "Rabbit"             , 46   ) };
+    inline static EnumType Camel             { CreateEnum( "Camel"              , 47   ) };
+    inline static EnumType Unknown48         { CreateEnum( "Unknown48"          , 48   ) };
+    inline static EnumType Unknown49         { CreateEnum( "Unknown49"          , 49   ) };
+    inline static EnumType SiegeTent         { CreateEnum( "SiegeTent"          , 50   ) };
+    inline static EnumType Unknown51         { CreateEnum( "Unknown51"          , 51   ) };
+    inline static EnumType Unknown52         { CreateEnum( "Unknown52"          , 52   ) };
+    inline static EnumType Fireman           { CreateEnum( "Fireman"            , 53   ) };
+    inline static EnumType Ghost             { CreateEnum( "Ghost"              , 54   ) };
+    inline static EnumType Lord              { CreateEnum( "Lord"               , 55   ) };
+    inline static EnumType Lady              { CreateEnum( "Lady"               , 56   ) };
+    inline static EnumType Jester            { CreateEnum( "Jester"             , 57   ) };
+    inline static EnumType Siegetower        { CreateEnum( "Siegetower"         , 58   ) };
+    inline static EnumType Ram               { CreateEnum( "Ram"                , 59   ) };
+    inline static EnumType Shield            { CreateEnum( "Shield"             , 60   ) };
+    inline static EnumType Ballista          { CreateEnum( "Ballista"           , 61   ) };
+    inline static EnumType Chicken           { CreateEnum( "Chicken"            , 62   ) };
+    inline static EnumType Unknown63         { CreateEnum( "Unknown63"          , 63   ) };
+    inline static EnumType Unknown64         { CreateEnum( "Unknown64"          , 64   ) };
+    inline static EnumType Juggler           { CreateEnum( "Juggler"            , 65   ) };
+    inline static EnumType FireEater         { CreateEnum( "FireEater"          , 66   ) };
+    inline static EnumType Dog               { CreateEnum( "Dog"                , 67   ) };
+    inline static EnumType Unknown68         { CreateEnum( "Unknown68"          , 68   ) };
+    inline static EnumType Unknown69         { CreateEnum( "Unknown69"          , 69   ) };
+    inline static EnumType ArabArcher        { CreateEnum( "ArabArcher"         , 70   ) };
+    inline static EnumType Slave             { CreateEnum( "Slave"              , 71   ) };
+    inline static EnumType Slinger           { CreateEnum( "Slinger"            , 72   ) };
+    inline static EnumType Assassin          { CreateEnum( "Assassin"           , 73   ) };
+    inline static EnumType HorseArcher       { CreateEnum( "HorseArcher"        , 74   ) };
+    inline static EnumType ArabSwordsman     { CreateEnum( "ArabSwordsman"      , 75   ) };
+    inline static EnumType FireThrower       { CreateEnum( "FireThrower"        , 76   ) };
+    inline static EnumType FireBallista      { CreateEnum( "FireBallista"       , 77   ) };                                                     
   };
 
 
@@ -314,176 +314,176 @@ namespace modclasses
   inline static constexpr char aIPersonalityFieldsEnum[]{ "AIPersonalityFieldsEnum" };
   struct AIPersonalityFieldsEnum : PseudoEnum<aIPersonalityFieldsEnum, int32_t, true, true, true>
   {
-    inline static EnumType UNKNOWN_000                            { CreateEnum( "Unknown000"                      , 0   ) };
-    inline static EnumType UNKNOWN_001                            { CreateEnum( "Unknown001"                      , 1   ) };
-    inline static EnumType UNKNOWN_002                            { CreateEnum( "Unknown002"                      , 2   ) };
-    inline static EnumType UNKNOWN_003                            { CreateEnum( "Unknown003"                      , 3   ) };
-    inline static EnumType UNKNOWN_004                            { CreateEnum( "Unknown004"                      , 4   ) };
-    inline static EnumType UNKNOWN_005                            { CreateEnum( "Unknown005"                      , 5   ) };
-    inline static EnumType CRITICAL_POPULARITY                    { CreateEnum( "CriticalPopularity"              , 6   ) };
-    inline static EnumType LOWEST_POPULARITY                      { CreateEnum( "LowestPopularity"                , 7   ) };
-    inline static EnumType HIGHEST_POPULARITY                     { CreateEnum( "HighestPopularity"               , 8   ) };
-    inline static EnumType TAXES_MIN                              { CreateEnum( "TaxesMin"                        , 9   ) };
-    inline static EnumType TAXES_MAX                              { CreateEnum( "TaxesMax"                        , 10  ) };
-    inline static EnumType UNKNOWN_011                            { CreateEnum( "Unknown011"                      , 11  ) };
-    inline static EnumType FARM_1                                 { CreateEnum( "Farm1"                           , 12  ) };
-    inline static EnumType FARM_2                                 { CreateEnum( "Farm2"                           , 13  ) };
-    inline static EnumType FARM_3                                 { CreateEnum( "Farm3"                           , 14  ) };
-    inline static EnumType FARM_4                                 { CreateEnum( "Farm4"                           , 15  ) };
-    inline static EnumType FARM_5                                 { CreateEnum( "Farm5"                           , 16  ) };
-    inline static EnumType FARM_6                                 { CreateEnum( "Farm6"                           , 17  ) };
-    inline static EnumType FARM_7                                 { CreateEnum( "Farm7"                           , 18  ) };
-    inline static EnumType FARM_8                                 { CreateEnum( "Farm8"                           , 19  ) };
-    inline static EnumType POPULATION_PER_FARM                    { CreateEnum( "PopulationPerFarm"               , 20  ) };
-    inline static EnumType POPULATION_PER_WOODCUTTER              { CreateEnum( "PopulationPerWoodcutter"         , 21  ) };
-    inline static EnumType POPULATION_PER_QUARRY                  { CreateEnum( "PopulationPerQuarry"             , 22  ) };
-    inline static EnumType POPULATION_PER_IRONMINE                { CreateEnum( "PopulationPerIronmine"           , 23  ) };
-    inline static EnumType POPULATION_PER_PITCHRIG                { CreateEnum( "PopulationPerPitchrig"           , 24  ) };
-    inline static EnumType MAX_QUARRIES                           { CreateEnum( "MaxQuarries"                     , 25  ) };
-    inline static EnumType MAX_IRONMINES                          { CreateEnum( "MaxIronmines"                    , 26  ) };
-    inline static EnumType MAX_WOODCUTTERS                        { CreateEnum( "MaxWoodcutters"                  , 27  ) };
-    inline static EnumType MAX_PITCHRIGS                          { CreateEnum( "MaxPitchrigs"                    , 28  ) };
-    inline static EnumType MAX_FARMS                              { CreateEnum( "MaxFarms"                        , 29  ) };
-    inline static EnumType BUILD_INTERVAL                         { CreateEnum( "BuildInterval"                   , 30  ) };
-    inline static EnumType RESOURCE_REBUILD_DELAY                 { CreateEnum( "ResourceRebuildDelay"            , 31  ) };
-    inline static EnumType MAX_FOOD                               { CreateEnum( "MaxFood"                         , 32  ) };
-    inline static EnumType MINIMUM_APPLES                         { CreateEnum( "MinimumApples"                   , 33  ) };
-    inline static EnumType MINIMUM_CHEESE                         { CreateEnum( "MinimumCheese"                   , 34  ) };
-    inline static EnumType MINIMUM_BREAD                          { CreateEnum( "MinimumBread"                    , 35  ) };
-    inline static EnumType MINIMUM_WHEAT                          { CreateEnum( "MinimumWheat"                    , 36  ) };
-    inline static EnumType MINIMUM_HOP                            { CreateEnum( "MinimumHop"                      , 37  ) };
-    inline static EnumType TRADE_AMOUNT_FOOD                      { CreateEnum( "TradeAmountFood"                 , 38  ) };
-    inline static EnumType TRADE_AMOUNT_EQUIPMENT                 { CreateEnum( "TradeAmountEquipment"            , 39  ) };
-    inline static EnumType UNKNOWN_040                            { CreateEnum( "Unknown040"                      , 40  ) };
-    inline static EnumType MINIMUM_GOODS_REQUIRED_AFTER_TRADE     { CreateEnum( "MinimumGoodsRequiredAfterTrade"  , 41  ) };
-    inline static EnumType DOUBLE_RATIONS_FOOD_THRESHOLD          { CreateEnum( "DoubleRationsFoodThreshold"      , 42  ) };
-    inline static EnumType MAX_WOOD                               { CreateEnum( "MaxWood"                         , 43  ) };
-    inline static EnumType MAX_STONE                              { CreateEnum( "MaxStone"                        , 44  ) };
-    inline static EnumType MAX_RESOURCE_OTHER                     { CreateEnum( "MaxResourceOther"                , 45  ) };
-    inline static EnumType MAX_EQUIPMENT                          { CreateEnum( "MaxEquipment"                    , 46  ) };
-    inline static EnumType MAX_BEER                               { CreateEnum( "MaxBeer"                         , 47  ) };
-    inline static EnumType MAX_RESOURCE_VARIANCE                  { CreateEnum( "MaxResourceVariance"             , 48  ) };
-    inline static EnumType RECRUIT_GOLD_THRESHOLD                 { CreateEnum( "RecruitGoldThreshold"            , 49  ) };
-    inline static EnumType BLACKSMITH_SETTING                     { CreateEnum( "BlacksmithSetting"               , 50  ) };
-    inline static EnumType FLETCHER_SETTING                       { CreateEnum( "FletcherSetting"                 , 51  ) };
-    inline static EnumType POLETURNER_SETTING                     { CreateEnum( "PoleturnerSetting"               , 52  ) };
-    inline static EnumType SELL_RESOURCE_01                       { CreateEnum( "SellResource01"                  , 53  ) };
-    inline static EnumType SELL_RESOURCE_02                       { CreateEnum( "SellResource02"                  , 54  ) };
-    inline static EnumType SELL_RESOURCE_03                       { CreateEnum( "SellResource03"                  , 55  ) };
-    inline static EnumType SELL_RESOURCE_04                       { CreateEnum( "SellResource04"                  , 56  ) };
-    inline static EnumType SELL_RESOURCE_05                       { CreateEnum( "SellResource05"                  , 57  ) };
-    inline static EnumType SELL_RESOURCE_06                       { CreateEnum( "SellResource06"                  , 58  ) };
-    inline static EnumType SELL_RESOURCE_07                       { CreateEnum( "SellResource07"                  , 59  ) };
-    inline static EnumType SELL_RESOURCE_08                       { CreateEnum( "SellResource08"                  , 60  ) };
-    inline static EnumType SELL_RESOURCE_09                       { CreateEnum( "SellResource09"                  , 61  ) };
-    inline static EnumType SELL_RESOURCE_10                       { CreateEnum( "SellResource10"                  , 62  ) };
-    inline static EnumType SELL_RESOURCE_11                       { CreateEnum( "SellResource11"                  , 63  ) };
-    inline static EnumType SELL_RESOURCE_12                       { CreateEnum( "SellResource12"                  , 64  ) };
-    inline static EnumType SELL_RESOURCE_13                       { CreateEnum( "SellResource13"                  , 65  ) };
-    inline static EnumType SELL_RESOURCE_14                       { CreateEnum( "SellResource14"                  , 66  ) };
-    inline static EnumType SELL_RESOURCE_15                       { CreateEnum( "SellResource15"                  , 67  ) };
-    inline static EnumType DEF_WALLPATROL_RALLYTIME               { CreateEnum( "DefWallPatrolRallyTime"          , 68  ) };
-    inline static EnumType DEF_WALLPATROL_GROUPS                  { CreateEnum( "DefWallPatrolGroups"             , 69  ) };
-    inline static EnumType DEF_SIEGEENGINE_GOLD_THRESHOLD         { CreateEnum( "DefSiegeEngineGoldThreshold"     , 70  ) };
-    inline static EnumType DEF_SIEGEENGINE_BUILD_DELAY            { CreateEnum( "DefSiegeEngineBuildDelay"        , 71  ) };
-    inline static EnumType UNKNOWN_072                            { CreateEnum( "Unknown072"                      , 72  ) };
-    inline static EnumType UNKNOWN_073                            { CreateEnum( "Unknown073"                      , 73  ) };
-    inline static EnumType RECRUIT_PROB_DEF_DEFAULT               { CreateEnum( "RecruitProbDefDefault"           , 74  ) };
-    inline static EnumType RECRUIT_PROB_DEF_WEAK                  { CreateEnum( "RecruitProbDefWeak"              , 75  ) };
-    inline static EnumType RECRUIT_PROB_DEF_STRONG                { CreateEnum( "RecruitProbDefStrong"            , 76  ) };
-    inline static EnumType RECRUIT_PROB_RAID_DEFAULT              { CreateEnum( "RecruitProbRaidDefault"          , 77  ) };
-    inline static EnumType RECRUIT_PROB_RAID_WEAK                 { CreateEnum( "RecruitProbRaidWeak"             , 78  ) };
-    inline static EnumType RECRUIT_PROB_RAID_STRONG               { CreateEnum( "RecruitProbRaidStrong"           , 79  ) };
-    inline static EnumType RECRUIT_PROB_ATTACK_DEFAULT            { CreateEnum( "RecruitProbAttackDefault"        , 80  ) };
-    inline static EnumType RECRUIT_PROB_ATTACK_WEAK               { CreateEnum( "RecruitProbAttackWeak"           , 81  ) };
-    inline static EnumType RECRUIT_PROB_ATTACK_STRONG             { CreateEnum( "RecruitProbAttackStrong"         , 82  ) };
-    inline static EnumType SORTIE_UNIT_RANGED_MIN                 { CreateEnum( "SortieUnitRangedMin"             , 83  ) };
-    inline static EnumType SORTIE_UNIT_RANGED                     { CreateEnum( "SortieUnitRanged"                , 84  ) };
-    inline static EnumType SORTIE_UNIT_MELEE_MIN                  { CreateEnum( "SortieUnitMeleeMin"              , 85  ) };
-    inline static EnumType SORTIE_UNIT_MELEE                      { CreateEnum( "SortieUnitMelee"                 , 86  ) };
-    inline static EnumType DEF_DIGGING_UNIT_MAX                   { CreateEnum( "DefDiggingUnitMax"               , 87  ) };
-    inline static EnumType DEF_DIGGING_UNIT                       { CreateEnum( "DefDiggingUnit"                  , 88  ) };
-    inline static EnumType RECRUIT_INTERVAL                       { CreateEnum( "RecruitInterval"                 , 89  ) };
-    inline static EnumType RECRUIT_INTERVAL_WEAK                  { CreateEnum( "RecruitIntervalWeak"             , 90  ) };
-    inline static EnumType RECRUIT_INTERVAL_STRONG                { CreateEnum( "RecruitIntervalStrong"           , 91  ) };
-    inline static EnumType DEF_TOTAL                              { CreateEnum( "DefTotal"                        , 92  ) };
-    inline static EnumType OUTER_PATROL_GROUPS_COUNT              { CreateEnum( "OuterPatrolGroupsCount"          , 93  ) };
-    inline static EnumType OUTER_PATROL_GROUPS_MOVE               { CreateEnum( "OuterPatrolGroupsMove"           , 94  ) };
-    inline static EnumType OUTER_PATROL_RALLY_DELAY               { CreateEnum( "OuterPatrolRallyDelay"           , 95  ) };
-    inline static EnumType DEF_WALLS                              { CreateEnum( "DefWalls"                        , 96  ) };
-    inline static EnumType DEF_UNIT_1                             { CreateEnum( "DefUnit1"                        , 97  ) };
-    inline static EnumType DEF_UNIT_2                             { CreateEnum( "DefUnit2"                        , 98  ) };
-    inline static EnumType DEF_UNIT_3                             { CreateEnum( "DefUnit3"                        , 99  ) };
-    inline static EnumType DEF_UNIT_4                             { CreateEnum( "DefUnit4"                        , 100 ) };
-    inline static EnumType DEF_UNIT_5                             { CreateEnum( "DefUnit5"                        , 101 ) };
-    inline static EnumType DEF_UNIT_6                             { CreateEnum( "DefUnit6"                        , 102 ) };
-    inline static EnumType DEF_UNIT_7                             { CreateEnum( "DefUnit7"                        , 103 ) };
-    inline static EnumType DEF_UNIT_8                             { CreateEnum( "DefUnit8"                        , 104 ) };
-    inline static EnumType RAID_UNITS_BASE                        { CreateEnum( "RaidUnitsBase"                   , 105 ) };
-    inline static EnumType RAID_UNITS_RANDOM                      { CreateEnum( "RaidUnitsRandom"                 , 106 ) };
-    inline static EnumType RAID_UNIT_1                            { CreateEnum( "RaidUnit1"                       , 107 ) };
-    inline static EnumType RAID_UNIT_2                            { CreateEnum( "RaidUnit2"                       , 108 ) };
-    inline static EnumType RAID_UNIT_3                            { CreateEnum( "RaidUnit3"                       , 109 ) };
-    inline static EnumType RAID_UNIT_4                            { CreateEnum( "RaidUnit4"                       , 110 ) };
-    inline static EnumType RAID_UNIT_5                            { CreateEnum( "RaidUnit5"                       , 111 ) };
-    inline static EnumType RAID_UNIT_6                            { CreateEnum( "RaidUnit6"                       , 112 ) };
-    inline static EnumType RAID_UNIT_7                            { CreateEnum( "RaidUnit7"                       , 113 ) };
-    inline static EnumType RAID_UNIT_8                            { CreateEnum( "RaidUnit8"                       , 114 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_1               { CreateEnum( "HarassingSiegeEngine1"           , 115 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_2               { CreateEnum( "HarassingSiegeEngine2"           , 116 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_3               { CreateEnum( "HarassingSiegeEngine3"           , 117 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_4               { CreateEnum( "HarassingSiegeEngine4"           , 118 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_5               { CreateEnum( "HarassingSiegeEngine5"           , 119 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_6               { CreateEnum( "HarassingSiegeEngine6"           , 120 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_7               { CreateEnum( "HarassingSiegeEngine7"           , 121 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINE_8               { CreateEnum( "HarassingSiegeEngine8"           , 122 ) };
-    inline static EnumType HARASSING_SIEGE_ENGINES_MAX            { CreateEnum( "HarassingSiegeEnginesMax"        , 123 ) };
-    inline static EnumType UNKNOWN_124                            { CreateEnum( "Unknown124"                      , 124 ) };
-    inline static EnumType ATT_FORCE_BASE                         { CreateEnum( "AttForceBase"                    , 125 ) };
-    inline static EnumType ATT_FORCE_RANDOM                       { CreateEnum( "AttForceRandom"                  , 126 ) };
-    inline static EnumType ATT_FORCE_SUPPORT_ALLY_THRESHOLD       { CreateEnum( "AttForceSupportAllyThreshold"    , 127 ) };
-    inline static EnumType ATT_FORCE_RALLY_PERCENTAGE             { CreateEnum( "AttForceRallyPercentage"         , 128 ) };
-    inline static EnumType UNKNOWN_129                            { CreateEnum( "Unknown129"                      , 129 ) };
-    inline static EnumType UNKNOWN_130                            { CreateEnum( "Unknown130"                      , 130 ) };
-    inline static EnumType ATT_UNIT_PATROL_RECOMMAND_DELAY        { CreateEnum( "AttUnitPatrolRecommandDelay"     , 131 ) };
-    inline static EnumType UNKNOWN_132                            { CreateEnum( "Unknown132"                      , 132 ) };
-    inline static EnumType SIEGE_ENGINE_1                         { CreateEnum( "SiegeEngine1"                    , 133 ) };
-    inline static EnumType SIEGE_ENGINE_2                         { CreateEnum( "SiegeEngine2"                    , 134 ) };
-    inline static EnumType SIEGE_ENGINE_3                         { CreateEnum( "SiegeEngine3"                    , 135 ) };
-    inline static EnumType SIEGE_ENGINE_4                         { CreateEnum( "SiegeEngine4"                    , 136 ) };
-    inline static EnumType SIEGE_ENGINE_5                         { CreateEnum( "SiegeEngine5"                    , 137 ) };
-    inline static EnumType SIEGE_ENGINE_6                         { CreateEnum( "SiegeEngine6"                    , 138 ) };
-    inline static EnumType SIEGE_ENGINE_7                         { CreateEnum( "SiegeEngine7"                    , 139 ) };
-    inline static EnumType SIEGE_ENGINE_8                         { CreateEnum( "SiegeEngine8"                    , 140 ) };
-    inline static EnumType COW_THROW_INTERVAL                     { CreateEnum( "CowThrowInterval"                , 141 ) };
-    inline static EnumType UNKNOWN_142                            { CreateEnum( "Unknown142"                      , 142 ) };
-    inline static EnumType ATT_MAX_ENGINEERS                      { CreateEnum( "AttMaxEngineers"                 , 143 ) };
-    inline static EnumType ATT_DIGGING_UNIT                       { CreateEnum( "AttDiggingUnit"                  , 144 ) };
-    inline static EnumType ATT_DIGGING_UNIT_MAX                   { CreateEnum( "AttDiggingUnitMax"               , 145 ) };
-    inline static EnumType ATT_UNIT_2                             { CreateEnum( "AttUnit2"                        , 146 ) };
-    inline static EnumType ATT_UNIT_2_MAX                         { CreateEnum( "AttUnit2Max"                     , 147 ) };
-    inline static EnumType ATT_MAX_ASSASSINS                      { CreateEnum( "AttMaxAssassins"                 , 148 ) };
-    inline static EnumType ATT_MAX_LADDERMEN                      { CreateEnum( "AttMaxLaddermen"                 , 149 ) };
-    inline static EnumType ATT_MAX_TUNNELERS                      { CreateEnum( "AttMaxTunnelers"                 , 150 ) };
-    inline static EnumType ATT_UNIT_PATROL                        { CreateEnum( "AttUnitPatrol"                   , 151 ) };
-    inline static EnumType ATT_UNIT_PATROL_MAX                    { CreateEnum( "AttUnitPatrolMax"                , 152 ) };
-    inline static EnumType ATT_UNIT_PATROL_GROUPS_COUNT           { CreateEnum( "AttUnitPatrolGroupsCount"        , 153 ) };
-    inline static EnumType ATT_UNIT_BACKUP                        { CreateEnum( "AttUnitBackup"                   , 154 ) };
-    inline static EnumType ATT_UNIT_BACKUP_MAX                    { CreateEnum( "AttUnitBackupMax"                , 155 ) };
-    inline static EnumType ATT_UNIT_BACKUP_GROUPS_COUNT           { CreateEnum( "AttUnitBackupGroupsCount"        , 156 ) };
-    inline static EnumType ATT_UNIT_ENGAGE                        { CreateEnum( "AttUnitEngage"                   , 157 ) };
-    inline static EnumType ATT_UNIT_ENGAGE_MAX                    { CreateEnum( "AttUnitEngageMax"                , 158 ) };
-    inline static EnumType ATT_UNIT_SIEGE_DEF                     { CreateEnum( "AttUnitSiegeDef"                 , 159 ) };
-    inline static EnumType ATT_UNIT_SIEGE_DEF_MAX                 { CreateEnum( "AttUnitSiegeDefMax"              , 160 ) };
-    inline static EnumType ATT_UNIT_SIEGE_DEF_GROUPS_COUNT        { CreateEnum( "AttUnitSiegeDefGroupsCount"      , 161 ) };
-    inline static EnumType ATT_UNIT_MAIN_1                        { CreateEnum( "AttUnitMain1"                    , 162 ) };
-    inline static EnumType ATT_UNIT_MAIN_2                        { CreateEnum( "AttUnitMain2"                    , 163 ) };
-    inline static EnumType ATT_UNIT_MAIN_3                        { CreateEnum( "AttUnitMain3"                    , 164 ) };
-    inline static EnumType ATT_UNIT_MAIN_4                        { CreateEnum( "AttUnitMain4"                    , 165 ) };
-    inline static EnumType ATT_MAX_DEFAULT                        { CreateEnum( "AttMaxDefault"                   , 166 ) };
-    inline static EnumType ATT_MAIN_GROUPS_COUNT                  { CreateEnum( "AttMainGroupsCount"              , 167 ) };
-    inline static EnumType TARGET_CHOICE                          { CreateEnum( "TargetChoice"                    , 168 ) };
-    inline static EnumType NONE                                   { CreateEnum( "NULL"                            , 999 ) };
+    inline static EnumType Unknown000                             { CreateEnum( "Unknown000"                      , 0   ) };
+    inline static EnumType Unknown001                             { CreateEnum( "Unknown001"                      , 1   ) };
+    inline static EnumType Unknown002                             { CreateEnum( "Unknown002"                      , 2   ) };
+    inline static EnumType Unknown003                             { CreateEnum( "Unknown003"                      , 3   ) };
+    inline static EnumType Unknown004                             { CreateEnum( "Unknown004"                      , 4   ) };
+    inline static EnumType Unknown005                             { CreateEnum( "Unknown005"                      , 5   ) };
+    inline static EnumType CriticalPopularity                     { CreateEnum( "CriticalPopularity"              , 6   ) };
+    inline static EnumType LowestPopularity                       { CreateEnum( "LowestPopularity"                , 7   ) };
+    inline static EnumType HighestPopularity                      { CreateEnum( "HighestPopularity"               , 8   ) };
+    inline static EnumType TaxesMin                               { CreateEnum( "TaxesMin"                        , 9   ) };
+    inline static EnumType TaxesMax                               { CreateEnum( "TaxesMax"                        , 10  ) };
+    inline static EnumType Unknown011                             { CreateEnum( "Unknown011"                      , 11  ) };
+    inline static EnumType Farm1                                  { CreateEnum( "Farm1"                           , 12  ) };
+    inline static EnumType Farm2                                  { CreateEnum( "Farm2"                           , 13  ) };
+    inline static EnumType Farm3                                  { CreateEnum( "Farm3"                           , 14  ) };
+    inline static EnumType Farm4                                  { CreateEnum( "Farm4"                           , 15  ) };
+    inline static EnumType Farm5                                  { CreateEnum( "Farm5"                           , 16  ) };
+    inline static EnumType Farm6                                  { CreateEnum( "Farm6"                           , 17  ) };
+    inline static EnumType Farm7                                  { CreateEnum( "Farm7"                           , 18  ) };
+    inline static EnumType Farm8                                  { CreateEnum( "Farm8"                           , 19  ) };
+    inline static EnumType PopulationPerFarm                      { CreateEnum( "PopulationPerFarm"               , 20  ) };
+    inline static EnumType PopulationPerWoodcutter                { CreateEnum( "PopulationPerWoodcutter"         , 21  ) };
+    inline static EnumType PopulationPerQuarry                    { CreateEnum( "PopulationPerQuarry"             , 22  ) };
+    inline static EnumType PopulationPerIronmine                  { CreateEnum( "PopulationPerIronmine"           , 23  ) };
+    inline static EnumType PopulationPerPitchrig                  { CreateEnum( "PopulationPerPitchrig"           , 24  ) };
+    inline static EnumType MaxQuarries                            { CreateEnum( "MaxQuarries"                     , 25  ) };
+    inline static EnumType MaxIronmines                           { CreateEnum( "MaxIronmines"                    , 26  ) };
+    inline static EnumType MaxWoodcutters                         { CreateEnum( "MaxWoodcutters"                  , 27  ) };
+    inline static EnumType MaxPitchrigs                           { CreateEnum( "MaxPitchrigs"                    , 28  ) };
+    inline static EnumType MaxFarms                               { CreateEnum( "MaxFarms"                        , 29  ) };
+    inline static EnumType BuildInterval                          { CreateEnum( "BuildInterval"                   , 30  ) };
+    inline static EnumType ResourceRebuildDelay                   { CreateEnum( "ResourceRebuildDelay"            , 31  ) };
+    inline static EnumType MaxFood                                { CreateEnum( "MaxFood"                         , 32  ) };
+    inline static EnumType MinimumApples                          { CreateEnum( "MinimumApples"                   , 33  ) };
+    inline static EnumType MinimumCheese                          { CreateEnum( "MinimumCheese"                   , 34  ) };
+    inline static EnumType MinimumBread                           { CreateEnum( "MinimumBread"                    , 35  ) };
+    inline static EnumType MinimumWheat                           { CreateEnum( "MinimumWheat"                    , 36  ) };
+    inline static EnumType MinimumHop                             { CreateEnum( "MinimumHop"                      , 37  ) };
+    inline static EnumType TradeAmountFood                        { CreateEnum( "TradeAmountFood"                 , 38  ) };
+    inline static EnumType TradeAmountEquipment                   { CreateEnum( "TradeAmountEquipment"            , 39  ) };
+    inline static EnumType Unknown040                             { CreateEnum( "Unknown040"                      , 40  ) };
+    inline static EnumType MinimumGoodsRequiredAfterTrade         { CreateEnum( "MinimumGoodsRequiredAfterTrade"  , 41  ) };
+    inline static EnumType DoubleRationsFoodThreshold             { CreateEnum( "DoubleRationsFoodThreshold"      , 42  ) };
+    inline static EnumType MaxWood                                { CreateEnum( "MaxWood"                         , 43  ) };
+    inline static EnumType MaxStone                               { CreateEnum( "MaxStone"                        , 44  ) };
+    inline static EnumType MaxResourceOther                       { CreateEnum( "MaxResourceOther"                , 45  ) };
+    inline static EnumType MaxEquipment                           { CreateEnum( "MaxEquipment"                    , 46  ) };
+    inline static EnumType MaxBeer                                { CreateEnum( "MaxBeer"                         , 47  ) };
+    inline static EnumType MaxResourceVariance                    { CreateEnum( "MaxResourceVariance"             , 48  ) };
+    inline static EnumType RecruitGoldThreshold                   { CreateEnum( "RecruitGoldThreshold"            , 49  ) };
+    inline static EnumType BlacksmithSetting                      { CreateEnum( "BlacksmithSetting"               , 50  ) };
+    inline static EnumType FletcherSetting                        { CreateEnum( "FletcherSetting"                 , 51  ) };
+    inline static EnumType PoleturnerSetting                      { CreateEnum( "PoleturnerSetting"               , 52  ) };
+    inline static EnumType SellResource01                         { CreateEnum( "SellResource01"                  , 53  ) };
+    inline static EnumType SellResource02                         { CreateEnum( "SellResource02"                  , 54  ) };
+    inline static EnumType SellResource03                         { CreateEnum( "SellResource03"                  , 55  ) };
+    inline static EnumType SellResource04                         { CreateEnum( "SellResource04"                  , 56  ) };
+    inline static EnumType SellResource05                         { CreateEnum( "SellResource05"                  , 57  ) };
+    inline static EnumType SellResource06                         { CreateEnum( "SellResource06"                  , 58  ) };
+    inline static EnumType SellResource07                         { CreateEnum( "SellResource07"                  , 59  ) };
+    inline static EnumType SellResource08                         { CreateEnum( "SellResource08"                  , 60  ) };
+    inline static EnumType SellResource09                         { CreateEnum( "SellResource09"                  , 61  ) };
+    inline static EnumType SellResource10                         { CreateEnum( "SellResource10"                  , 62  ) };
+    inline static EnumType SellResource11                         { CreateEnum( "SellResource11"                  , 63  ) };
+    inline static EnumType SellResource12                         { CreateEnum( "SellResource12"                  , 64  ) };
+    inline static EnumType SellResource13                         { CreateEnum( "SellResource13"                  , 65  ) };
+    inline static EnumType SellResource14                         { CreateEnum( "SellResource14"                  , 66  ) };
+    inline static EnumType SellResource15                         { CreateEnum( "SellResource15"                  , 67  ) };
+    inline static EnumType DefWallPatrolRallytime                 { CreateEnum( "DefWallPatrolRallyTime"          , 68  ) };
+    inline static EnumType DefWallPatrolGroups                    { CreateEnum( "DefWallPatrolGroups"             , 69  ) };
+    inline static EnumType DefSiegeEngineGoldThreshold            { CreateEnum( "DefSiegeEngineGoldThreshold"     , 70  ) };
+    inline static EnumType DefSiegeEngineBuildDelay               { CreateEnum( "DefSiegeEngineBuildDelay"        , 71  ) };
+    inline static EnumType Unknown072                             { CreateEnum( "Unknown072"                      , 72  ) };
+    inline static EnumType Unknown073                             { CreateEnum( "Unknown073"                      , 73  ) };
+    inline static EnumType RecruitProbDefDefault                  { CreateEnum( "RecruitProbDefDefault"           , 74  ) };
+    inline static EnumType RecruitProbDefWeak                     { CreateEnum( "RecruitProbDefWeak"              , 75  ) };
+    inline static EnumType RecruitProbDefStrong                   { CreateEnum( "RecruitProbDefStrong"            , 76  ) };
+    inline static EnumType RecruitProbRaidDefault                 { CreateEnum( "RecruitProbRaidDefault"          , 77  ) };
+    inline static EnumType RecruitProbRaidWeak                    { CreateEnum( "RecruitProbRaidWeak"             , 78  ) };
+    inline static EnumType RecruitProbRaidStrong                  { CreateEnum( "RecruitProbRaidStrong"           , 79  ) };
+    inline static EnumType RecruitProbAttackDefault               { CreateEnum( "RecruitProbAttackDefault"        , 80  ) };
+    inline static EnumType RecruitProbAttackWeak                  { CreateEnum( "RecruitProbAttackWeak"           , 81  ) };
+    inline static EnumType RecruitProbAttackStrong                { CreateEnum( "RecruitProbAttackStrong"         , 82  ) };
+    inline static EnumType SortieUnitRangedMin                    { CreateEnum( "SortieUnitRangedMin"             , 83  ) };
+    inline static EnumType SortieUnitRanged                       { CreateEnum( "SortieUnitRanged"                , 84  ) };
+    inline static EnumType SortieUnitMeleeMin                     { CreateEnum( "SortieUnitMeleeMin"              , 85  ) };
+    inline static EnumType SortieUnitMelee                        { CreateEnum( "SortieUnitMelee"                 , 86  ) };
+    inline static EnumType DefDiggingUnitMax                      { CreateEnum( "DefDiggingUnitMax"               , 87  ) };
+    inline static EnumType DefDiggingUnit                         { CreateEnum( "DefDiggingUnit"                  , 88  ) };
+    inline static EnumType RecruitInterval                        { CreateEnum( "RecruitInterval"                 , 89  ) };
+    inline static EnumType RecruitIntervalWeak                    { CreateEnum( "RecruitIntervalWeak"             , 90  ) };
+    inline static EnumType RecruitIntervalStrong                  { CreateEnum( "RecruitIntervalStrong"           , 91  ) };
+    inline static EnumType DefTotal                               { CreateEnum( "DefTotal"                        , 92  ) };
+    inline static EnumType OuterPatrolGroupsCount                 { CreateEnum( "OuterPatrolGroupsCount"          , 93  ) };
+    inline static EnumType OuterPatrolGroupsMove                  { CreateEnum( "OuterPatrolGroupsMove"           , 94  ) };
+    inline static EnumType OuterPatrolRallyDelay                  { CreateEnum( "OuterPatrolRallyDelay"           , 95  ) };
+    inline static EnumType DefWalls                               { CreateEnum( "DefWalls"                        , 96  ) };
+    inline static EnumType DefUnit1                               { CreateEnum( "DefUnit1"                        , 97  ) };
+    inline static EnumType DefUnit2                               { CreateEnum( "DefUnit2"                        , 98  ) };
+    inline static EnumType DefUnit3                               { CreateEnum( "DefUnit3"                        , 99  ) };
+    inline static EnumType DefUnit4                               { CreateEnum( "DefUnit4"                        , 100 ) };
+    inline static EnumType DefUnit5                               { CreateEnum( "DefUnit5"                        , 101 ) };
+    inline static EnumType DefUnit6                               { CreateEnum( "DefUnit6"                        , 102 ) };
+    inline static EnumType DefUnit7                               { CreateEnum( "DefUnit7"                        , 103 ) };
+    inline static EnumType DefUnit8                               { CreateEnum( "DefUnit8"                        , 104 ) };
+    inline static EnumType RaidUnitsBase                          { CreateEnum( "RaidUnitsBase"                   , 105 ) };
+    inline static EnumType RaidUnitsRandom                        { CreateEnum( "RaidUnitsRandom"                 , 106 ) };
+    inline static EnumType RaidUnit1                              { CreateEnum( "RaidUnit1"                       , 107 ) };
+    inline static EnumType RaidUnit2                              { CreateEnum( "RaidUnit2"                       , 108 ) };
+    inline static EnumType RaidUnit3                              { CreateEnum( "RaidUnit3"                       , 109 ) };
+    inline static EnumType RaidUnit4                              { CreateEnum( "RaidUnit4"                       , 110 ) };
+    inline static EnumType RaidUnit5                              { CreateEnum( "RaidUnit5"                       , 111 ) };
+    inline static EnumType RaidUnit6                              { CreateEnum( "RaidUnit6"                       , 112 ) };
+    inline static EnumType RaidUnit7                              { CreateEnum( "RaidUnit7"                       , 113 ) };
+    inline static EnumType RaidUnit8                              { CreateEnum( "RaidUnit8"                       , 114 ) };
+    inline static EnumType HarassingSiegeEngine1                  { CreateEnum( "HarassingSiegeEngine1"           , 115 ) };
+    inline static EnumType HarassingSiegeEngine2                  { CreateEnum( "HarassingSiegeEngine2"           , 116 ) };
+    inline static EnumType HarassingSiegeEngine3                  { CreateEnum( "HarassingSiegeEngine3"           , 117 ) };
+    inline static EnumType HarassingSiegeEngine4                  { CreateEnum( "HarassingSiegeEngine4"           , 118 ) };
+    inline static EnumType HarassingSiegeEngine5                  { CreateEnum( "HarassingSiegeEngine5"           , 119 ) };
+    inline static EnumType HarassingSiegeEngine6                  { CreateEnum( "HarassingSiegeEngine6"           , 120 ) };
+    inline static EnumType HarassingSiegeEngine7                  { CreateEnum( "HarassingSiegeEngine7"           , 121 ) };
+    inline static EnumType HarassingSiegeEngine8                  { CreateEnum( "HarassingSiegeEngine8"           , 122 ) };
+    inline static EnumType HarassingSiegeEnginesMax               { CreateEnum( "HarassingSiegeEnginesMax"        , 123 ) };
+    inline static EnumType Unknown124                             { CreateEnum( "Unknown124"                      , 124 ) };
+    inline static EnumType AttForceBase                           { CreateEnum( "AttForceBase"                    , 125 ) };
+    inline static EnumType AttForceRandom                         { CreateEnum( "AttForceRandom"                  , 126 ) };
+    inline static EnumType AttForceSupportAllyThreshold           { CreateEnum( "AttForceSupportAllyThreshold"    , 127 ) };
+    inline static EnumType AttForceRallyPercentage                { CreateEnum( "AttForceRallyPercentage"         , 128 ) };
+    inline static EnumType Unknown129                             { CreateEnum( "Unknown129"                      , 129 ) };
+    inline static EnumType Unknown130                             { CreateEnum( "Unknown130"                      , 130 ) };
+    inline static EnumType AttUnitPatrolRecommandDelay            { CreateEnum( "AttUnitPatrolRecommandDelay"     , 131 ) };
+    inline static EnumType Unknown132                             { CreateEnum( "Unknown132"                      , 132 ) };
+    inline static EnumType SiegeEngine1                           { CreateEnum( "SiegeEngine1"                    , 133 ) };
+    inline static EnumType SiegeEngine2                           { CreateEnum( "SiegeEngine2"                    , 134 ) };
+    inline static EnumType SiegeEngine3                           { CreateEnum( "SiegeEngine3"                    , 135 ) };
+    inline static EnumType SiegeEngine4                           { CreateEnum( "SiegeEngine4"                    , 136 ) };
+    inline static EnumType SiegeEngine5                           { CreateEnum( "SiegeEngine5"                    , 137 ) };
+    inline static EnumType SiegeEngine6                           { CreateEnum( "SiegeEngine6"                    , 138 ) };
+    inline static EnumType SiegeEngine7                           { CreateEnum( "SiegeEngine7"                    , 139 ) };
+    inline static EnumType SiegeEngine8                           { CreateEnum( "SiegeEngine8"                    , 140 ) };
+    inline static EnumType CowThrowInterval                       { CreateEnum( "CowThrowInterval"                , 141 ) };
+    inline static EnumType Unknown142                             { CreateEnum( "Unknown142"                      , 142 ) };
+    inline static EnumType AttMaxEngineers                        { CreateEnum( "AttMaxEngineers"                 , 143 ) };
+    inline static EnumType AttDiggingUnit                         { CreateEnum( "AttDiggingUnit"                  , 144 ) };
+    inline static EnumType AttDiggingUnitMax                      { CreateEnum( "AttDiggingUnitMax"               , 145 ) };
+    inline static EnumType AttUnit2                               { CreateEnum( "AttUnit2"                        , 146 ) };
+    inline static EnumType AttUnit2Max                            { CreateEnum( "AttUnit2Max"                     , 147 ) };
+    inline static EnumType AttMaxAssassins                        { CreateEnum( "AttMaxAssassins"                 , 148 ) };
+    inline static EnumType AttMaxLaddermen                        { CreateEnum( "AttMaxLaddermen"                 , 149 ) };
+    inline static EnumType AttMaxTunnelers                        { CreateEnum( "AttMaxTunnelers"                 , 150 ) };
+    inline static EnumType AttUnitPatrol                          { CreateEnum( "AttUnitPatrol"                   , 151 ) };
+    inline static EnumType AttUnitPatrolMax                       { CreateEnum( "AttUnitPatrolMax"                , 152 ) };
+    inline static EnumType AttUnitPatrolGroupsCount               { CreateEnum( "AttUnitPatrolGroupsCount"        , 153 ) };
+    inline static EnumType AttUnitBackup                          { CreateEnum( "AttUnitBackup"                   , 154 ) };
+    inline static EnumType AttUnitBackupMax                       { CreateEnum( "AttUnitBackupMax"                , 155 ) };
+    inline static EnumType AttUnitBackupGroupsCount               { CreateEnum( "AttUnitBackupGroupsCount"        , 156 ) };
+    inline static EnumType AttUnitEngage                          { CreateEnum( "AttUnitEngage"                   , 157 ) };
+    inline static EnumType AttUnitEngageMax                       { CreateEnum( "AttUnitEngageMax"                , 158 ) };
+    inline static EnumType AttUnitSiegeDef                        { CreateEnum( "AttUnitSiegeDef"                 , 159 ) };
+    inline static EnumType AttUnitSiegeDefMax                     { CreateEnum( "AttUnitSiegeDefMax"              , 160 ) };
+    inline static EnumType AttUnitSiegeDefGroupsCount             { CreateEnum( "AttUnitSiegeDefGroupsCount"      , 161 ) };
+    inline static EnumType AttUnitMain1                           { CreateEnum( "AttUnitMain1"                    , 162 ) };
+    inline static EnumType AttUnitMain2                           { CreateEnum( "AttUnitMain2"                    , 163 ) };
+    inline static EnumType AttUnitMain3                           { CreateEnum( "AttUnitMain3"                    , 164 ) };
+    inline static EnumType AttUnitMain4                           { CreateEnum( "AttUnitMain4"                    , 165 ) };
+    inline static EnumType AttMaxDefault                          { CreateEnum( "AttMaxDefault"                   , 166 ) };
+    inline static EnumType AttMainGroupsCount                     { CreateEnum( "AttMainGroupsCount"              , 167 ) };
+    inline static EnumType TargetChoice                           { CreateEnum( "TargetChoice"                    , 168 ) };
+    inline static EnumType None                                   { CreateEnum( "NULL"                            , 999 ) };
   };
 
   // using stuff:

@@ -367,7 +367,7 @@ namespace modclasses
   {
     if (!menuActive || keyUp || repeat || !currentMenu)
     {
-      return false;
+      return editing ? true : false;
     }
 
     auto keyIt{ menuActions.find(key) };
@@ -679,19 +679,36 @@ namespace modclasses
       return false;
     }
 
-    std::function<void(char)> func{
-      [this](char chr)
-      { 
-        this->receiveChar(chr); 
-      }
-    };
-    std::function<bool(const HWND, const bool, const bool, const VK)> passage{
-      [this](const HWND window, const bool keyUp, const bool repeat, const VK key)
-      {
-        return this->controlMenu(window, keyUp, repeat, key);
-      }
-    };
-    return enable ? interceptor->lockChars(this, func, passage) : interceptor->freeChars(this);
+    bool ret;
+    if (enable)
+    {
+      std::function<void(char)> func{
+        [this](char chr)
+        {
+          this->receiveChar(chr);
+        }
+      };
+
+      std::function<bool(const HWND, const bool, const bool, const VK)> passage{
+        [this](const HWND window, const bool keyUp, const bool repeat, const VK key)
+        {
+          return this->controlMenu(window, keyUp, repeat, key);
+        }
+      };
+
+      ret = interceptor->lockChars(this, func, passage);
+    }
+    else
+    {
+      ret = interceptor->freeChars(this);
+    }
+    
+    if (ret)  // if successful changed, change also editing variable
+    {
+      editing = !editing;
+    }
+
+    return ret;
   }
 
   void BltOverlay::receiveChar(char chr)

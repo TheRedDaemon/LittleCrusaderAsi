@@ -298,7 +298,7 @@ namespace modclasses
     std::pair<int32_t, int32_t> boxPos{ 25, yPos - 16 };
 
     over.inputOffSurf->BltFast(boxPos.first, boxPos.second, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
-    over.fntHandler.drawText(over.inputOffSurf, type, text, 150, yPos, 140, true, true, true, nullptr);
+    over.fntHandler.drawText(over.inputOffSurf, type, text, 150, yPos, 230, true, true, true, nullptr);
   }
 
 
@@ -386,4 +386,228 @@ namespace modclasses
       selectReact(0, resultOfEnter, true, currentValue);  // update after access
     }
   }
+
+
+  // FreeInputMenu
+
+
+  void FreeInputMenu::move(MenuAction direction, BltOverlay& over)
+  {
+    bool updateDraw{ false };
+
+    if (direction == MenuAction::UP || direction == MenuAction::DOWN)
+    {
+      if (!over.enableCharReceive(!over.editing))
+      {
+        resultOfEnter = "Char receiver fail.";
+      }
+
+      updateDraw = true;
+    }
+    else if (over.editing)
+    {
+      switch (direction)
+      {
+        case MenuAction::LEFT:
+        {
+          if (cursorPos > 0)
+          {
+            --cursorPos;
+            updateDraw = true;
+          }
+          break;
+        }
+        case MenuAction::RIGHT:
+        {
+          if (cursorPos < currentInput.size())
+          {
+            ++cursorPos;
+            updateDraw = true;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    if (updateDraw)
+    {
+      draw(over);
+    }
+  }
+
+
+  MenuBase* FreeInputMenu::action(BltOverlay& over)
+  {
+    // action will get into menu
+    if (!over.editing)
+    {
+      if (!over.enableCharReceive(!over.editing))
+      {
+        resultOfEnter = "Char receiver fail.";
+      }
+      draw(over);
+      return nullptr;
+    }
+
+    if (inputReact)
+    {
+      inputReact(currentInput, resultOfEnter);
+    }
+    else if (inputValueReact)
+    {
+      inputValueReact(currentInput, resultOfEnter, false, currentValue);
+    }
+
+    // deselect after apply
+    if (!over.enableCharReceive(!over.editing))
+    {
+      resultOfEnter = "Char receiver fail.";
+    }
+    draw(over);
+    return nullptr;
+  }
+
+
+  MenuBase* FreeInputMenu::back(BltOverlay& over)
+  {
+    if (over.editing)
+    {
+      if (cursorPos > 0)
+      {
+        --cursorPos;
+        currentInput.erase(cursorPos, 1);
+        draw(over);
+      }
+      return nullptr;
+    }
+
+    if (!lastMenu)
+    {
+      return nullptr;
+    }
+
+    // setting status back -> should be enough
+    currentInput = "";
+    cursorPos = 0;
+    resultOfEnter = "";
+    over.inputActive = false;
+
+    if (accessReact)
+    {
+      // ignore return
+      accessReact(true, header);
+    }
+
+    return lastMenu->access(true, over);
+  }
+
+
+  MenuBase* FreeInputMenu::access(bool callerLeaving, BltOverlay& over)
+  {
+    bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
+
+    if (!moveToThis)
+    {
+      return nullptr;
+    }
+
+    if (inputValueReact)
+    {
+      inputValueReact(currentInput, resultOfEnter, true, currentValue);  // update after access
+    }
+    else if (!inputReact)
+    {
+      resultOfEnter = "Missing react function.";
+    }
+
+    draw(over);
+    over.inputActive = true;
+
+    return this;
+  }
+
+
+  MenuBase* FreeInputMenu::executeAction(char newChar, BltOverlay& over)
+  {
+    if (onlyNumber && std::find(numberChars.begin(), numberChars.end(), newChar) == numberChars.end())
+    {
+      return nullptr;
+    }
+
+    if (currentInput.size() < maxInputLength)
+    {
+      currentInput.insert(cursorPos, 1, newChar);
+      ++cursorPos;
+      draw(over);
+    }
+    return nullptr;
+  }
+
+
+  void FreeInputMenu::draw(BltOverlay& over)
+  {
+    // fill black for colorkey
+    DDBLTFX fx;
+    ZeroDDObjectAndSetSize<DDBLTFX>(fx);
+    over.inputOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+
+    // NOTE: box is 100px smaller (top is not 0, but 50)
+
+    // initial background
+    over.inputOffSurf->BltFast(0, 50, over.compSurf, &over.menuRects.smallInputBox, DDBLTFAST_NOCOLORKEY);
+
+    // header text
+    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 75, 280, true, true, true, nullptr);
+
+    if (inputValueReact)
+    {
+      // default
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 105, 65, false, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 105, 184, true, true, true, nullptr);
+
+      // current
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 130, 65, false, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 130, 184, true, true, true, nullptr);
+    }
+
+    // draw input box
+    RECT* rect{ over.editing ? &over.menuRects.inputFieldSelected : &over.menuRects.inputField };
+    over.inputOffSurf->BltFast(25, 140, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+
+    // draw input text
+    if (over.editing)
+    {
+      std::string cursorInsert{ currentInput };
+      cursorInsert.insert(cursorPos, 1, '|');
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, cursorInsert, 150, 156, 230, true, true, true, nullptr);
+    }
+    else
+    {
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentInput, 150, 156, 230, true, true, true, nullptr);
+    }
+    
+
+    // apply text
+    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 176, 200, true, true, true, nullptr);
+  }
+
+
+  FreeInputMenu::FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
+                               std::string&& defaultValueStr, InputValueReact&& inputValueReactFunc)
+                              : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                                onlyNumber(onlyNumbers), defaultValue(std::move(defaultValueStr)),
+                                inputValueReact(std::move(inputValueReactFunc))
+  {
+    if (inputValueReact)
+    {
+      inputValueReact(currentInput, resultOfEnter, true, currentValue);  // update after access
+    }
+  }
+
+  FreeInputMenu::FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc,
+                               bool onlyNumbers, InputReact&& inputReactFunc)
+                              : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                                onlyNumber(onlyNumbers), inputReact(std::move(inputReactFunc)) { }
 }
