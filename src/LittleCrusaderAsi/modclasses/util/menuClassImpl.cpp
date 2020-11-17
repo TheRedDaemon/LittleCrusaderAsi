@@ -548,49 +548,60 @@ namespace modclasses
 
   void FreeInputMenu::draw(BltOverlay& over)
   {
-    // fill black for colorkey
-    DDBLTFX fx;
-    ZeroDDObjectAndSetSize<DDBLTFX>(fx);
-    over.inputOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+    // NOTE: box in inputReact case is 100px smaller (top is not 0, but 50)
+    // change positions of menu parts if not value input
+    const int32_t adapt{ inputReact ? 25 : 0 };
 
-    // NOTE: box is 100px smaller (top is not 0, but 50)
+    if (inputReact)
+    {
+      // fill black for colorkey
+      DDBLTFX fx;
+      ZeroDDObjectAndSetSize<DDBLTFX>(fx);
+      over.inputOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
 
-    // initial background
-    over.inputOffSurf->BltFast(0, 50, over.compSurf, &over.menuRects.smallInputBox, DDBLTFAST_NOCOLORKEY);
+      // initial background
+      over.inputOffSurf->BltFast(0, 50, over.compSurf, &over.menuRects.smallInputBox, DDBLTFAST_NOCOLORKEY);
+    }
+    else
+    {
+      // initial background
+      over.inputOffSurf->BltFast(0, 0, over.compSurf, &over.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
+    }
 
     // header text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 75, 280, true, true, true, nullptr);
+    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25 + adapt * 2,
+      280, true, true, true, nullptr);
 
     if (inputValueReact)
     {
       // default
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 105, 65, false, true, true, nullptr);
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 105, 184, true, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 70, 65, false, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 70, 184, true, true, true, nullptr);
 
       // current
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 130, 65, false, true, true, nullptr);
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 130, 184, true, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 100, 65, false, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 100, 184, true, true, true, nullptr);
     }
 
     // draw input box
     RECT* rect{ over.editing ? &over.menuRects.inputFieldSelected : &over.menuRects.inputField };
-    over.inputOffSurf->BltFast(25, 140, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+    over.inputOffSurf->BltFast(25, 139 - adapt, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
 
     // draw input text
     if (over.editing)
     {
       std::string cursorInsert{ currentInput };
       cursorInsert.insert(cursorPos, 1, '|');
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, cursorInsert, 150, 156, 230, true, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, cursorInsert, 150, 155 - adapt, 230, true, true, true, nullptr);
     }
     else
     {
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentInput, 150, 156, 230, true, true, true, nullptr);
+      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentInput, 150, 155 - adapt, 230, true, true, true, nullptr);
     }
     
-
     // apply text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 176, 200, true, true, true, nullptr);
+    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 225 - adapt * 2,
+      200, true, true, true, nullptr);
   }
 
 

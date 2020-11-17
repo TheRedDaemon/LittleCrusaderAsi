@@ -169,12 +169,12 @@ namespace modclasses
 
     // peforms any action -> if return != null, set current menu in BltOverlay to this return -> needs interfaces in case redraws are needed
     // likely needs redesign -> hwo do I send the other keys?
-    MenuBase* executeAction(MenuAction actionType, BltOverlay &over)
+    MenuBase* executeAction(MenuAction actionType, bool repeat, BltOverlay &over)
     {
       switch (actionType)
       {
         case MenuAction::ACTION:
-          return action(over);
+          return repeat ? nullptr : action(over); // repeat can not be used for an action
         case MenuAction::BACK:
           return back(over);
         case MenuAction::UP:
@@ -514,7 +514,7 @@ namespace modclasses
 
     // menu components
     CImage menuComp;
-    IDirectDrawSurface7* compSurf;
+    IDirectDrawSurface7* compSurf{ nullptr };
 
     // functions to execute on DDraw Load event
     std::vector<std::function<void()>> funcsForDDrawLoadEvent;

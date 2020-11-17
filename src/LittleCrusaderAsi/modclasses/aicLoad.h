@@ -127,7 +127,21 @@ namespace modclasses
     const bool isValidPersonalityValue(AICEnum field, const Json &value, int32_t &validValue) const;
     const int32_t getAICFieldIndex(AINameEnum aiName, AICEnum field) const;
 
-    // to safe space in the menu defintion
+    // helper function
+    // -> sorts AIC value types based on range and if they have special input
+    //    types, represented by pseudo enums
+    // -> no special meaning, only internally relevant
+    // returns intPtr to static structure, should be ok
+    const int32_t* getReactionNumber(AICEnum field) const;
+
+    // menu creation
+
+    void createMenu();
+
+    template<typename T>
+    void createEnumMenuHelper(AINameEnum aiName, AICEnum field, MenuBase& charMenu);
+
+    // to safe space in the menu definition
     template<typename PseudoEnumClass>
     std::string getNameOrNULL(int32_t value)
     {

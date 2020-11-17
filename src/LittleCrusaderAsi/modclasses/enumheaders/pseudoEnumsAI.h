@@ -517,6 +517,11 @@ namespace modclasses
   using RUnitEnum     = RangedUnit::EnumType;
   //using NPC         = ...;
   using NPCEnum       = NPC::EnumType;
+
+  // Melee and Ranged Unit are unused currently
+  // -> they share the ids though, so the question is more, would other units work
+  // -> so the question is, would the game still work if I send ladderman in the main attack force?
+  //   -> maybe apply that restriction later (keep digging unit though, others will not work (or?))
 }
 
 #endif //PSEUDOENUMSAI

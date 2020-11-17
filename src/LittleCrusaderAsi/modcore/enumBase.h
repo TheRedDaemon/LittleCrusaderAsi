@@ -179,15 +179,15 @@ namespace modcore
     static typename std::enable_if_t<uniqueValues && sortByValue, U>
     WithEachEnumInValueOrder(const std::function<void(const std::string&, EnumType)>& func)
     {
-      for (const auto& [name, value] : uniqueValueMap)
+      for (const auto& [value, nameEnumPair] : uniqueValueMap)
       {
         if constexpr (enumClassLike)
         {
-          func(*name, value);
+          func(*(nameEnumPair.first), nameEnumPair.second);
         }
         else
         {
-          func(*name, *value);
+          func(*(nameEnumPair.first), value);
         }
       }
     }
@@ -198,16 +198,11 @@ namespace modcore
     static typename std::enable_if_t<uniqueValues && sortByValue, U>
     WithEachValueInValueOrder(const std::function<void(const std::string&, const T&)>& func)
     {
-      for (const auto& [name, value] : uniqueValueMap)
+      for (const auto& [value, nameEnumPair] : uniqueValueMap)
       {
-        if constexpr (enumClassLike)
-        {
-          func(*name, value->getValue());
-        }
-        else
-        {
-          func(*name, *value);
-        }
+        // in both cases (classLike and value), the key is a copy of the value
+        // so they work the same
+        func(*(nameEnumPair.first), value);
       }
     }
 

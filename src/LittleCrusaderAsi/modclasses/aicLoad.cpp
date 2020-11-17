@@ -190,151 +190,8 @@ namespace modclasses
                                   "Indicator: first int is not a 12.", el::Level::Warning);
       }
 
-      // add menu stuff (test)
-      if (auto bltOverlay = getMod<BltOverlay>(); bltOverlay)
-      {
-        MenuBase* basPtr{ bltOverlay->getMainMenu() };
-        if (basPtr)
-        {
-          MenuBase& base{ *basPtr };
-
-          base.createMenu<MainMenu, true>(
-            "AIC Load",
-            nullptr,
-            true
-          )
-            // NOTE -> Main Menu is descendable, but child will be hidden by func
-            // they could be added though
-            .createMenu<MainMenu, false>(
-              "Reload All",
-              [this](bool, std::string&)
-              {
-                this->reloadAllAIC(0, false, false);
-                return false;
-              },
-              true
-            )
-            .createMenu<MainMenu, false>(
-              "Reload Main",
-              [this](bool, std::string&)
-              {
-                this->reloadMainAIC(0, false, false);
-                return false;
-              },
-              true
-            )
-            .createMenu<MainMenu, false>(
-              "AIC active: " + std::string(this->isChanged ? "true" : "false"),
-              [this](bool, std::string& header)
-              {
-                this->activateAICs(0, false, false);
-                header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
-                return false;
-              },
-              true
-            )
-            .createMenu<MainMenu, true>(
-              "Editor",
-              nullptr,
-              true
-            )
-              .createMenu<MainMenu, true>(
-                std::string(AIName::Rat->getName()),
-                nullptr,
-                false
-              )
-                .createMenu<ChoiceInputMenu, false>(
-                  std::string(AIC::Farm1->getName()),
-                  nullptr,
-                  getNameOrNULL<Farm>(vanillaAIC[getAICFieldIndex(AIName::Rat, AIC::Farm1)]),
-                  std::vector<std::pair<std::string, int32_t>>{
-                    { Farm::NoFarm->getName(), Farm::NoFarm->getValue() },
-                    { Farm::WheatFarm->getName(), Farm::WheatFarm->getValue() },
-                    { Farm::HopFarm->getName(), Farm::HopFarm->getValue() },
-                    { Farm::AppleFarm->getName(), Farm::AppleFarm->getValue() },
-                    { Farm::DairyFarm->getName(), Farm::DairyFarm->getValue() }
-                  },
-                  [this](int32_t newValue, std::string& resultMessage, bool onlyUpdateCurrent, std::string& currentValue)
-                  {
-                    if (onlyUpdateCurrent)
-                    {
-                      currentValue = getNameOrNULL<Farm>((*(this->aicMemoryPtr))[getAICFieldIndex(AIName::Rat, AIC::Farm1)]);
-                      return false;
-                    }
-
-                    // no need for extra check -> should be ok by definition
-                    if (this->setPersonalityValueUnchecked(AIName::Rat, AIC::Farm1, newValue))
-                    {
-                      resultMessage = "Success.";
-                      return true;
-                    }
-                    else
-                    {
-                      resultMessage = "Failed.";
-                      return false;
-                    }
-                  }
-                )
-                .createMenu<FreeInputMenu, false>(
-                  std::string(AIC::MinimumHop->getName()),
-                  nullptr,
-                  true,
-                  std::to_string(vanillaAIC[getAICFieldIndex(AIName::Rat, AIC::MinimumHop)]),
-                  [this](const std::string &currentInput, std::string& resultMessage,
-                    bool onlyUpdateCurrent, std::string& currentValue)
-                  {
-                    if (!onlyUpdateCurrent)
-                    {
-                      bool error{ false };
-                      int32_t inputValue{ 0 };
-                      try
-                      {
-                        inputValue = std::stoi(currentInput);
-                      }
-                      catch (const std::invalid_argument&)
-                      {
-                        resultMessage = "Invalid input.";
-                        error = true;
-                      }
-                      catch (const std::out_of_range&)
-                      {
-                        resultMessage = "Number to big.";
-                        error = true;
-                      }
-                      catch (const std::exception&)
-                      {
-                        resultMessage = "Parse error.";
-                        error = true;
-                      }
-
-                      // need extra check
-                      if (!error)
-                      {
-                        if (this->setPersonalityValue(AIName::Rat, AIC::MinimumHop, inputValue))
-                        {
-                          resultMessage = "Success.";
-                        }
-                        else
-                        {
-                          resultMessage = "Failed. See log.";
-                        }
-                      }
-                    }
-
-                    currentValue = std::to_string((*(this->aicMemoryPtr))[getAICFieldIndex(AIName::Rat, AIC::MinimumHop)]);
-                  }
-                );
-        }
-        else
-        {
-          BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
-        }
-      }
-      else
-      {
-        BltOverlay::sendToConsole("AICLoad: Unable to get BltOverlay for menu create.", el::Level::Warning);
-      }
-
+      // add menu
+      createMenu();
 
       // if aics are requested at start, load them in
       if (isChanged)
@@ -558,206 +415,14 @@ namespace modclasses
     // limit
     static const int32_t int32Max{ (std::numeric_limits<int32_t>::max)() };
 
-    // static map for function types, returns int for switch
-    // only basic value tests
-    // mapping int32_t ids to int32_t -> could also use switch again, hm?
-    // issue -> there was no constructor for const T* const value types it seems (map might work, but again, I could use the switch again
-    static const std::unordered_map<int32_t, int32_t> switchMap{
-      { AIC::Unknown000                       ->getValue() , 0  },
-      { AIC::Unknown001                       ->getValue() , 0  },
-      { AIC::Unknown002                       ->getValue() , 0  },
-      { AIC::Unknown003                       ->getValue() , 0  },
-      { AIC::Unknown004                       ->getValue() , 0  },
-      { AIC::Unknown005                       ->getValue() , 0  },
-      { AIC::Unknown011                       ->getValue() , 0  },
-      { AIC::PopulationPerFarm                ->getValue() , 0  },
-      { AIC::PopulationPerWoodcutter          ->getValue() , 0  },
-      { AIC::PopulationPerQuarry              ->getValue() , 0  },
-      { AIC::PopulationPerIronmine            ->getValue() , 0  },
-      { AIC::PopulationPerPitchrig            ->getValue() , 0  },
-      { AIC::BuildInterval                    ->getValue() , 0  },
-      { AIC::ResourceRebuildDelay             ->getValue() , 0  },
-      { AIC::MaxFood                          ->getValue() , 0  },
-      { AIC::TradeAmountFood                  ->getValue() , 0  },
-      { AIC::TradeAmountEquipment             ->getValue() , 0  },
-      { AIC::Unknown040                       ->getValue() , 0  },
-      { AIC::MinimumGoodsRequiredAfterTrade   ->getValue() , 0  },
-      { AIC::DoubleRationsFoodThreshold       ->getValue() , 0  },
-      { AIC::MaxWood                          ->getValue() , 0  },
-      { AIC::MaxStone                         ->getValue() , 0  },
-      { AIC::MaxResourceOther                 ->getValue() , 0  },
-      { AIC::MaxEquipment                     ->getValue() , 0  },
-      { AIC::MaxBeer                          ->getValue() , 0  },
-      { AIC::MaxResourceVariance              ->getValue() , 0  },
-      { AIC::RecruitGoldThreshold             ->getValue() , 0  },
-      { AIC::DefWallPatrolRallytime           ->getValue() , 0  },
-      { AIC::DefWallPatrolGroups              ->getValue() , 0  },
-      { AIC::DefSiegeEngineGoldThreshold      ->getValue() , 0  },
-      { AIC::DefSiegeEngineBuildDelay         ->getValue() , 0  },
-      { AIC::Unknown072                       ->getValue() , 0  },
-      { AIC::Unknown073                       ->getValue() , 0  },
-      { AIC::SortieUnitRangedMin              ->getValue() , 0  },
-      { AIC::SortieUnitMeleeMin               ->getValue() , 0  },
-      { AIC::DefDiggingUnitMax                ->getValue() , 0  },
-      { AIC::RecruitInterval                  ->getValue() , 0  },
-      { AIC::RecruitIntervalWeak              ->getValue() , 0  },
-      { AIC::RecruitIntervalStrong            ->getValue() , 0  },
-      { AIC::DefTotal                         ->getValue() , 0  },
-      { AIC::OuterPatrolGroupsCount           ->getValue() , 0  },
-      { AIC::OuterPatrolRallyDelay            ->getValue() , 0  },
-      { AIC::DefWalls                         ->getValue() , 0  },
-      { AIC::RaidUnitsBase                    ->getValue() , 0  },
-      { AIC::RaidUnitsRandom                  ->getValue() , 0  },
-      { AIC::Unknown124                       ->getValue() , 0  },
-      { AIC::AttForceBase                     ->getValue() , 0  },
-      { AIC::AttForceRandom                   ->getValue() , 0  },
-      { AIC::AttForceSupportAllyThreshold     ->getValue() , 0  },
-      { AIC::Unknown129                       ->getValue() , 0  },
-      { AIC::Unknown130                       ->getValue() , 0  },
-      { AIC::AttUnitPatrolRecommandDelay      ->getValue() , 0  },
-      { AIC::Unknown132                       ->getValue() , 0  },
-      { AIC::CowThrowInterval                 ->getValue() , 0  },
-      { AIC::Unknown142                       ->getValue() , 0  },
-      { AIC::AttMaxEngineers                  ->getValue() , 0  },
-      { AIC::AttDiggingUnitMax                ->getValue() , 0  },
-      { AIC::AttUnit2Max                      ->getValue() , 0  },
-      { AIC::AttMaxAssassins                  ->getValue() , 0  },
-      { AIC::AttMaxLaddermen                  ->getValue() , 0  },
-      { AIC::AttMaxTunnelers                  ->getValue() , 0  },
-      { AIC::AttUnitPatrolMax                 ->getValue() , 0  },
-      { AIC::AttUnitPatrolGroupsCount         ->getValue() , 0  },
-      { AIC::AttUnitBackupMax                 ->getValue() , 0  },
-      { AIC::AttUnitBackupGroupsCount         ->getValue() , 0  },
-      { AIC::AttUnitEngageMax                 ->getValue() , 0  },
-      { AIC::AttUnitSiegeDefMax               ->getValue() , 0  },
-      { AIC::AttUnitSiegeDefGroupsCount       ->getValue() , 0  },
-      { AIC::AttMaxDefault                    ->getValue() , 0  },
-      
-      { AIC::CriticalPopularity               ->getValue() , 1  },
-      { AIC::LowestPopularity                 ->getValue() , 1  },
-      { AIC::HighestPopularity                ->getValue() , 1  },
-      
-      { AIC::TaxesMin                         ->getValue() , 2  },
-      { AIC::TaxesMax                         ->getValue() , 2  },
-   
-      { AIC::Farm1                            ->getValue() , 3  },
-      { AIC::Farm2                            ->getValue() , 3  },
-      { AIC::Farm3                            ->getValue() , 3  },
-      { AIC::Farm4                            ->getValue() , 3  },
-      { AIC::Farm5                            ->getValue() , 3  },
-      { AIC::Farm6                            ->getValue() , 3  },
-      { AIC::Farm7                            ->getValue() , 3  },
-      { AIC::Farm8                            ->getValue() , 3  },
-      
-      { AIC::MaxQuarries                      ->getValue() , 4  },
-      { AIC::MaxIronmines                     ->getValue() , 4  },
-      { AIC::MaxWoodcutters                   ->getValue() , 4  },
-      { AIC::MaxPitchrigs                     ->getValue() , 4  },
-      { AIC::MaxFarms                         ->getValue() , 4  },
-     
-      { AIC::MinimumApples                    ->getValue() , 5  },
-      { AIC::MinimumCheese                    ->getValue() , 5  },
-      { AIC::MinimumBread                     ->getValue() , 5  },
-      { AIC::MinimumWheat                     ->getValue() , 5  },
-      { AIC::MinimumHop                       ->getValue() , 5  },
-    
-      { AIC::BlacksmithSetting                ->getValue() , 6  },
-      { AIC::FletcherSetting                  ->getValue() , 7  },
-      { AIC::PoleturnerSetting                ->getValue() , 8  },
-    
-      { AIC::SellResource01                   ->getValue() , 9  },
-      { AIC::SellResource02                   ->getValue() , 9  },
-      { AIC::SellResource03                   ->getValue() , 9  },
-      { AIC::SellResource04                   ->getValue() , 9  },
-      { AIC::SellResource05                   ->getValue() , 9  },
-      { AIC::SellResource06                   ->getValue() , 9  },
-      { AIC::SellResource07                   ->getValue() , 9  },
-      { AIC::SellResource08                   ->getValue() , 9  },
-      { AIC::SellResource09                   ->getValue() , 9  },
-      { AIC::SellResource10                   ->getValue() , 9  },
-      { AIC::SellResource11                   ->getValue() , 9  },
-      { AIC::SellResource12                   ->getValue() , 9  },
-      { AIC::SellResource13                   ->getValue() , 9  },
-      { AIC::SellResource14                   ->getValue() , 9  },
-      { AIC::SellResource15                   ->getValue() , 9  },
-
-      { AIC::RecruitProbDefDefault            ->getValue() , 10 },
-      { AIC::RecruitProbDefWeak               ->getValue() , 10 },
-      { AIC::RecruitProbDefStrong             ->getValue() , 10 },
-      { AIC::RecruitProbRaidDefault           ->getValue() , 10 },
-      { AIC::RecruitProbRaidWeak              ->getValue() , 10 },
-      { AIC::RecruitProbRaidStrong            ->getValue() , 10 },
-      { AIC::RecruitProbAttackDefault         ->getValue() , 10 },
-      { AIC::RecruitProbAttackWeak            ->getValue() , 10 },
-      { AIC::RecruitProbAttackStrong          ->getValue() , 10 },
-      { AIC::AttForceRallyPercentage          ->getValue() , 10 },
-
-      { AIC::SortieUnitRanged                 ->getValue() , 11 },
-      { AIC::SortieUnitMelee                  ->getValue() , 11 },
-      { AIC::DefUnit1                         ->getValue() , 11 },
-      { AIC::DefUnit2                         ->getValue() , 11 },
-      { AIC::DefUnit3                         ->getValue() , 11 },
-      { AIC::DefUnit4                         ->getValue() , 11 },
-      { AIC::DefUnit5                         ->getValue() , 11 },
-      { AIC::DefUnit6                         ->getValue() , 11 },
-      { AIC::DefUnit7                         ->getValue() , 11 },
-      { AIC::DefUnit8                         ->getValue() , 11 },
-      { AIC::RaidUnit1                        ->getValue() , 11 },
-      { AIC::RaidUnit2                        ->getValue() , 11 },
-      { AIC::RaidUnit3                        ->getValue() , 11 },
-      { AIC::RaidUnit4                        ->getValue() , 11 },
-      { AIC::RaidUnit5                        ->getValue() , 11 },
-      { AIC::RaidUnit6                        ->getValue() , 11 },
-      { AIC::RaidUnit7                        ->getValue() , 11 },
-      { AIC::RaidUnit8                        ->getValue() , 11 },
-      { AIC::AttUnit2                         ->getValue() , 11 },
-      { AIC::AttUnitPatrol                    ->getValue() , 11 },
-      { AIC::AttUnitBackup                    ->getValue() , 11 },
-      { AIC::AttUnitEngage                    ->getValue() , 11 },
-      { AIC::AttUnitSiegeDef                  ->getValue() , 11 },
-      { AIC::AttUnitMain1                     ->getValue() , 11 },
-      { AIC::AttUnitMain2                     ->getValue() , 11 },
-      { AIC::AttUnitMain3                     ->getValue() , 11 },
-      { AIC::AttUnitMain4                     ->getValue() , 11 },
-
-      { AIC::DefDiggingUnit                   ->getValue() , 12 },
-      { AIC::AttDiggingUnit                   ->getValue() , 12 },
-
-      { AIC::OuterPatrolGroupsMove            ->getValue() , 13 },
-
-      { AIC::HarassingSiegeEngine1            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine2            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine3            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine4            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine5            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine6            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine7            ->getValue() , 14 },
-      { AIC::HarassingSiegeEngine8            ->getValue() , 14 },
-
-      { AIC::HarassingSiegeEnginesMax         ->getValue() , 15 },
- 
-      { AIC::SiegeEngine1                     ->getValue() , 16 },
-      { AIC::SiegeEngine2                     ->getValue() , 16 },
-      { AIC::SiegeEngine3                     ->getValue() , 16 },
-      { AIC::SiegeEngine4                     ->getValue() , 16 },
-      { AIC::SiegeEngine5                     ->getValue() , 16 },
-      { AIC::SiegeEngine6                     ->getValue() , 16 },
-      { AIC::SiegeEngine7                     ->getValue() , 16 },
-      { AIC::SiegeEngine8                     ->getValue() , 16 },
-
-      { AIC::AttMainGroupsCount               ->getValue() , 17 },
-
-      { AIC::TargetChoice                     ->getValue() , 18 }
-    };
-
-    auto it{ switchMap.find(field->getValue()) };
-    if (it == switchMap.end())
+    const int32_t* reactNum{ getReactionNumber(field) };
+    if (!reactNum)
     {
-      LOG(ERROR) << "AICLoad: Personality value test received non valid field. This should not happen. Is a handler missing?";
+      // if not found, there was already a log message
       return false;
     }
 
-    switch (it->second)
+    switch (*reactNum)
     {
       case 0: // full 0 to int range
         return validIntRangeHelper(field, value, validValue, 0, int32Max, "0 to 2 ^ 31 - 1");
@@ -966,6 +631,490 @@ namespace modclasses
 
     return aicMap;
   }
+
+
+  // NOTE: no special meaning, just sorted by how I process them somewhere else
+  const int32_t* AICLoad::getReactionNumber(AICEnum field) const
+  {
+    // static map for function types, returns int for switch
+    // only basic value tests
+    // mapping int32_t ids to int32_t -> could also use switch again, hm?
+    // issue -> there was no constructor for const T* const value types it seems (map might work, but again, I could use the switch again
+    static const std::unordered_map<int32_t, int32_t> switchMap{
+      { AIC::Unknown000                       ->getValue() , 0  },
+      { AIC::Unknown001                       ->getValue() , 0  },
+      { AIC::Unknown002                       ->getValue() , 0  },
+      { AIC::Unknown003                       ->getValue() , 0  },
+      { AIC::Unknown004                       ->getValue() , 0  },
+      { AIC::Unknown005                       ->getValue() , 0  },
+      { AIC::Unknown011                       ->getValue() , 0  },
+      { AIC::PopulationPerFarm                ->getValue() , 0  },
+      { AIC::PopulationPerWoodcutter          ->getValue() , 0  },
+      { AIC::PopulationPerQuarry              ->getValue() , 0  },
+      { AIC::PopulationPerIronmine            ->getValue() , 0  },
+      { AIC::PopulationPerPitchrig            ->getValue() , 0  },
+      { AIC::BuildInterval                    ->getValue() , 0  },
+      { AIC::ResourceRebuildDelay             ->getValue() , 0  },
+      { AIC::MaxFood                          ->getValue() , 0  },
+      { AIC::TradeAmountFood                  ->getValue() , 0  },
+      { AIC::TradeAmountEquipment             ->getValue() , 0  },
+      { AIC::Unknown040                       ->getValue() , 0  },
+      { AIC::MinimumGoodsRequiredAfterTrade   ->getValue() , 0  },
+      { AIC::DoubleRationsFoodThreshold       ->getValue() , 0  },
+      { AIC::MaxWood                          ->getValue() , 0  },
+      { AIC::MaxStone                         ->getValue() , 0  },
+      { AIC::MaxResourceOther                 ->getValue() , 0  },
+      { AIC::MaxEquipment                     ->getValue() , 0  },
+      { AIC::MaxBeer                          ->getValue() , 0  },
+      { AIC::MaxResourceVariance              ->getValue() , 0  },
+      { AIC::RecruitGoldThreshold             ->getValue() , 0  },
+      { AIC::DefWallPatrolRallytime           ->getValue() , 0  },
+      { AIC::DefWallPatrolGroups              ->getValue() , 0  },
+      { AIC::DefSiegeEngineGoldThreshold      ->getValue() , 0  },
+      { AIC::DefSiegeEngineBuildDelay         ->getValue() , 0  },
+      { AIC::Unknown072                       ->getValue() , 0  },
+      { AIC::Unknown073                       ->getValue() , 0  },
+      { AIC::SortieUnitRangedMin              ->getValue() , 0  },
+      { AIC::SortieUnitMeleeMin               ->getValue() , 0  },
+      { AIC::DefDiggingUnitMax                ->getValue() , 0  },
+      { AIC::RecruitInterval                  ->getValue() , 0  },
+      { AIC::RecruitIntervalWeak              ->getValue() , 0  },
+      { AIC::RecruitIntervalStrong            ->getValue() , 0  },
+      { AIC::DefTotal                         ->getValue() , 0  },
+      { AIC::OuterPatrolGroupsCount           ->getValue() , 0  },
+      { AIC::OuterPatrolRallyDelay            ->getValue() , 0  },
+      { AIC::DefWalls                         ->getValue() , 0  },
+      { AIC::RaidUnitsBase                    ->getValue() , 0  },
+      { AIC::RaidUnitsRandom                  ->getValue() , 0  },
+      { AIC::Unknown124                       ->getValue() , 0  },
+      { AIC::AttForceBase                     ->getValue() , 0  },
+      { AIC::AttForceRandom                   ->getValue() , 0  },
+      { AIC::AttForceSupportAllyThreshold     ->getValue() , 0  },
+      { AIC::Unknown129                       ->getValue() , 0  },
+      { AIC::Unknown130                       ->getValue() , 0  },
+      { AIC::AttUnitPatrolRecommandDelay      ->getValue() , 0  },
+      { AIC::Unknown132                       ->getValue() , 0  },
+      { AIC::CowThrowInterval                 ->getValue() , 0  },
+      { AIC::Unknown142                       ->getValue() , 0  },
+      { AIC::AttMaxEngineers                  ->getValue() , 0  },
+      { AIC::AttDiggingUnitMax                ->getValue() , 0  },
+      { AIC::AttUnit2Max                      ->getValue() , 0  },
+      { AIC::AttMaxAssassins                  ->getValue() , 0  },
+      { AIC::AttMaxLaddermen                  ->getValue() , 0  },
+      { AIC::AttMaxTunnelers                  ->getValue() , 0  },
+      { AIC::AttUnitPatrolMax                 ->getValue() , 0  },
+      { AIC::AttUnitPatrolGroupsCount         ->getValue() , 0  },
+      { AIC::AttUnitBackupMax                 ->getValue() , 0  },
+      { AIC::AttUnitBackupGroupsCount         ->getValue() , 0  },
+      { AIC::AttUnitEngageMax                 ->getValue() , 0  },
+      { AIC::AttUnitSiegeDefMax               ->getValue() , 0  },
+      { AIC::AttUnitSiegeDefGroupsCount       ->getValue() , 0  },
+      { AIC::AttMaxDefault                    ->getValue() , 0  },
+      
+      { AIC::CriticalPopularity               ->getValue() , 1  },
+      { AIC::LowestPopularity                 ->getValue() , 1  },
+      { AIC::HighestPopularity                ->getValue() , 1  },
+      
+      { AIC::TaxesMin                         ->getValue() , 2  },
+      { AIC::TaxesMax                         ->getValue() , 2  },
+   
+      { AIC::Farm1                            ->getValue() , 3  },
+      { AIC::Farm2                            ->getValue() , 3  },
+      { AIC::Farm3                            ->getValue() , 3  },
+      { AIC::Farm4                            ->getValue() , 3  },
+      { AIC::Farm5                            ->getValue() , 3  },
+      { AIC::Farm6                            ->getValue() , 3  },
+      { AIC::Farm7                            ->getValue() , 3  },
+      { AIC::Farm8                            ->getValue() , 3  },
+      
+      { AIC::MaxQuarries                      ->getValue() , 4  },
+      { AIC::MaxIronmines                     ->getValue() , 4  },
+      { AIC::MaxWoodcutters                   ->getValue() , 4  },
+      { AIC::MaxPitchrigs                     ->getValue() , 4  },
+      { AIC::MaxFarms                         ->getValue() , 4  },
+     
+      { AIC::MinimumApples                    ->getValue() , 5  },
+      { AIC::MinimumCheese                    ->getValue() , 5  },
+      { AIC::MinimumBread                     ->getValue() , 5  },
+      { AIC::MinimumWheat                     ->getValue() , 5  },
+      { AIC::MinimumHop                       ->getValue() , 5  },
+    
+      { AIC::BlacksmithSetting                ->getValue() , 6  },
+      { AIC::FletcherSetting                  ->getValue() , 7  },
+      { AIC::PoleturnerSetting                ->getValue() , 8  },
+    
+      { AIC::SellResource01                   ->getValue() , 9  },
+      { AIC::SellResource02                   ->getValue() , 9  },
+      { AIC::SellResource03                   ->getValue() , 9  },
+      { AIC::SellResource04                   ->getValue() , 9  },
+      { AIC::SellResource05                   ->getValue() , 9  },
+      { AIC::SellResource06                   ->getValue() , 9  },
+      { AIC::SellResource07                   ->getValue() , 9  },
+      { AIC::SellResource08                   ->getValue() , 9  },
+      { AIC::SellResource09                   ->getValue() , 9  },
+      { AIC::SellResource10                   ->getValue() , 9  },
+      { AIC::SellResource11                   ->getValue() , 9  },
+      { AIC::SellResource12                   ->getValue() , 9  },
+      { AIC::SellResource13                   ->getValue() , 9  },
+      { AIC::SellResource14                   ->getValue() , 9  },
+      { AIC::SellResource15                   ->getValue() , 9  },
+
+      { AIC::RecruitProbDefDefault            ->getValue() , 10 },
+      { AIC::RecruitProbDefWeak               ->getValue() , 10 },
+      { AIC::RecruitProbDefStrong             ->getValue() , 10 },
+      { AIC::RecruitProbRaidDefault           ->getValue() , 10 },
+      { AIC::RecruitProbRaidWeak              ->getValue() , 10 },
+      { AIC::RecruitProbRaidStrong            ->getValue() , 10 },
+      { AIC::RecruitProbAttackDefault         ->getValue() , 10 },
+      { AIC::RecruitProbAttackWeak            ->getValue() , 10 },
+      { AIC::RecruitProbAttackStrong          ->getValue() , 10 },
+      { AIC::AttForceRallyPercentage          ->getValue() , 10 },
+
+      // these are all Unit -> is it required to separate them in Ranged and Melee?
+      { AIC::SortieUnitRanged                 ->getValue() , 11 },
+      { AIC::SortieUnitMelee                  ->getValue() , 11 },
+      { AIC::DefUnit1                         ->getValue() , 11 },
+      { AIC::DefUnit2                         ->getValue() , 11 },
+      { AIC::DefUnit3                         ->getValue() , 11 },
+      { AIC::DefUnit4                         ->getValue() , 11 },
+      { AIC::DefUnit5                         ->getValue() , 11 },
+      { AIC::DefUnit6                         ->getValue() , 11 },
+      { AIC::DefUnit7                         ->getValue() , 11 },
+      { AIC::DefUnit8                         ->getValue() , 11 },
+      { AIC::RaidUnit1                        ->getValue() , 11 },
+      { AIC::RaidUnit2                        ->getValue() , 11 },
+      { AIC::RaidUnit3                        ->getValue() , 11 },
+      { AIC::RaidUnit4                        ->getValue() , 11 },
+      { AIC::RaidUnit5                        ->getValue() , 11 },
+      { AIC::RaidUnit6                        ->getValue() , 11 },
+      { AIC::RaidUnit7                        ->getValue() , 11 },
+      { AIC::RaidUnit8                        ->getValue() , 11 },
+      { AIC::AttUnit2                         ->getValue() , 11 },
+      { AIC::AttUnitPatrol                    ->getValue() , 11 },
+      { AIC::AttUnitBackup                    ->getValue() , 11 },
+      { AIC::AttUnitEngage                    ->getValue() , 11 },
+      { AIC::AttUnitSiegeDef                  ->getValue() , 11 },
+      { AIC::AttUnitMain1                     ->getValue() , 11 },
+      { AIC::AttUnitMain2                     ->getValue() , 11 },
+      { AIC::AttUnitMain3                     ->getValue() , 11 },
+      { AIC::AttUnitMain4                     ->getValue() , 11 },
+
+      { AIC::DefDiggingUnit                   ->getValue() , 12 },
+      { AIC::AttDiggingUnit                   ->getValue() , 12 },
+
+      { AIC::OuterPatrolGroupsMove            ->getValue() , 13 },
+
+      { AIC::HarassingSiegeEngine1            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine2            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine3            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine4            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine5            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine6            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine7            ->getValue() , 14 },
+      { AIC::HarassingSiegeEngine8            ->getValue() , 14 },
+
+      { AIC::HarassingSiegeEnginesMax         ->getValue() , 15 },
+ 
+      { AIC::SiegeEngine1                     ->getValue() , 16 },
+      { AIC::SiegeEngine2                     ->getValue() , 16 },
+      { AIC::SiegeEngine3                     ->getValue() , 16 },
+      { AIC::SiegeEngine4                     ->getValue() , 16 },
+      { AIC::SiegeEngine5                     ->getValue() , 16 },
+      { AIC::SiegeEngine6                     ->getValue() , 16 },
+      { AIC::SiegeEngine7                     ->getValue() , 16 },
+      { AIC::SiegeEngine8                     ->getValue() , 16 },
+
+      { AIC::AttMainGroupsCount               ->getValue() , 17 },
+
+      { AIC::TargetChoice                     ->getValue() , 18 }
+    };
+
+    auto it{ switchMap.find(field->getValue()) };
+    if (it != switchMap.end())
+    {
+      return &(it->second);
+    }
+
+    LOG(ERROR) << "AICLoad: Personality value test received non valid field. This should not happen. Is a handler missing?";
+    return nullptr;
+  }
+
+
+  // creates templates to deal with different enum menus
+  // if I would use objects instead of the static class approach, something might ba possible
+  // however, as it stands, I can not send a static class ref
+  template<typename T>
+  void AICLoad::createEnumMenuHelper(AINameEnum aiName, AICEnum field, MenuBase &charMenu)
+  {
+    std::vector<std::pair<std::string, int32_t>> valueVector{};
+    T::WithEachEnumInValueOrder([&valueVector](const std::string &aicName, typename T::EnumType valueEnum)
+    {
+      if (valueEnum == T::None)
+      {
+        return;
+      }
+
+      valueVector.push_back(std::make_pair(aicName, valueEnum->getValue()));
+    });
+
+    charMenu.createMenu<ChoiceInputMenu, false>(
+      std::string(field->getName()),
+      nullptr,
+      getNameOrNULL<T>(vanillaAIC[getAICFieldIndex(aiName, field)]),
+      std::move(valueVector),
+      [this, aiName, field](int32_t newValue, std::string& resultMessage,
+        bool onlyUpdateCurrent, std::string& currentValue)
+      {
+        if (onlyUpdateCurrent)
+        {
+          currentValue = this->getNameOrNULL<T>((*(this->aicMemoryPtr))[this->getAICFieldIndex(aiName, field)]);
+          return false;
+        }
+
+        // no need for extra check -> should be ok by definition
+        if (this->setPersonalityValueUnchecked(aiName, field, newValue))
+        {
+          resultMessage = "Success.";
+          return true;
+        }
+        else
+        {
+          resultMessage = "Failed.";
+          return false;
+        }
+      }
+    );
+  }
+
+
+  void AICLoad::createMenu()
+  {
+    auto bltOverlay{ getMod<BltOverlay>() };
+    if (!bltOverlay)
+    {
+      BltOverlay::sendToConsole("AICLoad: Unable to get BltOverlay for menu create.", el::Level::Warning);
+    }
+
+    MenuBase* basPtr{ bltOverlay->getMainMenu() };
+    if (!basPtr)
+    {
+      BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
+    }
+
+    // create basic menus and get ref to editor menu
+    MenuBase& editorMenu{
+      (*basPtr).createMenu<MainMenu, true>(
+        "AIC Load",
+        nullptr,
+        true
+      )
+        // NOTE -> Main Menu is descendable, but child will be hidden by func
+        // they could be added though
+        .createMenu<MainMenu, false>(
+          "Reload All Files",
+          [this](bool, std::string&)
+          {
+            this->reloadAllAIC(0, false, false);
+            return false;
+          },
+          true
+        )
+        .createMenu<MainMenu, false>(
+          "Reload Main File",
+          [this](bool, std::string&)
+          {
+            this->reloadMainAIC(0, false, false);
+            return false;
+          },
+          true
+        )
+        .createMenu<MainMenu, false>(
+          "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
+          [this](bool, std::string& header)
+          {
+            this->activateAICs(0, false, false);
+            header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
+            return false;
+          },
+          true
+        )
+        .createMenu<MainMenu, true>(
+          "Editor",
+          nullptr,
+          true
+        )
+    };
+
+    AIName::WithEachEnumInValueOrder([this, &editorMenu](const std::string &name, AINameEnum nameEnum)
+    {
+      if (nameEnum == AIName::None)
+      {
+        return;
+      }
+
+      MenuBase& charMenu{
+        editorMenu.createMenu<MainMenu, true>(
+          std::string(name),
+          nullptr,
+          false
+        )
+      };
+
+      AIC::WithEachEnumInValueOrder([this, &charMenu, nameEnum](const std::string &aicName, AICEnum aicEnum)
+      {
+        if (aicEnum == AIC::None)
+        {
+          return;
+        }
+
+        // get sort value
+        const int32_t* reactNum{ this->getReactionNumber(aicEnum) };
+        if (!reactNum)
+        {
+          // if not found, there was already a log message
+          return;
+        }
+
+        switch (*reactNum)
+        {
+          case 0:
+          case 1:
+          case 2:
+          case 4:
+          case 5:
+          case 10:
+          case 15:
+          case 17:
+          {
+            charMenu.createMenu<FreeInputMenu, false>(
+              std::string(aicName),
+              nullptr,
+              true,
+              std::to_string(this->vanillaAIC[this->getAICFieldIndex(nameEnum, aicEnum)]),
+              [this, nameEnum, aicEnum](const std::string& currentInput,
+                std::string& resultMessage, bool onlyUpdateCurrent, std::string& currentValue)
+              {
+                if (!onlyUpdateCurrent)
+                {
+                  bool error{ false };
+                  int32_t inputValue{ 0 };
+                  try
+                  {
+                    inputValue = std::stoi(currentInput);
+                  }
+                  catch (const std::invalid_argument&)
+                  {
+                    resultMessage = "Invalid input.";
+                    error = true;
+                  }
+                  catch (const std::out_of_range&)
+                  {
+                    resultMessage = "Number to big.";
+                    error = true;
+                  }
+                  catch (const std::exception&)
+                  {
+                    resultMessage = "Parse error.";
+                    error = true;
+                  }
+
+                  // need extra check
+                  if (!error)
+                  {
+                    if (this->setPersonalityValue(nameEnum, aicEnum, inputValue))
+                    {
+                      resultMessage = "Success.";
+                    }
+                    else
+                    {
+                      resultMessage = "Failed. See log.";
+                    }
+                  }
+                }
+
+                currentValue = std::to_string(
+                  (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)]);
+              }
+            );
+
+            break;
+          }
+          case 3:
+            createEnumMenuHelper<Farm>(nameEnum, aicEnum, charMenu);
+            break;
+          case 6:
+            createEnumMenuHelper<Smith>(nameEnum, aicEnum, charMenu);
+            break;
+          case 7:
+            createEnumMenuHelper<Fletcher>(nameEnum, aicEnum, charMenu);
+            break;
+          case 8:
+            createEnumMenuHelper<Pole>(nameEnum, aicEnum, charMenu);
+            break;
+          case 9:
+            createEnumMenuHelper<Resource>(nameEnum, aicEnum, charMenu);
+            break;
+          case 11:
+            createEnumMenuHelper<Unit>(nameEnum, aicEnum, charMenu);
+            break;
+          case 12:
+            createEnumMenuHelper<DUnit>(nameEnum, aicEnum, charMenu);
+            break;
+          case 13:  // our little special one -> is this even only true or false? (only test for 0 or diff)
+          {
+            charMenu.createMenu<ChoiceInputMenu, false>(
+              std::string(aicName),
+              nullptr,
+              vanillaAIC[getAICFieldIndex(nameEnum, aicEnum)] ? "true" : "false",
+              std::vector<std::pair<std::string, int32_t>>{
+                { "false", 0 },
+                { "true", 1 }
+              },
+              [this, nameEnum, aicEnum](int32_t newValue, std::string& resultMessage,
+                bool onlyUpdateCurrent, std::string& currentValue)
+              {
+                if (onlyUpdateCurrent)
+                {
+                  currentValue = (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)] ? "true" : "false";
+                  return false;
+                }
+
+                // no need for extra check -> should be ok by definition
+                if (this->setPersonalityValueUnchecked(nameEnum, aicEnum, newValue))
+                {
+                  resultMessage = "Success.";
+                  return true;
+                }
+                else
+                {
+                  resultMessage = "Failed.";
+                  return false;
+                }
+              }
+            );
+
+            break;
+          }
+          case 14:
+            createEnumMenuHelper<HSE>(nameEnum, aicEnum, charMenu);
+            break;
+          case 16:
+            createEnumMenuHelper<SE>(nameEnum, aicEnum, charMenu);
+            break;
+          case 18:
+            createEnumMenuHelper<Target>(nameEnum, aicEnum, charMenu);
+            break;
+          default:
+          {
+            LOG(ERROR) << "AICLoad: Personality value test found no valid handling. "
+              "This should not happen. Is a handler missing?";
+            break;
+          }
+        }
+      });
+    });
+  }
+
 
   std::vector<AddressRequest> AICLoad::usedAddresses{
     {Address::AIC_IN_MEMORY, {{Version::NONE, 10816}}, true, AddressRisk::WARNING}

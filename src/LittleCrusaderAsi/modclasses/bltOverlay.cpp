@@ -365,7 +365,7 @@ namespace modclasses
 
   bool BltOverlay::controlMenu(const HWND, const bool keyUp, const bool repeat, const VK key)
   {
-    if (!menuActive || keyUp || repeat || !currentMenu)
+    if (!menuActive || keyUp || !currentMenu)
     {
       return editing ? true : false;
     }
@@ -376,7 +376,7 @@ namespace modclasses
       return false;
     }
 
-    MenuBase* switchMenu{ currentMenu->executeAction(menuActions[key], *this) };
+    MenuBase* switchMenu{ currentMenu->executeAction(menuActions[key], repeat, *this) };
     if (switchMenu != nullptr)
     {
       currentMenu = switchMenu;
