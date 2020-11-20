@@ -102,9 +102,6 @@
     <ClInclude Include="modclasses\bltOverlay.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
-    <ClInclude Include="dependencies\JsonForModernC++\json.hpp">
-      <Filter>dependencies</Filter>
-    </ClInclude>
     <ClInclude Include="dependencies\easylogging++\easylogging++.h">
       <Filter>dependencies</Filter>
     </ClInclude>
@@ -116,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="modclasses\enumheaders\pseudoEnumsAI.h">
       <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\JsonForModernC++\json.hpp">
+      <Filter>dependencies</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

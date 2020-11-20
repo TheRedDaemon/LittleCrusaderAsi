@@ -671,8 +671,9 @@ namespace modclasses
         return "Invalid name or path.";
       }
 
-      
-      Json output;
+      // keeps insertion order unlike normal json container
+      // used to keep value order (likely order people are used to)
+      OrderedJson output;
 
       // adding dummy AIC description
       output["AICShortDescription"] = {
@@ -684,10 +685,95 @@ namespace modclasses
         { "Hungarian"  ,  "" }
       };
 
+      size_t counter{ 0 };
+      AIName::WithEachEnumInValueOrder([this, &output, &counter](const std::string& name, AINameEnum nameEnum)
+      {
+        // filter AICNames that should not be inlcluded
+        if (nameEnum == AIName::None || !(this->saveArray[nameEnum->getValue()]))
+        {
+          return;
+        }
 
-      // TODO: add structures for aic file save
-      // this properly creates the structure, so no prepare needed (need counter for index though, or nulls)
-      output["AICharacters"][0]["Name"] = "Rat";
+        OrderedJson& thisChar{ output["AICharacters"][counter] };
+        ++counter;  // prepare for next round already
+        
+        thisChar["Name"] = name;
+        thisChar["CustomName"] = "";  // empty -> not used here for anything
+        
+
+        OrderedJson& personality{ thisChar["Personality"] };
+        AIC::WithEachEnumInValueOrder([this, &personality, nameEnum](const std::string& aicName, AICEnum aicEnum)
+        {
+          if (aicEnum == AIC::None)
+          {
+            return;
+          }
+
+          // get sort value
+          const int32_t* reactNum{ this->getReactionNumber(aicEnum) };
+          if (!reactNum)
+          {
+            // if not found, there was already a log message
+            return;
+          }
+
+          OrderedJson& jsonField{ personality[aicName] };
+          int32_t value{ (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)] };
+
+          switch (*reactNum)
+          {
+            case 0:
+            case 1:
+            case 2:
+            case 4:
+            case 5:
+            case 10:
+            case 15:
+            case 17:
+              jsonField = value;
+              break;
+            case 3:
+              jsonField = this->getNameOrNULL<Farm>(value); // might produce with UCP incompatible AIC... Change?
+              break;
+            case 6:
+              jsonField = this->getNameOrNULL<Smith>(value);
+              break;
+            case 7:
+              jsonField = this->getNameOrNULL<Fletcher>(value);
+              break;
+            case 8:
+              jsonField = this->getNameOrNULL<Pole>(value);
+              break;
+            case 9:
+              jsonField = this->getNameOrNULL<Resource>(value);
+              break;
+            case 11:
+              jsonField = this->getNameOrNULL<Unit>(value);
+              break;
+            case 12:
+              jsonField = this->getNameOrNULL<DUnit>(value);
+              break;
+            case 13:  // our little special one -> is this even only true or false? (only test for 0 or diff)
+              jsonField = value ? "True" : "False"; // uses bool string(!)
+              break;
+            case 14:
+              jsonField = this->getNameOrNULL<HSE>(value);
+              break;
+            case 16:
+              jsonField = this->getNameOrNULL<SE>(value);
+              break;
+            case 18:
+              jsonField = this->getNameOrNULL<Target>(value);
+              break;
+            default:
+            {
+              LOG(ERROR) << "AICLoad: Personality value test found no valid handling. "
+                "This should not happen. Is a handler missing?";
+              break;
+            }
+          }
+        });
+      });
 
       aicOut << std::setw(4) << output << std::endl;
 

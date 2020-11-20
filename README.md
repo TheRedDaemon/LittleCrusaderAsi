@@ -95,7 +95,7 @@ You will find them together with a copy of their licenses under [THIS](src/Littl
 Dependency | Used Version | Notes
 ------------ | ------------- | -------------
 [Easylogging++](https://github.com/amrayn/easyloggingpp) | 9.96.7
-[JSON for Modern C++](https://github.com/nlohmann/json) | 3.7.3
+[JSON for Modern C++](https://github.com/nlohmann/json) | 3.9.1
 [DDFontEngine](https://realmike.org/blog/projects/fast-bitmap-fonts-for-directdraw) | - | Old Tutorial for DirectDraw fonts. Classes themselves unused, but kept for reference.
 
 ### Other Crusader projects

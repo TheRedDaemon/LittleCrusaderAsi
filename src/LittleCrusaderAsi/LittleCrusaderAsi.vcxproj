@@ -176,8 +176,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="dependencies\JsonForModernC++\json.hpp" />
     <ClInclude Include="dependencies\easylogging++\easylogging++.h" />
+    <ClInclude Include="dependencies\JsonForModernC++\json.hpp" />
     <ClInclude Include="Modclasses\addressBase.h" />
     <ClInclude Include="Misc\copiedFunc.h" />
     <ClInclude Include="modclasses\addressResolver.h" />

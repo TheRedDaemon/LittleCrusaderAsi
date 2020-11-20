@@ -17,6 +17,7 @@
 namespace modclasses
 {
   using Json = nlohmann::json;
+  using OrderedJson = nlohmann::ordered_json;
 
   // base class for all mod impl
   class ModBase
