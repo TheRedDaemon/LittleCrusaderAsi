@@ -53,6 +53,11 @@ namespace modclasses
     std::unordered_map<std::string, std::unique_ptr<std::unordered_map<int32_t, int32_t>>> loadedAICValues;
     // TODO(?): maybe it would be a idea to store the summed values of everything but the main aic?
 
+    // "include in aic save"-array
+    // 0 is unused -> will use the AIName value to check
+    std::array<bool, 17> saveArray{};
+    std::string lastSaveName{ "" }; // remembered to confirm overwrite
+
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
     static std::vector<AddressRequest> usedAddresses;
@@ -140,6 +145,9 @@ namespace modclasses
 
     template<typename T>
     void createEnumMenuHelper(AINameEnum aiName, AICEnum field, MenuBase& charMenu);
+
+    // save current AIC status in file
+    std::string saveAIC(const std::string& fileName, const bool fileRelativeToMod);
 
     // to safe space in the menu definition
     template<typename PseudoEnumClass>

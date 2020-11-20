@@ -528,10 +528,15 @@ namespace modclasses
     return this;
   }
 
-
+  // TODO?: maybe take an unsigned char in th efirst place?
+  // altough, if string uses char intern, it would not make much of a difference
   MenuBase* FreeInputMenu::executeAction(char newChar, BltOverlay& over)
   {
     if (onlyNumber && std::find(numberChars.begin(), numberChars.end(), newChar) == numberChars.end())
+    {
+      return nullptr;
+    }
+    else if (newChar > -1 && newChar < 32)  // reject non-printable chars (this input menu will likely never use them)
     {
       return nullptr;
     }

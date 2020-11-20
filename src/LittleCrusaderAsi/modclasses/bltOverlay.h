@@ -325,7 +325,7 @@ namespace modclasses
 
     // will simply run over it and see if it exists -> Hash for something like this overkill
     // if onlyNumber, will only work with this chars
-    inline static constexpr std::array<char, 13> numberChars{
+    inline static constexpr std::array<const char, 13> numberChars{
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '-', '.'
     };
     const bool onlyNumber{ false };

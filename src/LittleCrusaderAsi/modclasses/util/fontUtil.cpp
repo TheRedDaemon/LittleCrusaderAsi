@@ -374,7 +374,7 @@ namespace modclasses
 
     size_t charNumber{ 0 };
     int32_t relXPos{ 0 };
-    for (unsigned char chr : text)
+    for (unsigned char chr : text)  // already properly "reinterprets" char as unsigned
     {
       if (chr == ' ')
       {
@@ -500,7 +500,7 @@ namespace modclasses
 
       for (int32_t chrNum{ 0 }; chrNum < std::get<0>(numberLengthAndSpace); chrNum++)
       {
-        unsigned char chr = text[counter];
+        unsigned char chr = text[counter]; // already properly "reinterprets" char as unsigned
         x += font.ABCWidths[chr].abcA;
         
         // for some reason, taking the result in case of error allows better recover? (direct compare stopped them from appearing)

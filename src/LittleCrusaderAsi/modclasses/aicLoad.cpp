@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <iomanip>
 
 #include "aicLoad.h"
 
@@ -633,6 +634,74 @@ namespace modclasses
   }
 
 
+  std::string AICLoad::saveAIC(const std::string& fileName, const bool fileRelativeToMod)
+  {
+    if (fileName.empty())
+    {
+      lastSaveName = "";
+      return "No input.";
+    }
+
+    bool overwrite{ lastSaveName == fileName ? true : false };
+
+    std::string filePath;
+    if (!(fileRelativeToMod || relModPath.empty()))
+    {
+      filePath += relModPath + "/";
+    }
+    filePath += aicFolder.empty() ? fileName : aicFolder + "/" + fileName;
+    
+    try
+    {
+      if (!overwrite)
+      {
+        // test if file already exists
+        // Source: 
+        if (struct stat buf; stat(filePath.c_str(), &buf) != -1)
+        {
+          lastSaveName = fileName;
+          return "Exists. Repeat for overwrite.";
+        }
+      }
+
+      std::ofstream aicOut(filePath);
+
+      if (!aicOut.good())
+      {
+        return "Invalid name or path.";
+      }
+
+      
+      Json output;
+
+      // adding dummy AIC description
+      output["AICShortDescription"] = {
+        { "German"     ,  "" },
+        { "English"    ,  "" },
+        { "Polish"     ,  "" },
+        { "Russian"    ,  "" },
+        { "Chinese"    ,  "" },
+        { "Hungarian"  ,  "" }
+      };
+
+
+      // TODO: add structures for aic file save
+      // this properly creates the structure, so no prepare needed (need counter for index though, or nulls)
+      output["AICharacters"][0]["Name"] = "Rat";
+
+      aicOut << std::setw(4) << output << std::endl;
+
+      lastSaveName = ""; // set last name to empty
+      return "Done";
+    }
+    catch (const std::exception& o_O)
+    {
+      BltOverlay::sendToConsole(o_O.what(), el::Level::Warning);
+      return "Error. See log.";
+    }
+  }
+
+
   // NOTE: no special meaning, just sorted by how I process them somewhere else
   const int32_t* AICLoad::getReactionNumber(AICEnum field) const
   {
@@ -945,6 +1014,7 @@ namespace modclasses
         )
     };
 
+    // create individual editor menus (AIName * AIC)
     AIName::WithEachEnumInValueOrder([this, &editorMenu](const std::string &name, AINameEnum nameEnum)
     {
       if (nameEnum == AIName::None)
@@ -1113,6 +1183,57 @@ namespace modclasses
         }
       });
     });
+
+    // create save menus (could maybe later be moved in the create AIC editor loop)
+    saveArray.fill(true); // initial fill
+
+    MenuBase& saveMenu{
+      editorMenu.ascend()
+      .createMenu<MainMenu, true>(
+        "Save AIC",
+        nullptr,
+        true
+      )
+    };
+
+    MenuBase& customizeSaveMenu{
+      saveMenu.createMenu<MainMenu, true>(
+        "Customize",
+        nullptr,
+        true
+      )
+    };
+
+    AIName::WithEachEnumInValueOrder([this, &customizeSaveMenu](const std::string& name, AINameEnum nameEnum)
+    {
+      if (nameEnum == AIName::None)
+      {
+        return;
+      }
+
+      customizeSaveMenu.createMenu<MainMenu, false>(
+        "Save " + name + ": " + std::string(this->saveArray.at(nameEnum->getValue()) ? "Yes" : "No"),
+        [this, nameEnum](bool, std::string& header)
+        {
+          int32_t aiValue{ nameEnum->getValue() };
+          this->saveArray.at(aiValue) = !(this->saveArray.at(aiValue));
+          header = "Save " + nameEnum->getName() + ": " + 
+            std::string(this->saveArray.at(aiValue) ? "Yes" : "No");
+          return false;
+        },
+        true
+      );
+    });
+
+    saveMenu.createMenu<FreeInputMenu, false>(
+      "Save",
+      nullptr,
+      false,
+      [this](const std::string& fileName, std::string& resultMessage)
+      {
+        resultMessage = std::move(this->saveAIC(fileName, false));
+      }
+    );
   }
 
 
