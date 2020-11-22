@@ -93,9 +93,9 @@ namespace modclasses
 
 
   // will need address and keyboard stuff
-  std::vector<ModType> AICLoad::getDependencies() const
+  std::vector<ModID> AICLoad::getDependencies() const
   {
-    return { ModType::ADDRESS_RESOLVER, ModType::KEYBOARD_INTERCEPTOR, ModType::BLT_OVERLAY };
+    return { AddressResolver::ID, KeyboardInterceptor::ID, BltOverlay::ID };
   }
 
 
@@ -170,6 +170,7 @@ namespace modclasses
     }
     else
     {
+      // better this way -> without being initialized, no menu would work
       LOG(WARNING) << "AICLoad: Unable to register initialAICLoad-event, because BltOverlay was not initialized.";
     }
 

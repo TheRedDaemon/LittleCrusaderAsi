@@ -43,13 +43,21 @@ namespace modclasses
     static std::vector<AddressRequest> usedAddresses;
 
   public:
+
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("buildRangeChanger", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<BuildRangeChanger>(modKeeper, config));
+      })
+    };
     
-    ModType getModType() const override
+    ModID getModID() const override
     {
-      return ModType::BUILD_RANGE_CHANGER;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override;
+    std::vector<ModID> getDependencies() const override;
 
     /**con- and destructor**/
     BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);

@@ -13,12 +13,13 @@ namespace modclasses
 
   public:
 
-    ModType getModType() const override
+    // needs to be registered by ModManager
+    ModID getModID() const override
     {
-      return ModType::NONE;
+      return nullptr;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::vector<ModID> getDependencies() const override
     {
       return {};
     }

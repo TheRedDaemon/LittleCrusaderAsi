@@ -29,15 +29,23 @@ namespace modclasses
     Version version{ Version::NONE };
 
   public:
+
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{ 
+      ModMan::RegisterMod( "versionGetter", [](const std::weak_ptr<MKeeper> modKeeper, const Json&)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<VersionGetter>(modKeeper));
+      }) 
+    };
     
-    ModType getModType() const override
+    ModID getModID() const override
     {
-      return ModType::VERSION_GET;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::vector<ModID> getDependencies() const override
     {
-      return { ModType::ADDRESS_BASE };
+      return { AddressBase::ID };
     }
 
     /**con- and destructor**/

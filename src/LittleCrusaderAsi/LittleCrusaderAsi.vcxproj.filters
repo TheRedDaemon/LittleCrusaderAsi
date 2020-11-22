@@ -54,9 +54,6 @@
     <ClInclude Include="Modclasses\modBase.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
-    <ClInclude Include="Modclasses\dummyStuff\dummyMods.h">
-      <Filter>Headerdateien\ModClasses\TestStuff</Filter>
-    </ClInclude>
     <ClInclude Include="modcore\logUtility.h">
       <Filter>Headerdateien\ModCore</Filter>
     </ClInclude>
@@ -67,9 +64,6 @@
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h">
-      <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
-    </ClInclude>
-    <ClInclude Include="Modclasses\enumheaders\modtypes.h">
       <Filter>Headerdateien\ModClasses\EnumHeaders</Filter>
     </ClInclude>
     <ClInclude Include="modclasses\enumheaders\addressEnums.h">
@@ -117,6 +111,9 @@
     <ClInclude Include="dependencies\JsonForModernC++\json.hpp">
       <Filter>dependencies</Filter>
     </ClInclude>
+    <ClInclude Include="modcore\modManager.h">
+      <Filter>Headerdateien\ModCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Misc\copiedFunctions.cpp">
@@ -126,9 +123,6 @@
       <Filter>Quelldateien\ModClasses</Filter>
     </ClCompile>
     <ClCompile Include="Modcore\dllmain.cpp">
-      <Filter>Quelldateien\ModCore</Filter>
-    </ClCompile>
-    <ClCompile Include="Modcore\modConstructors.cpp">
       <Filter>Quelldateien\ModCore</Filter>
     </ClCompile>
     <ClCompile Include="modcore\logUtility.cpp">

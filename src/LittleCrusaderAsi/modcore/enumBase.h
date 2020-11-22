@@ -103,7 +103,11 @@ namespace modcore
 
   public:
     // will be used as type to create static variables
-    using EnumType = typename std::conditional<enumClassLike, const _EnumTypeObj* const, const _EnumTypeObj>::type;
+    using EnumType = typename std::conditional<enumClassLike, const _EnumTypeObj*, const _EnumTypeObj>::type;
+    // returned by CreateEnum
+    // -> makes in likeClassEnum case the pointer *const, to prevent re-assign
+    // -> everything else can be done with EnumType, since EnumType is passed by value
+    using EnumKeeper = typename std::conditional<enumClassLike, EnumType const, EnumType>::type;
 
     // returns description of class
     static const std::string GetDescription()
@@ -269,7 +273,7 @@ namespace modcore
     // or a !copy! of the value (so should complex objects be used -> use class behaviour)
     // NOTE: if a key already exists -> abort()
     // (I sadly do not know any way to validate this during compile everything would need to be constexpr
-    static EnumType CreateEnum(std::string &&name, T &&value)
+    static EnumKeeper CreateEnum(std::string &&name, T &&value)
     {
       // NOTE:
       // uses abort if name is added a second time -> want valid enum, everything else should crash

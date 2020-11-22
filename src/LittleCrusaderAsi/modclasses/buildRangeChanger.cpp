@@ -37,9 +37,9 @@ namespace modclasses
   }
 
 
-  std::vector<ModType> BuildRangeChanger::getDependencies() const
+  std::vector<ModID> BuildRangeChanger::getDependencies() const
   {
-    return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER, ModType::BLT_OVERLAY };
+    return { KeyboardInterceptor::ID, AddressResolver::ID, BltOverlay::ID };
   }
 
 

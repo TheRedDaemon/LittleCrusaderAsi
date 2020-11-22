@@ -64,13 +64,21 @@ namespace modclasses
 
   public:
 
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("aicLoad", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<AICLoad>(modKeeper, config));
+      })
+    };
+
     // get type of this mod
-    ModType getModType() const override
+    ModID getModID() const override
     {
-      return ModType::AIC_LOAD;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override;
+    std::vector<ModID> getDependencies() const override;
 
     /**con- and destructor**/
 

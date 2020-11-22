@@ -21,16 +21,24 @@ namespace modclasses
     DWORD addressBase{ 0x0 };
 
     // TODO: likely inefficient and slow, so maybe change to a better approach latter
-    std::map<DWORD, std::unordered_map<ModType, std::unordered_set<AddressRequest*>>> addressSortContainer{};
+    std::map<DWORD, std::unordered_map<ModID, std::unordered_set<AddressRequest*>>> addressSortContainer{};
 
   public:
 
-    ModType getModType() const override
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("addressResolver", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<AddressResolver>(modKeeper, config));
+      })
+    };
+
+    ModID getModID() const override
     {
-      return ModType::ADDRESS_RESOLVER;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override;
+    std::vector<ModID> getDependencies() const override;
 
     /**con- and destructor**/
 
@@ -65,7 +73,7 @@ namespace modclasses
         DWORD address{ getAddress(memAddr) };
         if (const auto& modAddrIt = addressSortContainer.find(address); modAddrIt != addressSortContainer.end())
         {
-          if (const auto& modIt = (modAddrIt->second).find(requestingMod.getModType()); modIt != (modAddrIt->second).end())
+          if (const auto& modIt = (modAddrIt->second).find(requestingMod.getModID()); modIt != (modAddrIt->second).end())
           {
             bool allowed{ false };
             for (const auto& reg : (modIt->second))
@@ -81,7 +89,7 @@ namespace modclasses
         }
 
         throw std::exception(("The address of type with id '" + std::to_string(static_cast<int>(memAddr))
-                              + "' was not approved for mod with id '" + std::to_string(static_cast<int>(requestingMod.getModType())) + "'.").c_str());
+                              + "' was not approved for mod '" + requestingMod.getModID()->getName() + "'.").c_str());
       }
 
       throw std::exception("AddressResolver wasn't successfully initialized, but \"getAddressPointer\" was still called.");
@@ -106,9 +114,9 @@ namespace modclasses
     // fills addressesWhereToAddRequest, addToNewAddressStart and addToNewAddressEnd
     // also return a bool that says "true" if the risk level was violated
     const bool checkRiskAndOverlaps(
-      const ModType requestModType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
-      const std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
-      std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressEnd);
+      ModID requestModType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
+      const std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
+      std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &addToNewAddressEnd);
   };
 }
 

@@ -18,9 +18,9 @@ namespace modclasses
     }
   }
 
-  std::vector<ModType> AddressResolver::getDependencies() const
+  std::vector<ModID> AddressResolver::getDependencies() const
   {
-    return { ModType::ADDRESS_BASE, ModType::VERSION_GET };
+    return { AddressBase::ID, VersionGetter::ID };
   }
 
   void AddressResolver::initialize()
@@ -123,9 +123,9 @@ namespace modclasses
   // TODO?: the unordered_maps are still redundantly filled, any worthwhile check possible?
   // NOTE: length 1 addresses and start/end overlaps will create an overhead that needs to be filtered in the return
   const bool AddressResolver::checkRiskAndOverlaps(
-    const ModType requestModType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
-    const std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
-    std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModType, std::unordered_set<AddressRequest*>> &addToNewAddressEnd)
+    ModID requestModType, const AddressRequest &newToAddReq, const std::pair<DWORD, DWORD> newAddrStartEnd,
+    const std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &reqInPlace, std::unordered_set<DWORD> &addressesWhereToAddRequest,
+    std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &addToNewAddressStart, std::unordered_map<ModID, std::unordered_set<AddressRequest*>> &addToNewAddressEnd)
   {
     bool riskToHigh{ false };
     auto otherReqSetIter = reqInPlace.begin();
@@ -182,7 +182,7 @@ namespace modclasses
     if (riskToHigh)
     {
       LOG(WARNING) << "Risk level violated trying to request address with id '" << std::to_string(static_cast<int>(newToAddReq.address))
-        << "' for mod '" << getStringFromEnum(requestModType) << "'.";
+        << "' for mod '" << requestModType->getName() << "'.";
     }
 
     return riskToHigh;
@@ -193,7 +193,7 @@ namespace modclasses
     if (initialized)
     {
       // save ref to unordered address map, to remove in error case
-      std::unordered_map<DWORD, std::unordered_map<ModType, std::unordered_set<AddressRequest*>>*> addedAddresses; // used to identify maps
+      std::unordered_map<DWORD, std::unordered_map<ModID, std::unordered_set<AddressRequest*>>*> addedAddresses; // used to identify maps
       std::unordered_set<AddressRequest*> addedRequests; // used to only delete newly requested addresses
 
       size_t i{ 0 };
@@ -204,8 +204,8 @@ namespace modclasses
         std::pair<DWORD, DWORD> addrStartEnd;
 
         std::unordered_set<DWORD> addressesWhereToAddRequest;
-        std::unordered_map<ModType, std::unordered_set<AddressRequest*>> addToAddressStart;
-        std::unordered_map<ModType, std::unordered_set<AddressRequest*>> addToAddressEnd;
+        std::unordered_map<ModID, std::unordered_set<AddressRequest*>> addToAddressStart;
+        std::unordered_map<ModID, std::unordered_set<AddressRequest*>> addToAddressEnd;
 
         try
         {
@@ -222,13 +222,13 @@ namespace modclasses
           // create if not exist // start
           if (const auto& addrIt = addressSortContainer.find(addrStartEnd.first); addrIt == addressSortContainer.end())
           {
-            addressSortContainer[addrStartEnd.first][requestingMod.getModType()].insert(&req);
+            addressSortContainer[addrStartEnd.first][requestingMod.getModID()].insert(&req);
             addedAddresses.try_emplace(addrStartEnd.first, &addressSortContainer.at(addrStartEnd.first)); // add them here already, so there is a hint for removal in conflict case
           }
           // end
           if (const auto& addrIt = addressSortContainer.find(addrStartEnd.second); addrIt == addressSortContainer.end())
           {
-            addressSortContainer[addrStartEnd.second][requestingMod.getModType()].insert(&req);;
+            addressSortContainer[addrStartEnd.second][requestingMod.getModID()].insert(&req);;
             addedAddresses.try_emplace(addrStartEnd.second, &addressSortContainer.at(addrStartEnd.second)); // add them here already, so there is a hint for removal in conflict case
           }
 
@@ -236,7 +236,7 @@ namespace modclasses
           const auto& endIt = std::next(addressSortContainer.find(addrStartEnd.second));
           do
           {
-            conflict = checkRiskAndOverlaps(requestingMod.getModType(), req, addrStartEnd, currentIt->second,
+            conflict = checkRiskAndOverlaps(requestingMod.getModID(), req, addrStartEnd, currentIt->second,
                                             addressesWhereToAddRequest, addToAddressStart, addToAddressEnd);
 
             currentIt = std::next(currentIt);
@@ -246,7 +246,7 @@ namespace modclasses
           // check if capsuled by other
           if (!conflict && currentIt != addressSortContainer.end())
           {
-            conflict = checkRiskAndOverlaps(requestingMod.getModType(), req, addrStartEnd, currentIt->second,
+            conflict = checkRiskAndOverlaps(requestingMod.getModID(), req, addrStartEnd, currentIt->second,
                                             addressesWhereToAddRequest, addToAddressStart, addToAddressEnd);
           }
 
@@ -256,7 +256,7 @@ namespace modclasses
             for (const DWORD addrWhere : addressesWhereToAddRequest)
             {
               auto& modMap = addressSortContainer.at(addrWhere);
-              modMap[requestingMod.getModType()].insert(&req);
+              modMap[requestingMod.getModID()].insert(&req);
               addedAddresses.try_emplace(addrWhere, &modMap);
             }
 
@@ -316,7 +316,7 @@ namespace modclasses
         {
           bool allIn{ true };
           std::vector<AddressRequest*> toRemove;
-          for (const auto& addr : mapOfMods.second->at(requestingMod.getModType()))
+          for (const auto& addr : mapOfMods.second->at(requestingMod.getModID()))
           {
             bool in{ addedRequests.find(addr) != addedRequests.end() };
 
@@ -330,7 +330,7 @@ namespace modclasses
 
           if (allIn)
           {
-            mapOfMods.second->erase(requestingMod.getModType());
+            mapOfMods.second->erase(requestingMod.getModID());
 
             if (mapOfMods.second->empty())
             {
@@ -343,12 +343,12 @@ namespace modclasses
           {
             for (const auto rem : toRemove)
             {
-              mapOfMods.second->at(requestingMod.getModType()).erase(rem);
+              mapOfMods.second->at(requestingMod.getModID()).erase(rem);
             }
           }
         }
 
-        LOG(WARNING) << "Failed granting access of addresses to mod '" << getStringFromEnum(requestingMod.getModType()) << "'.";
+        LOG(WARNING) << "Failed granting access of addresses to mod '" << requestingMod.getModID()->getName() << "'.";
         return false;
       }
 

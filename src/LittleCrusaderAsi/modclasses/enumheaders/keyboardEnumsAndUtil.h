@@ -4,8 +4,6 @@
 #include <unordered_set>
 #include <Windows.h>  // you create a lot of noice... TODO: if ever time, try to remove
 
-#include "modtypes.h"
-
 // json
 #include "../../dependencies/JsonForModernC++/json.hpp"
 

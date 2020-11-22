@@ -9,7 +9,7 @@ namespace modcore
   ModLoader::ModLoader(HMODULE ownModule) : modKeeper{ std::make_shared<ModKeeper>(ownModule) }
   {
     // will load config and what ever is required at the start
-    std::unordered_map<MT, Json> modConfigs{};
+    std::unordered_map<ModID, Json> modConfigs{};
     try
     {
       std::ifstream configStream("modConfig.json"); // reading config from file
@@ -22,7 +22,13 @@ namespace modcore
 
       for (auto& pair : modConfig.items())
       {
-        Json key = pair.key();
+        ModID key{ ModManager::GetEnumByName(pair.key()) };
+        if (!key)
+        {
+          LOG(WARNING) << "No mod registration for name '" << pair.key() << "' found.";
+          continue; // ignore
+        }
+
         modConfigs[key] = pair.value();
       }
     }
@@ -78,9 +84,9 @@ namespace modcore
     LOG(INFO) << "Cleaned up mods.";
   }
 
-  void ModLoader::fillAndOrderModVector(const std::unordered_map<MT, Json> &modConfigs)
+  void ModLoader::fillAndOrderModVector(const std::unordered_map<ModID, Json> &modConfigs)
   {
-    std::unordered_map<MT, std::shared_ptr<ModKeeper::ModContainer>> modSortMap{};
+    std::unordered_map<ModID, std::shared_ptr<ModKeeper::ModContainer>> modSortMap{};
 
     // normaly, the mod will run over all configs and add them 
     for (const auto& config : modConfigs)
@@ -90,9 +96,9 @@ namespace modcore
   }
 
   void ModLoader::fulfillDependencies(
-    const std::unordered_map<MT, Json> &modConfigs,
-    std::unordered_map<MT, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
-    MT neededMod, const Json &config)
+    const std::unordered_map<ModID, Json> &modConfigs,
+    std::unordered_map<ModID, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
+    ModID neededMod, const Json &config)
   {
 
     if (modSortMap.find(neededMod) != modSortMap.end())
@@ -100,7 +106,7 @@ namespace modcore
       if (!modSortMap[neededMod])
       {
         throw std::exception(("Cylic dependency reference encountered! Dependency with id '"
-                              + std::to_string(static_cast<int>(neededMod))
+                              + neededMod->getName()
                               + "' was already requested.").c_str());
       } // no else, if mod inside, everything is okay
     }
@@ -109,12 +115,13 @@ namespace modcore
       modSortMap[neededMod];  // default constructs shared_ptr to null
 
       // create mod only if needed, otherwise unused creates
-      std::shared_ptr<ModKeeper::ModContainer> nextMod = std::make_shared<ModKeeper::ModContainer>(neededMod, createMod(neededMod, config));
+      std::shared_ptr<ModKeeper::ModContainer> nextMod = std::make_shared<ModKeeper::ModContainer>(neededMod,
+        (neededMod->getValue())(modKeeper, config));
 
-      std::vector<MT> deps{ nextMod->mod->getDependencies() };
+      std::vector<ModID> deps{ nextMod->mod->getDependencies() };
       if (!deps.empty())
       {
-        for (MT dep : deps)
+        for (ModID dep : deps)
         {
           if (modConfigs.find(dep) != modConfigs.end())
           {

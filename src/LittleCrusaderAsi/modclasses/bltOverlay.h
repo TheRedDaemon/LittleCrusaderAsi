@@ -541,14 +541,22 @@ namespace modclasses
 
   public:
 
-    ModType getModType() const override
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("bltOverlay", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<BltOverlay>(modKeeper, config));
+      })
+    };
+
+    ModID getModID() const override
     {
-      return ModType::BLT_OVERLAY;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::vector<ModID> getDependencies() const override
     {
-      return { ModType::KEYBOARD_INTERCEPTOR, ModType::ADDRESS_RESOLVER };
+      return { KeyboardInterceptor::ID, AddressResolver::ID };
     }
 
     void cleanUp() override;

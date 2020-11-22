@@ -4,27 +4,25 @@
 #include <vector>
 #include <memory>
 
+#include "../modcore/modKeeper.h"
+
 #include "IntSafe.h" // for DWORD
-#include "enumheaders/modtypes.h"
 #include "enumheaders/addressEnums.h"
 #include "enumheaders/strongVersions.h"
 
-#include "../modcore/modKeeper.h"
-
-// json
-#include "../dependencies/JsonForModernC++/json.hpp"
 
 namespace modclasses
 {
   using Json = nlohmann::json;
   using OrderedJson = nlohmann::ordered_json;
+  using MKeeper = modcore::ModKeeper;
 
   // base class for all mod impl
   class ModBase
   {
   private:
 
-    std::weak_ptr<modcore::ModKeeper> keeper{};
+    std::weak_ptr<MKeeper> keeper{};
   
   protected:
 
@@ -43,7 +41,7 @@ namespace modclasses
     // additional constructor created for mods that have dependencies
     // use this in your constructor, otherwise receiving mods will not be possible
     // more info see default constructor
-    ModBase(const std::weak_ptr<modcore::ModKeeper> modKeeper) : keeper{ modKeeper }{}
+    ModBase(const std::weak_ptr<MKeeper> modKeeper) : keeper{ modKeeper }{}
 
     // simply returns if initialzed
     virtual bool initialisationDone() const final
@@ -52,10 +50,10 @@ namespace modclasses
     }
 
     // get type of this mod
-    virtual ModType getModType() const = 0;
+    virtual ModID getModID() const = 0;
 
     // requested mods -> dependencies are created before will be available to be used by this mod
-    virtual std::vector<ModType> getDependencies() const = 0;
+    virtual std::vector<ModID> getDependencies() const = 0;
 
     // calls actual initalize -> simple abstraction, so that the mod author does not need to return a value
     // idea is to remove a little bit the potential to return something different then the result
@@ -109,7 +107,7 @@ namespace modclasses
       }
       else
       {
-        LOG(WARNING) << "The mod with id '" << static_cast<int>(getModType()) << "' tried to receive the HMODULE but has no keeper.";
+        LOG(WARNING) << "The mod with '" << getModID()->getName() << "' tried to receive the HMODULE but has no keeper.";
       }
 
       return nullptr;
@@ -125,7 +123,7 @@ namespace modclasses
       auto keeperPointer = keeper.lock();
       if (keeperPointer)
       {
-        auto modPointer = keeperPointer->getModIfInitAndReq<T>(getModType());
+        auto modPointer = keeperPointer->getModIfInitAndReq<T>(getModID());
         if (modPointer && modPointer->initialisationDone())
         {
           return modPointer;
@@ -133,7 +131,7 @@ namespace modclasses
       }
       else
       {
-        LOG(WARNING) << "The mod with id '" << static_cast<int>(getModType()) << "' tried to receive a mod but has no keeper.";
+        LOG(WARNING) << "The mod with '" << getModID()->getName() << "' tried to receive a mod but has no keeper.";
       }
 
       return std::shared_ptr<T>{};

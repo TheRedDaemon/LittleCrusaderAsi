@@ -64,13 +64,21 @@ namespace modclasses
     // (much) later TODO?: if might be easier for the resolve to create a map of [3] arrays or structs
     // but if more then two modifiers pushed... how to choose which to use first? and which will be first?
   public:
+
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("keyboardInterceptor", [](const std::weak_ptr<MKeeper>, const Json& config)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<KeyboardInterceptor>(config));
+      })
+    };
     
-    ModType getModType() const override
+    ModID getModID() const override
     {
-      return ModType::KEYBOARD_INTERCEPTOR;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::vector<ModID> getDependencies() const override
     {
       return {};
     }

@@ -1,26 +1,15 @@
 #ifndef MODKEEPER
 #define MODKEEPER
 
-#include <vector>
-#include <memory>
-#include <unordered_map>
+#include "modManager.h"
 
 // logging
 #include "../dependencies/easylogging++/easylogging++.h"
 #include "../modcore/logUtility.h" // used to mark that log needs to be copied at the end
 
-#include "../modclasses/enumheaders/modTypes.h"
-
-// forward declared
-namespace modclasses
-{
-  class ModBase;
-}
-
 namespace modcore
 {
   using Mod = modclasses::ModBase;
-  using MT = modclasses::ModType;
 
   class ModKeeper final // preventing inheritance, since destructor wont be virtual...
   {
@@ -30,12 +19,12 @@ namespace modcore
     // also keeps friend function for find
     struct ModContainer final
     {
-      MT modEnum;
+      ModID modEnum;
       std::shared_ptr<modclasses::ModBase> mod{};
-      std::vector<MT> modsThatNeedThis{};
+      std::vector<ModID> modsThatNeedThis{};
 
       // for make_shared, modsThatNeedThis is initialized empty
-      ModContainer(MT modMt, std::shared_ptr<modclasses::ModBase> modPtr) : modEnum(modMt), mod(modPtr) {}
+      ModContainer(ModID modMt, std::shared_ptr<modclasses::ModBase> modPtr) : modEnum(modMt), mod(modPtr) {}
     };
 
     std::vector<std::shared_ptr<ModContainer>> loadedMods{};
@@ -55,7 +44,7 @@ namespace modcore
     // if there is no mod or is not a dependency of the requesting an empty pointer is returned
     // the later writes also a message to a log file
     template<typename T>
-    const std::shared_ptr<T> getModIfInitAndReq(const MT requestingModType)
+    const std::shared_ptr<T> getModIfInitAndReq(ModID requestingModType)
     {
       std::shared_ptr<T> modPointer;
 
@@ -79,8 +68,8 @@ namespace modcore
           }
           else
           {
-            LOG(WARNING) << "The mod with id '" << static_cast<int>(requestingModType) << "' tried to receive a non-requested mod with id '" 
-              << static_cast<int>(modCon.modEnum) << "'.";
+            LOG(WARNING) << "The mod '" << requestingModType->getName() << "' tried to receive a non-requested mod with id '" 
+              << modCon.modEnum->getName() << "'.";
           }
         }
       }

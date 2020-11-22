@@ -184,7 +184,6 @@
     <ClInclude Include="modclasses\aicLoad.h" />
     <ClInclude Include="modclasses\bltOverlay.h" />
     <ClInclude Include="modclasses\buildRangeChanger.h" />
-    <ClInclude Include="Modclasses\dummyStuff\dummyMods.h" />
     <ClInclude Include="modclasses\dummyStuff\protoMod.h" />
     <ClInclude Include="modclasses\enumheaders\addressEnums.h" />
     <ClInclude Include="modclasses\enumheaders\addrResolverEnumAndStruct.h" />
@@ -192,13 +191,13 @@
     <ClInclude Include="modclasses\enumheaders\pseudoEnumsAI.h" />
     <ClInclude Include="modclasses\keyboardInterceptor.h" />
     <ClInclude Include="Modclasses\modBase.h" />
-    <ClInclude Include="Modclasses\enumheaders\modtypes.h" />
     <ClInclude Include="Modclasses\enumheaders\strongVersions.h" />
     <ClInclude Include="modclasses\versionGetter.h" />
     <ClInclude Include="modcore\enumBase.h" />
     <ClInclude Include="modcore\logUtility.h" />
     <ClInclude Include="modcore\modKeeper.h" />
     <ClInclude Include="modcore\modLoader.h" />
+    <ClInclude Include="modcore\modManager.h" />
     <ClInclude Include="resources\resource.h" />
   </ItemGroup>
   <ItemGroup>
@@ -216,7 +215,6 @@
     <ClCompile Include="modclasses\util\menuClassImpl.cpp" />
     <ClCompile Include="Modcore\dllmain.cpp" />
     <ClCompile Include="modcore\logUtility.cpp" />
-    <ClCompile Include="Modcore\modConstructors.cpp" />
     <ClCompile Include="modclasses\versionGetter.cpp" />
     <ClCompile Include="modcore\modLoader.cpp" />
   </ItemGroup>

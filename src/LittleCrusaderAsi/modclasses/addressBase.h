@@ -13,12 +13,20 @@ namespace modclasses
 
   public:
 
-    ModType getModType() const override
+    // declare public -> request mod registration and receive id (or nullptr)
+    inline static ModIDKeeper ID{
+      ModMan::RegisterMod("addressBase", [](const std::weak_ptr<MKeeper>, const Json&)
+      {
+        return std::static_pointer_cast<ModBase>(std::make_shared<AddressBase>());
+      })
+    };
+
+    ModID getModID() const override
     {
-      return ModType::ADDRESS_BASE;
+      return ID;
     }
 
-    std::vector<ModType> getDependencies() const override
+    std::vector<ModID> getDependencies() const override
     {
       return {};
     }
