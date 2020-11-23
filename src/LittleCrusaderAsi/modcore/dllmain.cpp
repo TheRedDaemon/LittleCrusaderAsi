@@ -1,13 +1,13 @@
 // dllmain.cpp : Definiert den Einstiegspunkt für die DLL-Anwendung.
 //#include "pch.h"
 
-#include <Windows.h>
-#include <chrono>
-#include <filesystem>
-
 #include "modLoader.h"
 #include "logUtility.h"
 #include "../misc/copiedFunc.h"
+
+#include <Windows.h>
+#include <chrono>
+#include <filesystem>
 
 //logging
 #include "../dependencies/easylogging++/easylogging++.h"
@@ -89,7 +89,7 @@ static void copyLogOnError()
 // dll start
 BOOL APIENTRY DllMain(HMODULE hModule,
                       DWORD  ul_reason_for_call,
-                      LPVOID lpReserved
+                      LPVOID
 )
 {
 

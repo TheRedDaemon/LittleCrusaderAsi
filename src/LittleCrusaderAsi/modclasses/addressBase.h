@@ -15,7 +15,7 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{
-      ModMan::RegisterMod("addressBase", [](const std::weak_ptr<MKeeper>, const Json&)
+      ModMan::RegisterMod("addressBase", [](const Json&)
       {
         return std::static_pointer_cast<ModBase>(std::make_shared<AddressBase>());
       })

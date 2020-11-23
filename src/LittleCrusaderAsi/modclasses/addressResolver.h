@@ -27,9 +27,9 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{
-      ModMan::RegisterMod("addressResolver", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      ModMan::RegisterMod("addressResolver", [](const Json& config)
       {
-        return std::static_pointer_cast<ModBase>(std::make_shared<AddressResolver>(modKeeper, config));
+        return std::static_pointer_cast<ModBase>(std::make_shared<AddressResolver>(config));
       })
     };
 
@@ -43,7 +43,7 @@ namespace modclasses
     /**con- and destructor**/
 
     // will get a config how to treat address overlaps
-    AddressResolver(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
+    AddressResolver(const Json &config);
 
     /**additional functions for others**/
 

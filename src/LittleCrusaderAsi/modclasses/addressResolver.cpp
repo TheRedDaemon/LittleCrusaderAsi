@@ -4,7 +4,7 @@
 namespace modclasses
 {
 
-  AddressResolver::AddressResolver(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
+  AddressResolver::AddressResolver(const Json &config)
   {
     auto confIt = config.find("rejectLevel");
     if (confIt != config.end())

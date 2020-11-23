@@ -65,7 +65,7 @@ namespace modclasses
   /*******************************************************/
 
 
-  BltOverlay::BltOverlay(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
+  BltOverlay::BltOverlay(const Json &config)
   {
     auto confIt = config.find("doNotKeepDD7Interface");
     if (confIt != config.end() && confIt.value().is_boolean())
@@ -198,7 +198,7 @@ namespace modclasses
     overPtr = this;
 
     // load menuComponents
-    if (!(issue || copyFunc::LoadPNGinCImage(getOwnModuleHandle(), menuComp, MAKEINTRESOURCE(MENU_COMPONENTS))))
+    if (!(issue || copyFunc::LoadPNGinCImage(ModMan::GetOwnModuleHandle(), menuComp, MAKEINTRESOURCE(MENU_COMPONENTS))))
     {
       issue = true;
       LOG(WARNING) << "BltOverlay was unable to load the menu components.";

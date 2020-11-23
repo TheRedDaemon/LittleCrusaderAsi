@@ -7,7 +7,7 @@
 
 namespace modclasses
 {
-  AICLoad::AICLoad(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
+  AICLoad::AICLoad(const Json &config)
   {
     // TODO?: it might be an idea to create a more general function for simple json value reads, but this depends on how samey they are...
 

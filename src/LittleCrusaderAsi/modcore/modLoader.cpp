@@ -1,13 +1,13 @@
 
-#include <string>
-
 #include "modLoader.h"
-#include "logUtility.h"
 
 namespace modcore
 {
-  ModLoader::ModLoader(HMODULE ownModule) : modKeeper{ std::make_shared<ModKeeper>(ownModule) }
+  ModLoader::ModLoader(HMODULE ownModule)
   {
+    // set own Module handle
+    ModMan::handle = ownModule;
+
     // will load config and what ever is required at the start
     std::unordered_map<ModID, Json> modConfigs{};
     try
@@ -47,27 +47,23 @@ namespace modcore
 
     // end by calling initialze on every mod:
     int initializedMods{ 0 };
-    for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
+    for (Mod* modPtr : ModMan::orderedMods)
     {
-      if (modKeeper->loadedMods.at(i)->mod->callInitialize())
+      if (modPtr->callInitialize())
       {
         ++initializedMods;
       }
     }
-    LOG(INFO) << initializedMods << " of " << modKeeper->loadedMods.size() << " mods initialized.";
+
+    LOG(INFO) << initializedMods << " of " << ModMan::orderedMods.size() << " mods initialized.";
   }
 
   void ModLoader::dllThreadAttachEvent()
   {
-    if (!firstThreadAttachAfterDllAttachReceived)
+    // at the first attach event, fire this event to the mods
+    for (Mod* modPtr : ModMan::orderedMods)
     {
-      firstThreadAttachAfterDllAttachReceived = true;
-
-      // at the first attach event, fire this event to the mods
-      for (size_t i = 0; i < modKeeper->loadedMods.size(); i++)
-      {
-        modKeeper->loadedMods.at(i)->mod->threadAttachAfterModAttachEvent();
-      }
+      modPtr->threadAttachAfterModAttachEvent();
     }
   }
 
@@ -77,33 +73,30 @@ namespace modcore
   {
     // call cleanUp in reverse dependency order (is this reverse order?)
 
-    for (int i = modKeeper->loadedMods.size() - 1; i >= 0; i--)
+    for (int i = ModMan::orderedMods.size() - 1; i >= 0; i--)
     {
-      modKeeper->loadedMods.at(i)->mod->cleanUp();
+      ModMan::orderedMods.at(i)->cleanUp();
     }
     LOG(INFO) << "Cleaned up mods.";
   }
 
   void ModLoader::fillAndOrderModVector(const std::unordered_map<ModID, Json> &modConfigs)
   {
-    std::unordered_map<ModID, std::shared_ptr<ModKeeper::ModContainer>> modSortMap{};
-
     // normaly, the mod will run over all configs and add them 
     for (const auto& config : modConfigs)
     {
-      fulfillDependencies(modConfigs, modSortMap, config.first, config.second);
+      fulfillDependencies(modConfigs, config.first, config.second);
     }
   }
 
   void ModLoader::fulfillDependencies(
     const std::unordered_map<ModID, Json> &modConfigs,
-    std::unordered_map<ModID, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
     ModID neededMod, const Json &config)
   {
 
-    if (modSortMap.find(neededMod) != modSortMap.end())
+    if (auto it{ ModMan::loadedMods.find(neededMod) }; it != ModMan::loadedMods.end())
     {
-      if (!modSortMap[neededMod])
+      if (!(it->second.mod))
       {
         throw std::exception(("Cylic dependency reference encountered! Dependency with id '"
                               + neededMod->getName()
@@ -112,35 +105,35 @@ namespace modcore
     }
     else
     {
-      modSortMap[neededMod];  // default constructs shared_ptr to null
+      // create mod entry:
+      ModMan::loadedMods[neededMod];
 
       // create mod only if needed, otherwise unused creates
-      std::shared_ptr<ModKeeper::ModContainer> nextMod = std::make_shared<ModKeeper::ModContainer>(neededMod,
-        (neededMod->getValue())(modKeeper, config));
+      auto nextMod{ (neededMod->getValue())(config) };
 
-      std::vector<ModID> deps{ nextMod->mod->getDependencies() };
+      std::vector<ModID> deps{ nextMod->getDependencies() };
       if (!deps.empty())
       {
         for (ModID dep : deps)
         {
           if (modConfigs.find(dep) != modConfigs.end())
           {
-            fulfillDependencies(modConfigs, modSortMap, dep, modConfigs.at(dep));
+            fulfillDependencies(modConfigs, dep, modConfigs.at(dep));
           }
           else
           {
             // trying to call build in stuff (without external config?)
-            fulfillDependencies(modConfigs, modSortMap, dep, nullptr);
+            fulfillDependencies(modConfigs, dep, nullptr);
           }
 
-          // add, that this mad wanted this dependency
-          modSortMap[dep]->modsThatNeedThis.push_back(neededMod);
+          // add, that this mod wanted this dependency
+          ModMan::loadedMods[dep].modsThatNeedThis.push_back(neededMod);
         }
       } // if no dependency, it can be added
 
       // at this point, either everything is fulfilled or it broke anyway
-      modSortMap[neededMod] = nextMod;
-      modKeeper->loadedMods.push_back(nextMod);
+      ModMan::loadedMods[neededMod].mod = nextMod;
+      ModMan::orderedMods.push_back(&(*nextMod));
     }
   }
 }

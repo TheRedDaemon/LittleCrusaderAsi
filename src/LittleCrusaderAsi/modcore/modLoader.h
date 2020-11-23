@@ -10,10 +10,6 @@ namespace modcore
 
   class ModLoader final // preventing inheritance, since destructor wont be virtual...
   {
-  private:
-
-    std::shared_ptr<ModKeeper> modKeeper;
-    bool firstThreadAttachAfterDllAttachReceived{ false };
 
   public:
 
@@ -38,7 +34,6 @@ namespace modcore
     void fillAndOrderModVector(const std::unordered_map<ModID, Json> &modConfigs);
     void fulfillDependencies( // for recursive fill
       const std::unordered_map<ModID, Json> &modConfigs,
-      std::unordered_map<ModID, std::shared_ptr<ModKeeper::ModContainer>> &modSortMap,
       ModID neededMod, const Json &config);
   };
 }

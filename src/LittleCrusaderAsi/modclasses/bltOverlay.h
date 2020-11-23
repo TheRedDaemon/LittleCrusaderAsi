@@ -543,9 +543,9 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{
-      ModMan::RegisterMod("bltOverlay", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      ModMan::RegisterMod("bltOverlay", [](const Json& config)
       {
-        return std::static_pointer_cast<ModBase>(std::make_shared<BltOverlay>(modKeeper, config));
+        return std::static_pointer_cast<ModBase>(std::make_shared<BltOverlay>(config));
       })
     };
 
@@ -562,7 +562,7 @@ namespace modclasses
     void cleanUp() override;
 
     /**con- and destructor**/
-    BltOverlay(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config); // default cons, does nothing though
+    BltOverlay(const Json &config);
 
     /**additional functions for others**/
 

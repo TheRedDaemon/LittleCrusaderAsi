@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-#include "../modcore/modKeeper.h"
+#include "../modcore/modManager.h"
 
 #include "IntSafe.h" // for DWORD
 #include "enumheaders/addressEnums.h"
@@ -15,15 +15,10 @@ namespace modclasses
 {
   using Json = nlohmann::json;
   using OrderedJson = nlohmann::ordered_json;
-  using MKeeper = modcore::ModKeeper;
 
   // base class for all mod impl
   class ModBase
   {
-  private:
-
-    std::weak_ptr<MKeeper> keeper{};
-  
   protected:
 
     bool initialized{ false };
@@ -37,11 +32,6 @@ namespace modclasses
     // pointer and address stuff needs to be done in "initialize"!
     // config will be send as ref, but will be created in the modloaderConstr and discarded afterwards, so create a lokal copy if needed
     ModBase() {}
-
-    // additional constructor created for mods that have dependencies
-    // use this in your constructor, otherwise receiving mods will not be possible
-    // more info see default constructor
-    ModBase(const std::weak_ptr<MKeeper> modKeeper) : keeper{ modKeeper }{}
 
     // simply returns if initialzed
     virtual bool initialisationDone() const final
@@ -96,42 +86,16 @@ namespace modclasses
 
   protected:
 
-    // some utility functions
-
-    HMODULE getOwnModuleHandle()
-    {
-      auto keeperPointer = keeper.lock();
-      if (keeperPointer)
-      {
-        return keeperPointer->getOwnModuleHandle();
-      }
-      else
-      {
-        LOG(WARNING) << "The mod with '" << getModID()->getName() << "' tried to receive the HMODULE but has no keeper.";
-      }
-
-      return nullptr;
-    }
-
     // return shared pointer of mod if there, requested, initialized
     // otherwise the return will be an empty pointer
     // if the mod should be used further, use a weak pointer to store it in the class
     template<typename T>
     const std::shared_ptr<T> getMod()
     {
-      // double test, but i do not have access to initialisationDone otherwise, or not?
-      auto keeperPointer = keeper.lock();
-      if (keeperPointer)
+      auto modPointer = ModMan::GetModIfReq<T>(getModID());
+      if (modPointer && modPointer->initialisationDone())
       {
-        auto modPointer = keeperPointer->getModIfInitAndReq<T>(getModID());
-        if (modPointer && modPointer->initialisationDone())
-        {
-          return modPointer;
-        }
-      }
-      else
-      {
-        LOG(WARNING) << "The mod with '" << getModID()->getName() << "' tried to receive a mod but has no keeper.";
+        return modPointer;
       }
 
       return std::shared_ptr<T>{};

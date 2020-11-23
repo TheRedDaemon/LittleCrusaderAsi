@@ -67,7 +67,7 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{
-      ModMan::RegisterMod("keyboardInterceptor", [](const std::weak_ptr<MKeeper>, const Json& config)
+      ModMan::RegisterMod("keyboardInterceptor", [](const Json& config)
       {
         return std::static_pointer_cast<ModBase>(std::make_shared<KeyboardInterceptor>(config));
       })

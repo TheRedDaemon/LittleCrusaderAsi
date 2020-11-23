@@ -32,9 +32,9 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{ 
-      ModMan::RegisterMod( "versionGetter", [](const std::weak_ptr<MKeeper> modKeeper, const Json&)
+      ModMan::RegisterMod( "versionGetter", [](const Json&)
       {
-        return std::static_pointer_cast<ModBase>(std::make_shared<VersionGetter>(modKeeper));
+        return std::static_pointer_cast<ModBase>(std::make_shared<VersionGetter>());
       }) 
     };
     
@@ -49,7 +49,7 @@ namespace modclasses
     }
 
     /**con- and destructor**/
-    VersionGetter(const std::weak_ptr<modcore::ModKeeper> modKeeper) : ModBase{ modKeeper }{}
+    VersionGetter(){}
 
     /**additional functions for others**/ 
 

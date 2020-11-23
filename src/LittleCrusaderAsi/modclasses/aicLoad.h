@@ -66,9 +66,9 @@ namespace modclasses
 
     // declare public -> request mod registration and receive id (or nullptr)
     inline static ModIDKeeper ID{
-      ModMan::RegisterMod("aicLoad", [](const std::weak_ptr<MKeeper> modKeeper, const Json& config)
+      ModMan::RegisterMod("aicLoad", [](const Json& config)
       {
-        return std::static_pointer_cast<ModBase>(std::make_shared<AICLoad>(modKeeper, config));
+        return std::static_pointer_cast<ModBase>(std::make_shared<AICLoad>(config));
       })
     };
 
@@ -82,7 +82,7 @@ namespace modclasses
 
     /**con- and destructor**/
 
-    AICLoad(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config);
+    AICLoad(const Json &config);
 
     /**additional functions for others**/
 
@@ -131,7 +131,8 @@ namespace modclasses
 
     // returns empty pointer in unrecoverable error case
     // if size_t == 0, value ignored
-    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name, const bool fileRelativeToMod, const size_t mapInitSize) const;
+    std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name,
+      const bool fileRelativeToMod, const size_t mapInitSize) const;
     void applyAICs();
 
     // returns if the value is valid, at the same time it fills an int32_t with the right value

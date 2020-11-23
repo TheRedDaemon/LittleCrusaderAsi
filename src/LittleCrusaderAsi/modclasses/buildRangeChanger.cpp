@@ -3,7 +3,7 @@
 
 namespace modclasses
 {
-  BuildRangeChanger::BuildRangeChanger(const std::weak_ptr<modcore::ModKeeper> modKeeper, const Json &config) : ModBase(modKeeper)
+  BuildRangeChanger::BuildRangeChanger(const Json &config)
   {
     auto confIt = config.find("startState");
     if (confIt != config.end() && confIt.value().is_boolean())

@@ -84,9 +84,6 @@
     <ClInclude Include="modcore\modLoader.h">
       <Filter>Headerdateien\ModCore</Filter>
     </ClInclude>
-    <ClInclude Include="modcore\modKeeper.h">
-      <Filter>Headerdateien\ModCore</Filter>
-    </ClInclude>
     <ClInclude Include="modclasses\aicLoad.h">
       <Filter>Headerdateien\ModClasses</Filter>
     </ClInclude>
