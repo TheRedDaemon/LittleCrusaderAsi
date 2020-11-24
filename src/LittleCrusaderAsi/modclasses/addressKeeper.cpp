@@ -40,7 +40,7 @@ namespace modclasses
         switch (version)
         {
           case Version::V1P41P1SE:
-            return 0xFBFD1; // 4 byte
+            return 0xFBFD2; // 4 byte
           case Version::V1P41:
             return 0xFBC52; // 4 byte
         }

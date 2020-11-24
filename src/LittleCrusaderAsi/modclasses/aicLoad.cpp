@@ -1067,6 +1067,16 @@ namespace modclasses
         // NOTE -> Main Menu is descendable, but child will be hidden by func
         // they could be added though
         .createMenu<MainMenu, false>(
+          "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
+          [this](bool, std::string& header)
+          {
+            this->activateAICs(0, false, false);
+            header = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
+            return false;
+          },
+          true
+        )
+        .createMenu<MainMenu, false>(
           "Reload All Files",
           [this](bool, std::string&)
           {
@@ -1080,16 +1090,6 @@ namespace modclasses
           [this](bool, std::string&)
           {
             this->reloadMainAIC(0, false, false);
-            return false;
-          },
-          true
-        )
-        .createMenu<MainMenu, false>(
-          "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
-          [this](bool, std::string& header)
-          {
-            this->activateAICs(0, false, false);
-            header = "AIC active: " + std::string(this->isChanged ? "true" : "false");
             return false;
           },
           true

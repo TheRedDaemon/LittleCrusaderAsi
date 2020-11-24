@@ -383,6 +383,12 @@ namespace modclasses
         beforeLastSpace = relXPos;  // includes the space length
       }
 
+      // NOTE: horizontal center issue
+      // since the centering is computed using the complete ABC length
+      // the last char will likely have more white-space to the right
+      // -> does feel off-center
+      // TODO?: maybe restructure compute to take only A and B for last distance compute in line
+      // maybe it might be enough to simply substract the C value from the last char for the line width
       int32_t xPosAdd = font.ABCWidths[chr].abcA + font.BPlusC[chr];
       if (charNumber > 0 && horizontalMaxLength < relXPos + xPosAdd)
       {
