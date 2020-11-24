@@ -4,6 +4,69 @@
 namespace modclasses
 {
   // NOTE: basically all hardcoded currently
+
+
+  // MenuBase //
+
+
+  MenuBase* MenuBase::executeAction(MenuAction actionType, bool repeat)
+  {
+    switch (actionType)
+    {
+    case MenuAction::ACTION:
+      return repeat ? nullptr : action(); // repeat can not be used for an action
+    case MenuAction::BACK:
+      return back();
+    case MenuAction::UP:
+    case MenuAction::DOWN:
+    case MenuAction::RIGHT:
+    case MenuAction::LEFT:
+      move(actionType);
+      break;
+    default:
+      break;
+    }
+
+    return nullptr;
+  }
+
+
+  MenuBase& MenuBase::ascend()
+  {
+    if (lastMenu)
+    {
+      return *lastMenu;
+    }
+
+    LOG(WARNING) << "BltOverlay: Tried to ascend menu without a higher menu. Staying on level.";
+    return *this;
+  }
+
+
+  void MenuBase::forceDrawThisAndParent() const
+  {
+    if (lastMenu)
+    {
+      lastMenu->draw();
+    }
+    draw();
+  }
+
+
+  void MenuBase::draw(bool drawParent, bool checkIfParent) const
+  {
+    const MenuBase* toDraw{ drawParent && lastMenu ? lastMenu : this };
+    const MenuBase* current{ bltOver.currentMenu };
+
+    if (toDraw == current)
+    {
+      toDraw->draw();
+    }
+    else if (checkIfParent && toDraw == current->lastMenu)
+    {
+      current->forceDrawThisAndParent();
+    }
+  }
   
   
   // MainMenu //
@@ -16,7 +79,7 @@ namespace modclasses
   }
 
 
-  void MainMenu::move(MenuAction direction, BltOverlay &over)
+  void MainMenu::move(MenuAction direction)
   {
     size_t beforePos{ currentSelected };
     
@@ -54,7 +117,7 @@ namespace modclasses
 
     if (beforePos != currentSelected)
     {
-      draw(over);
+      draw();
     }
   }
 
@@ -72,7 +135,7 @@ namespace modclasses
   }
 
 
-  MenuBase* MainMenu::action(BltOverlay &over)
+  MenuBase* MainMenu::action()
   {
     if (subMenus->empty())
     {
@@ -80,18 +143,18 @@ namespace modclasses
     }
     
     // status of menu can stay
-    MenuBase* newBase{ subMenus->at(currentSelected)->access(false, over) };
+    MenuBase* newBase{ subMenus->at(currentSelected)->access(false) };
     if (!newBase)
     {
       // redraw in case the teyt changed
-      draw(over);
+      draw();
     }
 
     return newBase;
   }
 
 
-  MenuBase* MainMenu::back(BltOverlay &over)
+  MenuBase* MainMenu::back()
   {
     if (!lastMenu)
     {
@@ -108,11 +171,11 @@ namespace modclasses
       accessReact(true, header);
     }
 
-    return lastMenu->access(true, over);
+    return lastMenu->access(true);
   }
 
 
-  void MainMenu::menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over)
+  void MainMenu::menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const
   {
     FontTypeEnum type;
     RECT* rect;
@@ -121,28 +184,28 @@ namespace modclasses
     if (bigMenu)
     {
       type = FontTypeEnum::NORMAL;
-      rect = active ? &over.menuRects.bigButtonPressed : &over.menuRects.bigButton;
+      rect = active ? &bltOver.menuRects.bigButtonPressed : &bltOver.menuRects.bigButton;
       boxPos.second = yPos - 30;
     }
     else
     {
       type = FontTypeEnum::SMALL_BOLD;
-      rect = active ? &over.menuRects.smallButtonPressed : &over.menuRects.smallButton;
+      rect = active ? &bltOver.menuRects.smallButtonPressed : &bltOver.menuRects.smallButton;
       boxPos.second = yPos - 16;
     }
 
-    over.menuOffSurf->BltFast(boxPos.first, boxPos.second, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
-    over.fntHandler.drawText(over.menuOffSurf, type, text, 150, yPos, 260, true, true, true, nullptr);
+    bltOver.menuOffSurf->BltFast(boxPos.first, boxPos.second, bltOver.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+    bltOver.fntHandler.drawText(bltOver.menuOffSurf, type, text, 150, yPos, 260, true, true, true, nullptr);
   }
 
 
-  void MainMenu::draw(BltOverlay &over)
+  void MainMenu::draw() const
   {
     // initial background
-    over.menuOffSurf->BltFast(0, 0, over.compSurf, &over.menuRects.mainMenu, DDBLTFAST_NOCOLORKEY);
+    bltOver.menuOffSurf->BltFast(0, 0, bltOver.compSurf, &bltOver.menuRects.mainMenu, DDBLTFAST_NOCOLORKEY);
 
     // header text
-    over.fntHandler.drawText(over.menuOffSurf, FontTypeEnum::NORMAL_BOLD, header, 150, 40, 260, true, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.menuOffSurf, FontTypeEnum::NORMAL_BOLD, header, 150, 40, 260, true, true, true, nullptr);
 
     // draw menus
     if (subMenus->empty())
@@ -155,23 +218,23 @@ namespace modclasses
 
     for (size_t i = startEndVisible.first; i < startEndVisible.second + 1; i++)
     {
-      menuBoxDrawHelper(subMenus->at(i)->header, menuYMid, i == currentSelected, over);
+      menuBoxDrawHelper(subMenus->at(i)->header, menuYMid, i == currentSelected);
       menuYMid += steps;
     }
 
     if (startEndVisible.first > 0)
     {
-      over.menuOffSurf->BltFast(0, 70, over.compSurf, &over.menuRects.goldArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.menuOffSurf->BltFast(0, 70, bltOver.compSurf, &bltOver.menuRects.goldArrowUp, DDBLTFAST_SRCCOLORKEY);
     }
 
     if (startEndVisible.second < subMenus->size() - 1)
     {
-      over.menuOffSurf->BltFast(0, 430, over.compSurf, &over.menuRects.goldArrowDown, DDBLTFAST_SRCCOLORKEY);
+      bltOver.menuOffSurf->BltFast(0, 430, bltOver.compSurf, &bltOver.menuRects.goldArrowDown, DDBLTFAST_SRCCOLORKEY);
     }
   }
 
 
-  MenuBase* MainMenu::access(bool callerLeaving, BltOverlay &over)
+  MenuBase* MainMenu::access(bool callerLeaving)
   {
     bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
 
@@ -180,21 +243,36 @@ namespace modclasses
       return nullptr;
     }
 
-    draw(over);
+    draw();
 
     return this;
   }
 
 
-  MainMenu::MainMenu(std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu)
-                    : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)), 
+  MainMenu::MainMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu)
+                    : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
                       bigMenu(std::move(isItBigMenu)), subMenus(std::make_unique<std::vector<std::unique_ptr<MenuBase>>>()) {}
+
+  MainMenu::MainMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                     bool &&isItBigMenu, MainMenuPointer* ptrCon)
+                    : MainMenu(overlay, std::forward<std::string>(headerString),
+                      std::forward<HeaderReact>(accessReactFunc), std::forward<bool>(isItBigMenu))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->currentSelected = &currentSelected;
+      ptrCon->startEndVisible = &startEndVisible;
+      ptrCon->bigMenu = &bigMenu;
+    }
+  }
 
 
   // ChoiceInputMenu //
 
 
-  void ChoiceInputMenu::move(MenuAction direction, BltOverlay &over)
+  void ChoiceInputMenu::move(MenuAction direction)
   {
     size_t beforePos{ currentSelected };
 
@@ -232,7 +310,7 @@ namespace modclasses
 
     if (beforePos != currentSelected)
     {
-      draw(over);
+      draw();
     }
   }
 
@@ -251,7 +329,7 @@ namespace modclasses
 
 
   // only apply (ok) button reacts to "push"
-  MenuBase* ChoiceInputMenu::action(BltOverlay &over)
+  MenuBase* ChoiceInputMenu::action()
   {
     if (!selectReact || choicePairs.empty())
     {
@@ -263,12 +341,12 @@ namespace modclasses
       currentValue = choicePairs.at(currentSelected).first;
     }
 
-    draw(over);
+    draw();
     return nullptr;
   }
 
 
-  MenuBase* ChoiceInputMenu::back(BltOverlay &over)
+  MenuBase* ChoiceInputMenu::back()
   {
     if (!lastMenu)
     {
@@ -279,7 +357,7 @@ namespace modclasses
     currentSelected = 0;
     computeStartEndVisible();
     resultOfEnter = "";
-    over.inputActive = false;
+    bltOver.inputActive = false;
 
     if (accessReact)
     {
@@ -287,36 +365,36 @@ namespace modclasses
       accessReact(true, header);
     }
 
-    return lastMenu->access(true, over);
+    return lastMenu->access(true);
   }
 
 
-  void ChoiceInputMenu::menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over)
+  void ChoiceInputMenu::menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const
   {
     FontTypeEnum type{ FontTypeEnum::SMALL };
-    RECT* rect{ active ? &over.menuRects.inputFieldSelected : &over.menuRects.inputField };
+    RECT* rect{ active ? &bltOver.menuRects.inputFieldSelected : &bltOver.menuRects.inputField };
     std::pair<int32_t, int32_t> boxPos{ 25, yPos - 16 };
 
-    over.inputOffSurf->BltFast(boxPos.first, boxPos.second, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
-    over.fntHandler.drawText(over.inputOffSurf, type, text, 150, yPos, 230, true, true, true, nullptr);
+    bltOver.inputOffSurf->BltFast(boxPos.first, boxPos.second, bltOver.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, type, text, 150, yPos, 230, true, true, true, nullptr);
   }
 
 
-  void ChoiceInputMenu::draw(BltOverlay &over)
+  void ChoiceInputMenu::draw() const
   {
     // initial background
-    over.inputOffSurf->BltFast(0, 0, over.compSurf, &over.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
+    bltOver.inputOffSurf->BltFast(0, 0, bltOver.compSurf, &bltOver.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
 
     // header text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25, 280, true, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25, 280, true, true, true, nullptr);
 
     // default
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 55, 65, false, true, true, nullptr);
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 55, 184, true, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 55, 65, false, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 55, 184, true, true, true, nullptr);
 
     // current
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 80, 65, false, true, true, nullptr);
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 80, 184, true, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 80, 65, false, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 80, 184, true, true, true, nullptr);
 
     // draw menus
     if (choicePairs.empty())
@@ -327,29 +405,29 @@ namespace modclasses
     int32_t menuYMid{ 124 };
     for (size_t i = startEndVisible.first; i < startEndVisible.second + 1; i++)
     {
-      menuBoxDrawHelper(choicePairs.at(i).first, menuYMid, i == currentSelected, over);
+      menuBoxDrawHelper(choicePairs.at(i).first, menuYMid, i == currentSelected);
       menuYMid += 32;
     }
 
     // assuming three visible max
     if (startEndVisible.first > 0)
     {
-      over.inputOffSurf->BltFast(5, 118, over.compSurf, &over.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
-      over.inputOffSurf->BltFast(275, 118, over.compSurf, &over.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(5, 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(275, 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
     }
 
     if (startEndVisible.second < choicePairs.size() - 1)
     {
-      over.inputOffSurf->BltFast(5, 162, over.compSurf, &over.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
-      over.inputOffSurf->BltFast(275, 162, over.compSurf, &over.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(5, 162, bltOver.compSurf, &bltOver.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(275, 162, bltOver.compSurf, &bltOver.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
     }
 
     // apply text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 226, 200, true, true, true, nullptr);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 226, 200, true, true, true, nullptr);
   }
 
 
-  MenuBase* ChoiceInputMenu::access(bool callerLeaving, BltOverlay &over)
+  MenuBase* ChoiceInputMenu::access(bool callerLeaving)
   {
     bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
 
@@ -367,16 +445,16 @@ namespace modclasses
       resultOfEnter = "Missing react function.";
     }
 
-    draw(over);
-    over.inputActive = true;
+    draw();
+    bltOver.inputActive = true;
 
     return this;
   }
 
 
-  ChoiceInputMenu::ChoiceInputMenu(std::string &&headerString, HeaderReact &&accessReactFunc, std::string &&defaultValueStr,
+  ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc, std::string &&defaultValueStr,
                                    std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc)
-                                  : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                                  : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
                                     defaultValue(std::move(defaultValueStr)), choicePairs(std::move(choicePairCon)),
                                     selectReact(std::move(selectReactFunc))
   {
@@ -387,24 +465,45 @@ namespace modclasses
     }
   }
 
+  ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                                   std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
+                                   SelectReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon)
+                                  : ChoiceInputMenu(overlay, std::forward<std::string>(headerString),
+                                    std::forward<HeaderReact>(accessReactFunc), std::forward<std::string>(defaultValueStr),
+                                    std::forward<std::vector<std::pair<std::string, int32_t>>>(choicePairCon),
+                                    std::forward<SelectReact>(selectReactFunc))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->choicePairs = &choicePairs;
+      ptrCon->currentSelected = &currentSelected;
+      ptrCon->startEndVisible = &startEndVisible;
+      ptrCon->defaultValue = &defaultValue;
+      ptrCon->currentValue = &currentValue;
+      ptrCon->resultOfEnter = &resultOfEnter;
+    }
+  }
+
 
   // FreeInputMenu
 
 
-  void FreeInputMenu::move(MenuAction direction, BltOverlay& over)
+  void FreeInputMenu::move(MenuAction direction)
   {
     bool updateDraw{ false };
 
     if (direction == MenuAction::UP || direction == MenuAction::DOWN)
     {
-      if (!over.enableCharReceive(!over.editing))
+      if (!bltOver.enableCharReceive(!bltOver.editing))
       {
         resultOfEnter = "Char receiver fail.";
       }
 
       updateDraw = true;
     }
-    else if (over.editing)
+    else if (bltOver.editing)
     {
       switch (direction)
       {
@@ -433,21 +532,21 @@ namespace modclasses
 
     if (updateDraw)
     {
-      draw(over);
+      draw();
     }
   }
 
 
-  MenuBase* FreeInputMenu::action(BltOverlay& over)
+  MenuBase* FreeInputMenu::action()
   {
     // action will get into menu
-    if (!over.editing)
+    if (!bltOver.editing)
     {
-      if (!over.enableCharReceive(!over.editing))
+      if (!bltOver.enableCharReceive(!bltOver.editing))
       {
         resultOfEnter = "Char receiver fail.";
       }
-      draw(over);
+      draw();
       return nullptr;
     }
 
@@ -461,24 +560,24 @@ namespace modclasses
     }
 
     // deselect after apply
-    if (!over.enableCharReceive(!over.editing))
+    if (!bltOver.enableCharReceive(!bltOver.editing))
     {
       resultOfEnter = "Char receiver fail.";
     }
-    draw(over);
+    draw();
     return nullptr;
   }
 
 
-  MenuBase* FreeInputMenu::back(BltOverlay& over)
+  MenuBase* FreeInputMenu::back()
   {
-    if (over.editing)
+    if (bltOver.editing)
     {
       if (cursorPos > 0)
       {
         --cursorPos;
         currentInput.erase(cursorPos, 1);
-        draw(over);
+        draw();
       }
       return nullptr;
     }
@@ -492,7 +591,7 @@ namespace modclasses
     currentInput = "";
     cursorPos = 0;
     resultOfEnter = "";
-    over.inputActive = false;
+    bltOver.inputActive = false;
 
     if (accessReact)
     {
@@ -500,11 +599,11 @@ namespace modclasses
       accessReact(true, header);
     }
 
-    return lastMenu->access(true, over);
+    return lastMenu->access(true);
   }
 
 
-  MenuBase* FreeInputMenu::access(bool callerLeaving, BltOverlay& over)
+  MenuBase* FreeInputMenu::access(bool callerLeaving)
   {
     bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
 
@@ -522,15 +621,15 @@ namespace modclasses
       resultOfEnter = "Missing react function.";
     }
 
-    draw(over);
-    over.inputActive = true;
+    draw();
+    bltOver.inputActive = true;
 
     return this;
   }
 
   // TODO?: maybe take an unsigned char in th efirst place?
   // altough, if string uses char intern, it would not make much of a difference
-  MenuBase* FreeInputMenu::executeAction(char newChar, BltOverlay& over)
+  MenuBase* FreeInputMenu::executeAction(char newChar)
   {
     if (onlyNumber && std::find(numberChars.begin(), numberChars.end(), newChar) == numberChars.end())
     {
@@ -545,13 +644,13 @@ namespace modclasses
     {
       currentInput.insert(cursorPos, 1, newChar);
       ++cursorPos;
-      draw(over);
+      draw();
     }
     return nullptr;
   }
 
 
-  void FreeInputMenu::draw(BltOverlay& over)
+  void FreeInputMenu::draw() const
   {
     // NOTE: box in inputReact case is 100px smaller (top is not 0, but 50)
     // change positions of menu parts if not value input
@@ -562,57 +661,57 @@ namespace modclasses
       // fill black for colorkey
       DDBLTFX fx;
       ZeroDDObjectAndSetSize<DDBLTFX>(fx);
-      over.inputOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
+      bltOver.inputOffSurf->Blt(NULL, NULL, NULL, DDBLT_COLORFILL, &fx);
 
       // initial background
-      over.inputOffSurf->BltFast(0, 50, over.compSurf, &over.menuRects.smallInputBox, DDBLTFAST_NOCOLORKEY);
+      bltOver.inputOffSurf->BltFast(0, 50, bltOver.compSurf, &bltOver.menuRects.smallInputBox, DDBLTFAST_NOCOLORKEY);
     }
     else
     {
       // initial background
-      over.inputOffSurf->BltFast(0, 0, over.compSurf, &over.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
+      bltOver.inputOffSurf->BltFast(0, 0, bltOver.compSurf, &bltOver.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
     }
 
     // header text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25 + adapt * 2,
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25 + adapt * 2,
       280, true, true, true, nullptr);
 
     if (inputValueReact)
     {
       // default
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 70, 65, false, true, true, nullptr);
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 70, 184, true, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 70, 65, false, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 70, 184, true, true, true, nullptr);
 
       // current
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 100, 65, false, true, true, nullptr);
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 100, 184, true, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 100, 65, false, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 100, 184, true, true, true, nullptr);
     }
 
     // draw input box
-    RECT* rect{ over.editing ? &over.menuRects.inputFieldSelected : &over.menuRects.inputField };
-    over.inputOffSurf->BltFast(25, 139 - adapt, over.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+    RECT* rect{ bltOver.editing ? &bltOver.menuRects.inputFieldSelected : &bltOver.menuRects.inputField };
+    bltOver.inputOffSurf->BltFast(25, 139 - adapt, bltOver.compSurf, rect, DDBLTFAST_NOCOLORKEY);
 
     // draw input text
-    if (over.editing)
+    if (bltOver.editing)
     {
       std::string cursorInsert{ currentInput };
       cursorInsert.insert(cursorPos, 1, '|');
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, cursorInsert, 150, 155 - adapt, 230, true, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, cursorInsert, 150, 155 - adapt, 230, true, true, true, nullptr);
     }
     else
     {
-      over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, currentInput, 150, 155 - adapt, 230, true, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, currentInput, 150, 155 - adapt, 230, true, true, true, nullptr);
     }
     
     // apply text
-    over.fntHandler.drawText(over.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 225 - adapt * 2,
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 150, 225 - adapt * 2,
       200, true, true, true, nullptr);
   }
 
 
-  FreeInputMenu::FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
+  FreeInputMenu::FreeInputMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
                                std::string&& defaultValueStr, InputValueReact&& inputValueReactFunc)
-                              : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                              : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
                                 onlyNumber(onlyNumbers), defaultValue(std::move(defaultValueStr)),
                                 inputValueReact(std::move(inputValueReactFunc))
   {
@@ -622,8 +721,40 @@ namespace modclasses
     }
   }
 
-  FreeInputMenu::FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc,
+  FreeInputMenu::FreeInputMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
                                bool onlyNumbers, InputReact&& inputReactFunc)
-                              : MenuBase(std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                              : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
                                 onlyNumber(onlyNumbers), inputReact(std::move(inputReactFunc)) { }
+
+  FreeInputMenu::FreeInputMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
+                               std::string&& defaultValueStr, InputValueReact&& inputValueReactFunc, FreeInputMenuPointer* ptrCon)
+                              : FreeInputMenu(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc),
+                                onlyNumbers, std::forward<std::string>(defaultValueStr), std::forward<InputValueReact>(inputValueReactFunc))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->defaultValue = &defaultValue;
+      ptrCon->currentValue = &currentValue;
+      ptrCon->currentInput = &currentInput;
+      ptrCon->cursorPos = &cursorPos;
+      ptrCon->resultOfEnter = &resultOfEnter;
+    }
+  }
+
+  FreeInputMenu::FreeInputMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+                               bool onlyNumbers, InputReact&& inputReactFunc, FreeInputMenuPointer* ptrCon)
+                              : FreeInputMenu(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc),
+                                onlyNumbers, std::forward<InputReact>(inputReactFunc))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->currentInput = &currentInput;
+      ptrCon->cursorPos = &cursorPos;
+      ptrCon->resultOfEnter = &resultOfEnter;
+    }
+  }
 }

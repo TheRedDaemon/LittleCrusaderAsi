@@ -153,46 +153,40 @@ namespace modclasses
   
 
   private:
+
     std::string header;
-    MenuBase* lastMenu{nullptr};
+    MenuBase* lastMenu{ nullptr };
 
     // will receive ref to header, also, first bool is 'leaving', true would be leaving the current menu
     // needs to return true, if the menu should be enterable (ignored if leave?)
     HeaderReact accessReact{ nullptr };
 
-  public:
-    MenuBase(const std::string &headerString, HeaderReact accessReactFunc)
-      : header(headerString), accessReact(accessReactFunc) { };
+  protected:
 
-    MenuBase(std::string &&headerString, HeaderReact &&accessReactFunc)
-      : header(std::move(headerString)), accessReact(std::move(accessReactFunc)) { };
+    // reference to overlay -> can not be const currently, since variables need to change
+    // TODO: change that somehow?
+    BltOverlay& bltOver;
+
+  public:
+
+    // general structure, if ref is given, the structure is filled with relevant pointers
+    // should only fill own stuff -> lifetime should be ok, since they exist until the end of bltOverlay
+    struct MenuBasePointer
+    {
+      const MenuBase* thisMenu{ nullptr };
+      std::string* header{ nullptr };
+    };
+
+    MenuBase(BltOverlay &overlayPtr, std::string &&headerString, HeaderReact &&accessReactFunc)
+      : bltOver(overlayPtr), header(std::move(headerString)), accessReact(std::move(accessReactFunc)) { };
 
     // peforms any action -> if return != null, set current menu in BltOverlay to this return -> needs interfaces in case redraws are needed
     // likely needs redesign -> hwo do I send the other keys?
-    MenuBase* executeAction(MenuAction actionType, bool repeat, BltOverlay &over)
-    {
-      switch (actionType)
-      {
-        case MenuAction::ACTION:
-          return repeat ? nullptr : action(over); // repeat can not be used for an action
-        case MenuAction::BACK:
-          return back(over);
-        case MenuAction::UP:
-        case MenuAction::DOWN:
-        case MenuAction::RIGHT:
-        case MenuAction::LEFT:
-          move(actionType, over);
-          break;
-        default:
-          break;
-      }
-
-      return nullptr;
-    }
+    MenuBase* executeAction(MenuAction actionType, bool repeat);
 
     // key is placeholder, until I know what to send
     // send overlay for fully controll
-    virtual MenuBase* executeAction(char, BltOverlay&)
+    virtual MenuBase* executeAction(char)
     {
       return nullptr;
     }
@@ -200,14 +194,17 @@ namespace modclasses
     // should only be used by BltOverlay
     // forces draw of parent (if any) then this
     // a bit hacky -> either menu is drawn twice, or last menu status of input is restored
-    void forceDraw(BltOverlay &over)
-    {
-      if (lastMenu)
-      {
-        lastMenu->draw(over);
-      }
-      draw(over);
-    }
+    void forceDrawThisAndParent() const;
+
+    // draws this menu if it is the current menu
+    // drawParent will draw the parent instead (if it is active)
+    // if checkIfParent is set, it checks if the currentMenu is the child of the menu that should be drawn
+    // if yes, forceDrawThisAndParent() will be executed on the currentMenu
+    // -> will draw two menus, but keep right visuals
+    // NOTE: everything a bit hacky, since it relies heavy on the current structure
+    // would need visibility stuff...-> to much, currently
+    void draw(bool drawParent, bool checkIfParent) const;
+    
 
     // create MenuObject and return reference either to decend or to keep
     // I do not know what I am doing
@@ -217,7 +214,7 @@ namespace modclasses
     MenuBase& createMenu(Args&&... args){
       static_assert(!descend || T::DESCENDABLE, "Tried to descend to non-descendable menu.");
 
-      std::unique_ptr<T> newMenu{ std::make_unique<T>(std::forward<Args>(args)...) };
+      std::unique_ptr<T> newMenu{ std::make_unique<T>(bltOver, std::forward<Args>(args)...) };
       MenuBase* menuPtr{ newMenu.get() };
       addChild(std::forward<std::unique_ptr<T>>(newMenu));
 
@@ -235,16 +232,7 @@ namespace modclasses
 
     // return ref to higher menuBase
     // if no exists, return this and writes log message
-    virtual MenuBase& ascend() final
-    {
-      if (lastMenu)
-      {
-        return *lastMenu;
-      }
-
-      LOG(WARNING) << "BltOverlay: Tried to ascend menu without a higher menu. Staying on level.";
-      return *this;
-    }
+    virtual MenuBase& ascend() final;
 
     virtual ~MenuBase(){}
 
@@ -258,11 +246,11 @@ namespace modclasses
 
   private:
 
-    virtual MenuBase* access(bool callerLeaving, BltOverlay &over) = 0;
-    virtual void move(MenuAction direction, BltOverlay &over) = 0;
-    virtual MenuBase* action(BltOverlay &over) = 0;
-    virtual MenuBase* back(BltOverlay &over) = 0;
-    virtual void draw(BltOverlay &over) = 0;
+    virtual void draw() const = 0;
+    virtual MenuBase* access(bool callerLeaving) = 0;
+    virtual void move(MenuAction direction) = 0;
+    virtual MenuBase* action() = 0;
+    virtual MenuBase* back() = 0;
 
     // derived are all friend of the BaseClass, to access the private variables
     friend class MainMenu;
@@ -285,8 +273,25 @@ namespace modclasses
     std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>> subMenus;
 
   public:
+
+    // if given, the structure is filled with relevant pointers
+    // should only fill own stuff -> lifetime should be ok, since they exist until the end of bltOverlay
+    struct MainMenuPointer : MenuBasePointer
+    {
+      bool* bigMenu{ nullptr };
+      size_t* currentSelected{ nullptr };
+      std::pair<size_t, size_t>* startEndVisible{ nullptr };
+
+      // see currently no reason to expose this structure:
+      //std::unique_ptr<std::vector<std::unique_ptr<MenuBase>>>* subMenus{ nullptr };
+    };
     
-    MainMenu(std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu);
+    MainMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc, bool &&isItBigMenu);
+
+    MainMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+      bool&& isItBigMenu, MainMenuPointer* ptrCon);
+
+    void draw() const override;
 
     // prevent copy and assign (not sure how necessary)
     MainMenu(const MainMenu&) = delete;
@@ -299,13 +304,12 @@ namespace modclasses
   private:
 
     void computeStartEndVisible();
-    void menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over);
+    void menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const;
 
-    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
-    void move(MenuAction direction, BltOverlay &over) override;
-    MenuBase* action(BltOverlay &over) override;
-    MenuBase* back(BltOverlay &over) override;
-    void draw(BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving) override;
+    void move(MenuAction direction) override;
+    MenuBase* action() override;
+    MenuBase* back() override;
   };
 
 
@@ -344,19 +348,39 @@ namespace modclasses
     size_t cursorPos{ 0 };  // where to edit and where the cursor stands
     std::string currentInput{ "" };
 
-    const std::string defaultValue{ "" };
+    std::string defaultValue{ "" };
     std::string currentValue{ "" };
     std::string resultOfEnter{ "" };
 
   public:
 
-    FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc, bool onlyNumbers,
-      std::string&& defaultValueStr, InputValueReact&& inputValueReactFunc);
+    // if given, the structure is filled with relevant pointers
+    // should only fill own stuff -> lifetime should be ok, since they exist until the end of bltOverlay
+    struct FreeInputMenuPointer : MenuBasePointer
+    {
+      size_t* cursorPos{ nullptr };  // where to edit and where the cursor stands
+      std::string* currentInput{ nullptr };
+      std::string* defaultValue{ nullptr }; // nullptr for InputReact version
+      std::string* currentValue{ nullptr }; // nullptr for InputReact version
+      std::string* resultOfEnter{ nullptr };
+    };
 
-    FreeInputMenu(std::string&& headerString, HeaderReact&& accessReactFunc,
-      bool onlyNumbers, InputReact&& inputReactFunc);
+    FreeInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+      bool onlyNumbers, std::string &&defaultValueStr, InputValueReact &&inputValueReactFunc);
 
-    MenuBase* executeAction(char newChar, BltOverlay& over) override;
+    FreeInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+      bool onlyNumbers, InputReact &&inputReactFunc);
+
+    FreeInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+      bool onlyNumbers, std::string &&defaultValueStr, InputValueReact &&inputValueReactFunc,
+      FreeInputMenuPointer* ptrCon);
+
+    FreeInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+      bool onlyNumbers, InputReact &&inputReactFunc, FreeInputMenuPointer* ptrCon);
+
+    MenuBase* executeAction(char newChar) override;
+
+    void draw() const override;
 
     // prevent copy and assign (not sure how necessary)
     FreeInputMenu(const FreeInputMenu&) = delete;
@@ -368,11 +392,10 @@ namespace modclasses
 
   private:
 
-    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
-    void move(MenuAction direction, BltOverlay &over) override;
-    MenuBase* action(BltOverlay &over) override;
-    MenuBase* back(BltOverlay &over) override;
-    void draw(BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving) override;
+    void move(MenuAction direction) override;
+    MenuBase* action() override;
+    MenuBase* back() override;
   };
 
 
@@ -405,14 +428,33 @@ namespace modclasses
     size_t currentSelected{ 0 };
     std::pair<size_t, size_t> startEndVisible{ 0, 0 };
     
-    const std::string defaultValue;
+    std::string defaultValue;
     std::string currentValue;
     std::string resultOfEnter;
   
   public:
 
-    ChoiceInputMenu(std::string &&headerString, HeaderReact &&accessReactFunc, std::string &&defaultValueStr,
-                    std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc);
+    // if given, the structure is filled with relevant pointers
+    // should only fill own stuff -> lifetime should be ok, since they exist until the end of bltOverlay
+    struct ChoiceInputMenuPointer : MenuBasePointer
+    {
+      std::vector<std::pair<std::string, int32_t>>* choicePairs{ nullptr };
+      size_t* currentSelected{ nullptr };
+      std::pair<size_t, size_t>* startEndVisible{ nullptr };
+      std::string* defaultValue{ nullptr };
+      std::string* currentValue{ nullptr };
+      std::string* resultOfEnter{ nullptr };
+    };
+
+    ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                    std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
+                    SelectReact &&selectReactFunc);
+
+    ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                    std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
+                    SelectReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon);
+
+    void draw() const override;
 
     // prevent copy and assign (not sure how necessary)
     ChoiceInputMenu(const ChoiceInputMenu&) = delete;
@@ -425,13 +467,12 @@ namespace modclasses
   private:
 
     void computeStartEndVisible();
-    void menuBoxDrawHelper(std::string& text, int32_t yPos, bool active, BltOverlay &over);
+    void menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const;
 
-    MenuBase* access(bool callerLeaving, BltOverlay &over) override;
-    void move(MenuAction direction, BltOverlay &over) override;
-    MenuBase* action(BltOverlay &over) override;
-    MenuBase* back(BltOverlay &over) override;
-    void draw(BltOverlay &over) override;
+    MenuBase* access(bool callerLeaving) override;
+    void move(MenuAction direction) override;
+    MenuBase* action() override;
+    MenuBase* back() override;
   };
 
 
@@ -644,6 +685,7 @@ namespace modclasses
     static HRESULT _stdcall FlipFake(IDirectDrawSurface7* const that, LPDIRECTDRAWSURFACE7 surf7, DWORD flags);
 
     // all menu friend
+    friend class MenuBase;
     friend class MainMenu;
     friend class FreeInputMenu;
     friend class ChoiceInputMenu;

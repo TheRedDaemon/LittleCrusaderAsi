@@ -160,6 +160,12 @@ namespace modclasses
     if (!(keyUp || repeat))
     {
       applyValues(!isChanged);
+
+      if (activationPtr.thisMenu)
+      {
+        *(activationPtr.header) = "Custom Values: " + std::string(this->isChanged ? "True" : "False");
+        activationPtr.thisMenu->draw(true, false);
+      }
     }
   }
 
@@ -219,7 +225,8 @@ namespace modclasses
             header = "Custom Values: " + std::string(this->isChanged ? "True" : "False");
             return false;
           },
-          true
+          true,
+          &activationPtr
         )
         .createMenu<MainMenu, false>(
           "Reset Custom To Default",

@@ -268,6 +268,12 @@ namespace modclasses
 
     std::string msg{ isChanged ? "true" : "false" };
     BltOverlay::sendToConsole("Changed load status of file AICs to: " + msg, el::Level::Info);
+
+    if (activationPtr.thisMenu)
+    {
+      *(activationPtr.header) = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
+      activationPtr.thisMenu->draw(true, false);
+    }
   }
 
 
@@ -1074,7 +1080,8 @@ namespace modclasses
             header = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
             return false;
           },
-          true
+          true,
+          &activationPtr
         )
         .createMenu<MainMenu, false>(
           "Reload All Files",

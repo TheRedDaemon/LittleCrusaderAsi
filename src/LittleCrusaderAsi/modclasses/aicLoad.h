@@ -58,6 +58,9 @@ namespace modclasses
     std::array<bool, 17> saveArray{};
     std::string lastSaveName{ "" }; // remembered to confirm overwrite
 
+    // menu stuff
+    MainMenu::MainMenuPointer activationPtr;  // ptrCon to activation menu
+
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
     static std::vector<AddressRequest> usedAddresses;

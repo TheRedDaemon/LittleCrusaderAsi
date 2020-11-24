@@ -242,7 +242,7 @@ namespace modclasses
 
       // create main menu
 
-      mainMenu = std::make_unique<MainMenu>("Mod Menu", nullptr, true);
+      mainMenu = std::make_unique<MainMenu>(*this, "Mod Menu", nullptr, true);
       currentMenu = mainMenu.get();
       initialized = true;
     }
@@ -376,7 +376,7 @@ namespace modclasses
       return false;
     }
 
-    MenuBase* switchMenu{ currentMenu->executeAction(menuActions[key], repeat, *this) };
+    MenuBase* switchMenu{ currentMenu->executeAction(menuActions[key], repeat) };
     if (switchMenu != nullptr)
     {
       currentMenu = switchMenu;
@@ -534,7 +534,7 @@ namespace modclasses
 
     if (dd7BackbufferPtr && currentMenu)
     {
-      currentMenu->forceDraw(*this);
+      currentMenu->forceDrawThisAndParent();
     }
 
     // should update console
@@ -716,7 +716,7 @@ namespace modclasses
     std::string s{ chr };
     if (currentMenu)
     {
-      currentMenu->executeAction(chr, *this);
+      currentMenu->executeAction(chr);
     }
   }
 

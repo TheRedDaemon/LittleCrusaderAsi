@@ -49,6 +49,9 @@ namespace modclasses
     // 4 map sizes -> 4 values
     std::array<BuildRangeData, 4> buildRanges{};
 
+    // menu stuff
+    MainMenu::MainMenuPointer activationPtr;  // ptrCon to activation menu
+
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
     static std::vector<AddressRequest> usedAddresses;
