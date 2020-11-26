@@ -532,15 +532,9 @@ namespace modclasses
 
 
   // returns empty pointer in unrecoverable error case
-  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name, const bool fileRelativeToMod, const size_t mapInitSize) const
+  std::unique_ptr<std::unordered_map<int32_t, int32_t>> AICLoad::loadAICFile(const std::string &name,
+    const bool fileRelativeToMod, const size_t mapInitSize) const
   {
-    auto aicMap{ std::make_unique<std::unordered_map<int32_t, int32_t>>() };
-    if (mapInitSize > 0)
-    {
-      aicMap->reserve(mapInitSize);
-    }
-
-    bool runningOk{ true };
 
     // NOTE: key functions etc. happen from the folder of stronghold, not the plugin
     std::string filePath;
@@ -556,8 +550,8 @@ namespace modclasses
 
       if (!aicStream.good())
       {
-        LOG(WARNING) << "AICLoad: Unable to load file '" << name << "'. Is the name or the aic folder wrong?";
-        return std::unique_ptr<std::unordered_map<int32_t, int32_t>>();
+        BltOverlay::sendToConsole("AICLoad: Unable to load file '" + name + "'. Is the name or the aic folder wrong?", el::Level::Warning);
+        return {};
       }
 
       Json aicJson = Json::parse(aicStream);
@@ -565,9 +559,18 @@ namespace modclasses
       auto fileIt = aicJson.find("AICharacters");
       if (fileIt == aicJson.end())
       {
-        LOG(WARNING) << "AICLoad: Did not found the field 'AICharacters'. Unable to load aic '" << name << "'.";
-        return std::unique_ptr<std::unordered_map<int32_t, int32_t>>();
+        BltOverlay::sendToConsole("AICLoad: Did not found the field 'AICharacters'. Unable to load aic '" + name + "'.", el::Level::Warning);
+        return {};
       }
+
+      // can savely create map here
+      auto aicMap{ std::make_unique<std::unordered_map<int32_t, int32_t>>() };
+      if (mapInitSize > 0)
+      {
+        aicMap->reserve(mapInitSize);
+      }
+
+      bool skippedStuff{ false };
 
       Json &aicArray = fileIt.value();
       for (const auto& charAIC : aicArray)
@@ -576,6 +579,7 @@ namespace modclasses
         if (charIt == charAIC.end())
         {
           LOG(WARNING) << "AICLoad: Did not found the field 'Name' in one of the character-objects. Skipping the object.";
+          skippedStuff = true;
           continue;
         }
 
@@ -584,6 +588,7 @@ namespace modclasses
         if (!aiName || aiName == AIName::None)
         {
           LOG(WARNING) << "AICLoad: The character name '" << aiNameString << "' is no valid name. Skipping the object.";
+          skippedStuff = true;
           continue;
         }
 
@@ -591,6 +596,7 @@ namespace modclasses
         if (perIt == charAIC.end())
         {
           LOG(WARNING) << "AICLoad: Did not found the field 'Personality' in object of character '" << aiNameString << "'. Skipping the object.";
+          skippedStuff = true;
           continue;
         }
 
@@ -602,6 +608,7 @@ namespace modclasses
           {
             LOG(WARNING) << "AICLoad: The field '" << valuePair.key() << "' of the character '" << aiNameString << "' is no valid AIC field. "
               << "Skipping the field.";
+            skippedStuff = true;
             continue;
           }
 
@@ -610,6 +617,7 @@ namespace modclasses
           {
             LOG(WARNING) << "AICLoad: The value of field '" << valuePair.key() << "' of the character '" << aiNameString << "' is not valid. "
               << "Skipping the field.";
+            skippedStuff = true;
             continue;
           }
 
@@ -617,27 +625,25 @@ namespace modclasses
         }
       }
 
+      if (skippedStuff)
+      {
+        BltOverlay::sendToConsole("During loading of '" + name + "' fields were skipped. See file log.", el::Level::Warning);
+      }
+
       BltOverlay::sendToConsole("Loaded AIC: " + name, el::Level::Info);
+      return aicMap;
     }
     catch (const Json::parse_error& o_O)
     {
       LOG(ERROR) << "AIC parse error: " << o_O.what();
-      runningOk = false;
     }
     catch (const std::exception& o_O)
     {
       LOG(ERROR) << "Error during aic load: " << o_O.what();
-      runningOk = false;
     }
 
-    // extra if big problem occured
-    if (!runningOk)
-    {
-      LOG(WARNING) << "Encountered unsolveable problems during load of AIC '" << name << "'. File is ignored.";
-      aicMap.reset();
-    }
-
-    return aicMap;
+    BltOverlay::sendToConsole("Encountered unsolveable problems during load of AIC '" + name + "'. File is ignored.", el::Level::Warning);
+    return {};
   }
 
 
@@ -1063,49 +1069,52 @@ namespace modclasses
       BltOverlay::sendToConsole("AICLoad: Unable to get main menu.", el::Level::Warning);
     }
 
-    // create basic menus and get ref to editor menu
-    MenuBase& editorMenu{
+    MenuBase& aicMenu{ 
       (*basPtr).createMenu<MainMenu, true>(
         "AIC Load",
         nullptr,
         true
       )
-        // NOTE -> Main Menu is descendable, but child will be hidden by func
-        // they could be added though
-        .createMenu<MainMenu, false>(
-          "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
-          [this](bool, std::string& header)
-          {
-            this->activateAICs(0, false, false);
-            header = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
-            return false;
-          },
-          true,
-          &activationPtr
-        )
-        .createMenu<MainMenu, false>(
-          "Reload All Files",
-          [this](bool, std::string&)
-          {
-            this->reloadAllAIC(0, false, false);
-            return false;
-          },
-          true
-        )
-        .createMenu<MainMenu, false>(
-          "Reload Main File",
-          [this](bool, std::string&)
-          {
-            this->reloadMainAIC(0, false, false);
-            return false;
-          },
-          true
-        )
-        .createMenu<MainMenu, true>(
-          "Editor",
-          nullptr,
-          true
-        )
+    };
+
+    // create basic menus and get ref to editor menu
+    MenuBase& editorMenu{
+      // NOTE -> Main Menu is descendable, but child will be hidden by func
+      // they could be added though
+      aicMenu.createMenu<MainMenu, false>(
+        "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
+        [this](bool, std::string& header)
+        {
+          this->activateAICs(0, false, false);
+          header = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
+          return false;
+        },
+        true,
+        &activationPtr
+      )
+      .createMenu<MainMenu, false>(
+        "Reload All Files",
+        [this](bool, std::string&)
+        {
+          this->reloadAllAIC(0, false, false);
+          return false;
+        },
+        true
+      )
+      .createMenu<MainMenu, false>(
+        "Reload Main File",
+        [this](bool, std::string&)
+        {
+          this->reloadMainAIC(0, false, false);
+          return false;
+        },
+        true
+      )
+      .createMenu<MainMenu, true>(
+        "Editor",
+        nullptr,
+        true
+      )
     };
 
     // create individual editor menus (AIName * AIC)
@@ -1282,8 +1291,7 @@ namespace modclasses
     saveArray.fill(true); // initial fill
 
     MenuBase& saveMenu{
-      editorMenu.ascend()
-      .createMenu<MainMenu, true>(
+      aicMenu.createMenu<MainMenu, true>(
         "Save AIC",
         nullptr,
         true
@@ -1329,21 +1337,93 @@ namespace modclasses
       }
     );
 
-    // testing new menu
-    editorMenu.ascend().createMenu<SortableListMenu, false>(
-      "Test",
+    // reload menu
+
+    std::vector<std::pair<std::string, int32_t>> initialAICList{};
+    for (size_t i = 0; i < loadList.size(); i++)
+    {
+      initialAICList.emplace_back(loadList[i], i);  // save index
+    }
+
+    aicMenu.createMenu<ChoiceInputMenu, false>(
+      "Reload AIC",
       nullptr,
-      SortableListMenu::SortMenuContainer{
-        { "test1", false, 0 },
-        { "test2", true, 0 },
-        { "test3", true, 0 },
-        { "test4", true, 0 },
-        { "test5", true, 0 },
-        { "test6", true, 0 },
-        { "test7", true, 0 },
+      std::move(initialAICList),
+      [this](int32_t value, std::string& resultMessage)
+      {
+        std::string& aicName{ loadList[value] };
+        auto it{ loadedAICValues.find(aicName) };
+        if (it == loadedAICValues.end())
+        {
+          resultMessage = "Not loaded.";  // should not really happen
+          return;
+        }
+
+        auto changedMain{ loadAICFile(aicName, false, loadedAICValues[aicName]->size()) };
+        if (!changedMain)
+        {
+          resultMessage = "Failed. See log.";
+          return;
+        }
+
+        // swaps maps -> old should be deleted after this function
+        loadedAICValues[aicName].swap(changedMain);
+        resultMessage = "Loaded.";
       },
+      &reloadMenuPtr
+    );
+
+    // create sort menu for AIC load
+
+    SortableListMenu::SortMenuContainer sortInitCon{};
+    for (auto& aic : loadList)
+    {
+      sortInitCon.emplace_back(aic, true, 0); // value not important
+    }
+
+    aicMenu.createMenu<SortableListMenu, false>(
+      "Load Order",
       nullptr,
-      nullptr
+      std::move(sortInitCon),
+      nullptr,
+      nullptr,
+      &sortMenuPtr
+    );
+
+    // load new AIC menu
+
+    aicMenu.createMenu<FreeInputMenu, false>(
+      "Load New AIC",
+      nullptr,
+      false,
+      [this](const std::string& fileName, std::string& resultMessage)
+      {
+        if (this->loadedAICValues.find(fileName) != this->loadedAICValues.end())
+        {
+          resultMessage = "Exists. Use reload.";
+          return;
+        }
+
+        auto newFile{ this->loadAICFile(fileName, false) };
+        if (!newFile)
+        {
+          resultMessage = "Failed. See log.";
+          return;
+        }
+
+        this->loadedAICValues[fileName].swap(newFile);  // add new
+        if (this->sortMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
+        {
+          (*(this->sortMenuPtr.menuCon)).emplace_back(fileName, true, 0); // default active
+        }
+        this->loadList.push_back(fileName);
+        if (this->reloadMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
+        {
+          (*(this->reloadMenuPtr.choicePairs)).emplace_back(this->loadList.back(), this->loadList.size() - 1);
+        }
+
+        resultMessage = "Loaded.";
+      }
     );
   }
 

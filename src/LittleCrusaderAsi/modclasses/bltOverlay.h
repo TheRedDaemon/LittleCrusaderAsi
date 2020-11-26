@@ -398,8 +398,8 @@ namespace modclasses
   // uses int32_t as general value
   class ChoiceInputMenu : public MenuBase
   {
-    using SelectReact = std::function<bool(int32_t, std::string&, bool, std::string&)>;
-
+    using SelectValueReact = std::function<bool(int32_t, std::string&, bool, std::string&)>;
+    using SelectReact = std::function<void(int32_t, std::string&)>;
 
   public:
 
@@ -412,12 +412,16 @@ namespace modclasses
     std::vector<std::pair<std::string, int32_t>> choicePairs;
 
     // function reacts to enter on selected value
+    // receives the value and a ref to the 'resultOfEnter'- string (can be changed)
+    SelectReact selectReact;
+
+    // function reacts to enter on selected value
     // receives the value, a ref to the 'resultOfEnter'- string (can be changed)
     // a bool indicating that it only should update the current value string (if true)
     // and a ref to that string -> if the bool is set, the send value will be meaningless
     // the return value indicates if the menu should use the already given pair string for the new current value
     // should only be true if the value was changed; return is ignored if only a change is requested
-    SelectReact selectReact;
+    SelectValueReact selectValueReact;
 
     // movement
     size_t currentSelected{ 0 };
@@ -436,18 +440,26 @@ namespace modclasses
       std::vector<std::pair<std::string, int32_t>>* choicePairs{ nullptr };
       size_t* currentSelected{ nullptr };
       std::pair<size_t, size_t>* startEndVisible{ nullptr };
-      std::string* defaultValue{ nullptr };
-      std::string* currentValue{ nullptr };
+      std::string* defaultValue{ nullptr }; // will be nullptr if only SelectReact
+      std::string* currentValue{ nullptr }; // will be nullptr if only SelectReact
       std::string* resultOfEnter{ nullptr };
     };
 
     ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
                     std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
-                    SelectReact &&selectReactFunc);
+                    SelectValueReact &&selectReactFunc);
 
     ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
                     std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
-                    SelectReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon);
+                    SelectValueReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon);
+
+    ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                    std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
+                    SelectReact &&selectReactFunc);
+
+    ChoiceInputMenu(BltOverlay &overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                    std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc,
+                    ChoiceInputMenuPointer* ptrCon);
 
     // prevent copy and assign (not sure how necessary)
     ChoiceInputMenu(const ChoiceInputMenu&) = delete;

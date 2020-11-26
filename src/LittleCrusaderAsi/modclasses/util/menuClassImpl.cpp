@@ -323,7 +323,12 @@ namespace modclasses
       return;
     }
 
-    size_t maxVisible{ (std::min)(choicePairs.size() - 1, 2u) };  // hardcoded ( maxNum + 1 (0 index) )
+    size_t maxVisible{
+      (std::min)(
+        choicePairs.size() - 1,
+        selectReact ? 4u : 2u
+      )
+    };  // hardcoded ( maxNum + 1 (0 index) )
     startEndVisible = { 0, maxVisible };
   }
 
@@ -331,12 +336,16 @@ namespace modclasses
   // only apply (ok) button reacts to "push"
   MenuBase* ChoiceInputMenu::action()
   {
-    if (!selectReact || choicePairs.empty())
+    if (choicePairs.empty() || !(selectReact || selectValueReact))
     {
       return nullptr;
     }
 
-    if (selectReact(choicePairs.at(currentSelected).second, resultOfEnter, false, currentValue))
+    if (selectReact)
+    {
+      selectReact(choicePairs.at(currentSelected).second, resultOfEnter);
+    }
+    else if (selectValueReact && selectValueReact(choicePairs.at(currentSelected).second, resultOfEnter, false, currentValue))
     {
       currentValue = choicePairs.at(currentSelected).first;
     }
@@ -353,10 +362,6 @@ namespace modclasses
       return nullptr;
     }
 
-    // setting status back -> should be enough
-    currentSelected = 0;
-    computeStartEndVisible();
-    resultOfEnter = "";
     bltOver.inputActive = false;
 
     if (accessReact)
@@ -388,13 +393,16 @@ namespace modclasses
     // header text
     bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 150, 25, 280, true, true, true, nullptr);
 
-    // default
-    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 55, 65, false, true, true, nullptr);
-    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 55, 184, true, true, true, nullptr);
+    if (selectValueReact)
+    {
+      // default
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Default:", 16, 55, 65, false, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, defaultValue, 192, 55, 184, true, true, true, nullptr);
 
-    // current
-    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 80, 65, false, true, true, nullptr);
-    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 80, 184, true, true, true, nullptr);
+      // current
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, "Current:", 16, 80, 65, false, true, true, nullptr);
+      bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, currentValue, 192, 80, 184, true, true, true, nullptr);
+    }
 
     // draw menus
     if (choicePairs.empty())
@@ -402,7 +410,7 @@ namespace modclasses
       return;
     }
 
-    int32_t menuYMid{ 124 };
+    int32_t menuYMid{ selectReact ? 60 : 124 };
     for (size_t i = startEndVisible.first; i < startEndVisible.second + 1; i++)
     {
       menuBoxDrawHelper(choicePairs.at(i).first, menuYMid, i == currentSelected);
@@ -412,8 +420,8 @@ namespace modclasses
     // assuming three visible max
     if (startEndVisible.first > 0)
     {
-      bltOver.inputOffSurf->BltFast(5, 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
-      bltOver.inputOffSurf->BltFast(275, 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(5, selectReact ? 54 : 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(275, selectReact ? 54 : 118, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
     }
 
     if (startEndVisible.second < choicePairs.size() - 1)
@@ -436,14 +444,19 @@ namespace modclasses
       return nullptr;
     }
 
-    if (selectReact)
+    if (selectValueReact)
     {
-      selectReact(0, resultOfEnter, true, currentValue);  // update after access
+      selectValueReact(0, resultOfEnter, true, currentValue);  // update after access
     }
-    else
+    else if (!selectReact)
     {
       resultOfEnter = "Missing react function.";
     }
+
+    // setting status during access
+    currentSelected = 0;
+    computeStartEndVisible();
+    resultOfEnter = "";
 
     draw();
     bltOver.inputActive = true;
@@ -453,25 +466,25 @@ namespace modclasses
 
 
   ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc, std::string &&defaultValueStr,
-                                   std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc)
+                                   std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectValueReact &&selectReactFunc)
                                   : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
                                     defaultValue(std::move(defaultValueStr)), choicePairs(std::move(choicePairCon)),
-                                    selectReact(std::move(selectReactFunc))
+                                    selectValueReact(std::move(selectReactFunc))
   {
     computeStartEndVisible();
-    if (selectReact)
+    if (selectValueReact)
     {
-      selectReact(0, resultOfEnter, true, currentValue);  // update after access
+      selectValueReact(0, resultOfEnter, true, currentValue);  // update after access
     }
   }
 
   ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
                                    std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
-                                   SelectReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon)
+                                   SelectValueReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon)
                                   : ChoiceInputMenu(overlay, std::forward<std::string>(headerString),
                                     std::forward<HeaderReact>(accessReactFunc), std::forward<std::string>(defaultValueStr),
                                     std::forward<std::vector<std::pair<std::string, int32_t>>>(choicePairCon),
-                                    std::forward<SelectReact>(selectReactFunc))
+                                    std::forward<SelectValueReact>(selectReactFunc))
   {
     if (ptrCon)
     {
@@ -482,6 +495,32 @@ namespace modclasses
       ptrCon->startEndVisible = &startEndVisible;
       ptrCon->defaultValue = &defaultValue;
       ptrCon->currentValue = &currentValue;
+      ptrCon->resultOfEnter = &resultOfEnter;
+    }
+  }
+
+  ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                                   std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc)
+                                  : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                                    choicePairs(std::move(choicePairCon)), selectReact(std::move(selectReactFunc))
+  {
+    computeStartEndVisible();
+  }
+
+  ChoiceInputMenu::ChoiceInputMenu(BltOverlay& overlay, std::string &&headerString, HeaderReact &&accessReactFunc,
+                                   std::vector<std::pair<std::string, int32_t>> &&choicePairCon, SelectReact &&selectReactFunc,
+                                   ChoiceInputMenuPointer* ptrCon)
+                                  : ChoiceInputMenu(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc),
+                                    std::forward<std::vector<std::pair<std::string, int32_t>>>(choicePairCon),
+                                    std::forward<SelectReact>(selectReactFunc))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->choicePairs = &choicePairs;
+      ptrCon->currentSelected = &currentSelected;
+      ptrCon->startEndVisible = &startEndVisible;
       ptrCon->resultOfEnter = &resultOfEnter;
     }
   }
@@ -840,8 +879,11 @@ namespace modclasses
       return nullptr;
     }
 
-    // set this here, to take every update
+    // setting status during access
     currentElement = menuCon.begin();
+    currentPos = 0;
+    resultOfEnter = "";
+    computeStartEndVisible();
 
     draw();
     bltOver.inputActive = true;
@@ -918,10 +960,6 @@ namespace modclasses
       return nullptr;
     }
 
-    // setting status back -> should be enough
-    currentPos = 0;
-    resultOfEnter = "test";
-    computeStartEndVisible();
     bltOver.inputActive = false;
 
     if (accessReact)

@@ -60,6 +60,8 @@ namespace modclasses
 
     // menu stuff
     MainMenu::MainMenuPointer activationPtr;  // ptrCon to activation menu
+    ChoiceInputMenu::ChoiceInputMenuPointer reloadMenuPtr;
+    SortableListMenu::SortableListMenuPointer sortMenuPtr;  // ptrCon for sort menu
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
