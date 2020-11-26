@@ -242,7 +242,7 @@ namespace modclasses
 
   protected:
 
-    virtual void addChild(std::unique_ptr<MenuBase> &&menu) = 0;
+    virtual void addChild(std::unique_ptr<MenuBase>&&) {};
 
   private:
 
@@ -256,6 +256,7 @@ namespace modclasses
     friend class MainMenu;
     friend class FreeInputMenu;
     friend class ChoiceInputMenu;
+    friend class SortableListMenu;
   };
 
 
@@ -291,8 +292,6 @@ namespace modclasses
     MainMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
       bool&& isItBigMenu, MainMenuPointer* ptrCon);
 
-    void draw() const override;
-
     // prevent copy and assign (not sure how necessary)
     MainMenu(const MainMenu&) = delete;
     MainMenu& operator= (const MainMenu&) = delete;
@@ -306,6 +305,7 @@ namespace modclasses
     void computeStartEndVisible();
     void menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const;
 
+    void draw() const override;
     MenuBase* access(bool callerLeaving) override;
     void move(MenuAction direction) override;
     MenuBase* action() override;
@@ -380,18 +380,13 @@ namespace modclasses
 
     MenuBase* executeAction(char newChar) override;
 
-    void draw() const override;
-
     // prevent copy and assign (not sure how necessary)
     FreeInputMenu(const FreeInputMenu&) = delete;
     FreeInputMenu& operator= (const FreeInputMenu&) = delete;
 
-  protected:
-
-    void addChild(std::unique_ptr<MenuBase>&&) override { };
-
   private:
 
+    void draw() const override;
     MenuBase* access(bool callerLeaving) override;
     void move(MenuAction direction) override;
     MenuBase* action() override;
@@ -454,21 +449,98 @@ namespace modclasses
                     std::string &&defaultValueStr, std::vector<std::pair<std::string, int32_t>> &&choicePairCon,
                     SelectReact &&selectReactFunc, ChoiceInputMenuPointer* ptrCon);
 
-    void draw() const override;
-
     // prevent copy and assign (not sure how necessary)
     ChoiceInputMenu(const ChoiceInputMenu&) = delete;
     ChoiceInputMenu& operator= (const ChoiceInputMenu&) = delete;
-  
-  protected:
-
-    void addChild(std::unique_ptr<MenuBase>&&) override { };
 
   private:
 
     void computeStartEndVisible();
     void menuBoxDrawHelper(const std::string& text, int32_t yPos, bool active) const;
 
+    void draw() const override;
+    MenuBase* access(bool callerLeaving) override;
+    void move(MenuAction direction) override;
+    MenuBase* action() override;
+    MenuBase* back() override;
+  };
+
+
+  // intended to be sorted in the menu
+  class SortableListMenu : public MenuBase
+  {
+  public:
+    using SortMenuContainer = std::list<std::tuple<std::string, bool, int32_t>>;
+
+    static constexpr bool DESCENDABLE{ false };
+
+  private:
+    using SortChangeReact = std::function<bool(const SortMenuContainer&, std::string&)>;
+    using ActivationReact = std::function<bool(const std::tuple<std::string, bool, int32_t>&, std::string&)>;
+    using MenuIter = SortMenuContainer::iterator;
+
+
+    // list will contain elements -> strings are whats displayed
+    // bool says if element is active
+    // the in32_t can be an specific value -> the react func is change func for reaction
+    SortMenuContainer menuCon;
+
+    // function reacts to a sort change
+    // receives the reference to the sort list and a ref to the 'resultOfEnter'- string (can be changed)
+    // the return value indicates if the menu should stay this way (true) or should revert (false)
+    // if this function is not provided, the change will be kept
+    SortChangeReact sortChangeReact;
+
+    // function reacts to activation change
+    // receives the changed tuple as const ref and and a ref to the 'resultOfEnter'- string (can be changed)
+    // the return value indicates if the menu should stay this way (true) or should revert (false)
+    // if this function is not provided, the change will be kept
+    ActivationReact actiReact;
+
+    // movement
+    size_t currentPos{ 0 };
+    size_t originalPos{ 0 };  // saves last pos to jump back with select
+    MenuIter currentElement{ menuCon.begin() };
+    MenuIter originalElementPos{ menuCon.end() };  // NOTE: is in theory pos after the old element -> used for splice
+    bool moving{ false };
+
+    std::pair<size_t, size_t> startEndVisible{ 0, 0 };
+    std::string resultOfEnter;
+
+  public:
+
+    // if given, the structure is filled with relevant pointers
+    // should only fill own stuff -> lifetime should be ok, since they exist until the end of bltOverlay
+    struct SortableListMenuPointer : MenuBasePointer
+    {
+      SortMenuContainer* menuCon{ nullptr };
+      MenuIter* currentElement{ nullptr };
+      MenuIter* originalElementPos{ nullptr };
+      size_t* currentPos{ nullptr };
+      size_t* originalPos{ nullptr };
+      bool* moving{ nullptr };
+      std::pair<size_t, size_t>* startEndVisible{ nullptr };
+      std::string* resultOfEnter{ nullptr };
+    };
+
+    SortableListMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+      SortMenuContainer&& sortMenuCon, SortChangeReact&& sortChangeReactFunc, ActivationReact&& actiReactFunc);
+
+    SortableListMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+      SortMenuContainer&& sortMenuCon, SortChangeReact&& sortChangeReactFunc,
+      ActivationReact&& actiReactFunc, SortableListMenuPointer* ptrCon);
+
+    // prevent copy and assign (not sure how necessary)
+    SortableListMenu(const SortableListMenu&) = delete;
+    SortableListMenu& operator= (const SortableListMenu&) = delete;
+
+  private:
+
+    void computeStartEndVisible();
+    void correctStartEndVisible();
+    void menuBoxDrawHelper(const std::string& text, bool enabled, int32_t yPos, bool active, size_t number) const;
+
+    void draw() const override;
     MenuBase* access(bool callerLeaving) override;
     void move(MenuAction direction) override;
     MenuBase* action() override;
@@ -689,6 +761,7 @@ namespace modclasses
     friend class MainMenu;
     friend class FreeInputMenu;
     friend class ChoiceInputMenu;
+    friend class SortableListMenu;
   };
 }
 

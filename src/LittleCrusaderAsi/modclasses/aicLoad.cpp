@@ -1328,6 +1328,23 @@ namespace modclasses
         resultMessage = std::move(this->saveAIC(fileName, false));
       }
     );
+
+    // testing new menu
+    editorMenu.ascend().createMenu<SortableListMenu, false>(
+      "Test",
+      nullptr,
+      SortableListMenu::SortMenuContainer{
+        { "test1", false, 0 },
+        { "test2", true, 0 },
+        { "test3", true, 0 },
+        { "test4", true, 0 },
+        { "test5", true, 0 },
+        { "test6", true, 0 },
+        { "test7", true, 0 },
+      },
+      nullptr,
+      nullptr
+    );
   }
 
 

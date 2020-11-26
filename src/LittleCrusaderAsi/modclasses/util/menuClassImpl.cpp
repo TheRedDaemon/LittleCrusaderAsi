@@ -757,4 +757,307 @@ namespace modclasses
       ptrCon->resultOfEnter = &resultOfEnter;
     }
   }
+
+
+  // SortableListMenu //
+
+
+  void SortableListMenu::menuBoxDrawHelper(const std::string& text, bool enabled, int32_t yPos, bool active, size_t number) const
+  {
+    RECT* rect{ active ? &bltOver.menuRects.inputFieldSelected : &bltOver.menuRects.inputField };
+    std::pair<int32_t, int32_t> boxPos{ 40, yPos - 16 };
+
+    bltOver.inputOffSurf->BltFast(boxPos.first, boxPos.second, bltOver.compSurf, rect, DDBLTFAST_NOCOLORKEY);
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, text, 165, yPos, 186, true, true, true, nullptr);
+
+    if (!enabled)
+    {
+      bltOver.inputOffSurf->BltFast(boxPos.first + 218, boxPos.second, bltOver.compSurf, &bltOver.menuRects.cancelBox, DDBLTFAST_NOCOLORKEY);
+    }
+
+    if (moving && active)
+    {
+      bltOver.inputOffSurf->BltFast(boxPos.first, boxPos.second, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+      bltOver.inputOffSurf->BltFast(boxPos.first + 15, boxPos.second, bltOver.compSurf, &bltOver.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
+    }
+
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL_BOLD, std::to_string(number) + ".",
+      20, yPos, 30, true, true, true, nullptr);
+  }
+
+
+  void SortableListMenu::draw() const
+  {
+    // initial background
+    bltOver.inputOffSurf->BltFast(0, 0, bltOver.compSurf, &bltOver.menuRects.bigInputBox, DDBLTFAST_NOCOLORKEY);
+
+    // header text
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL_BOLD, header, 165, 25, 260, true, true, true, nullptr);
+
+    // draw menus
+    if (menuCon.empty())
+    {
+      return;
+    }
+
+    int32_t menuYMid{ 64 };
+    size_t counter{ 0 };
+    for(auto& tup : menuCon)
+    {
+      if (counter < startEndVisible.first || counter > startEndVisible.second)
+      {
+        ++counter;
+        continue; // only handle visible
+      }
+
+      menuBoxDrawHelper(std::get<0>(tup), std::get<1>(tup), menuYMid, counter == currentPos, counter + 1);
+      menuYMid += 32;
+      ++counter;
+    }
+
+    // assuming three visible max
+    if (startEndVisible.first > 0)
+    {
+      bltOver.inputOffSurf->BltFast(10, 16, bltOver.compSurf, &bltOver.menuRects.silverArrowUp, DDBLTFAST_SRCCOLORKEY);
+    }
+
+    if (startEndVisible.second < menuCon.size() - 1)
+    {
+      bltOver.inputOffSurf->BltFast(10, 208, bltOver.compSurf, &bltOver.menuRects.silverArrowDown, DDBLTFAST_SRCCOLORKEY);
+    }
+
+    // apply text
+    bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, resultOfEnter, 165, 226, 200, true, true, true, nullptr);
+  }
+
+
+  MenuBase* SortableListMenu::access(bool callerLeaving)
+  {
+    bool moveToThis{ accessReact != nullptr ? accessReact(callerLeaving, header) : true };
+
+    if (!moveToThis)
+    {
+      return nullptr;
+    }
+
+    // set this here, to take every update
+    currentElement = menuCon.begin();
+
+    draw();
+    bltOver.inputActive = true;
+
+    return this;
+  }
+
+
+  void SortableListMenu::correctStartEndVisible()
+  {
+    if (currentPos != originalPos)
+    {
+      // should never be big enough for issues
+      int32_t startEndJump{ static_cast<int32_t>(originalPos) - static_cast<int32_t>(currentPos) };
+      int32_t toAdd{ 0 };
+      if (startEndJump > 0)
+      {
+        toAdd = (std::min)(startEndJump, static_cast<int32_t>(menuCon.size()) - 1 - static_cast<int32_t>(startEndVisible.second));
+      }
+      else
+      {
+        toAdd = (std::max)(startEndJump, -static_cast<int32_t>(startEndVisible.first));
+      }
+      startEndVisible = { startEndVisible.first + toAdd, startEndVisible.second + toAdd };
+
+      currentPos = originalPos;
+    }
+  }
+
+
+  MenuBase* SortableListMenu::action()
+  {
+    if (menuCon.empty())
+    {
+      return nullptr;
+    }
+
+    if (moving)
+    {
+      if (sortChangeReact && !sortChangeReact(menuCon, resultOfEnter))
+      {
+        menuCon.splice(originalElementPos, menuCon, currentElement);
+        correctStartEndVisible();
+      }
+
+      moving = false;
+    }
+    else
+    {
+      originalElementPos = std::next(currentElement);
+      originalPos = currentPos;
+      moving = true;
+    }
+
+    draw();
+    return nullptr;
+  }
+
+
+  MenuBase* SortableListMenu::back()
+  {
+    if (moving)
+    {
+      // TODO?: will not jump the menu to original element pos -> menu will stay -> change this?
+      menuCon.splice(originalElementPos, menuCon, currentElement);
+      correctStartEndVisible();
+      moving = false;
+      draw();
+      return nullptr;
+    }
+
+    if (!lastMenu)
+    {
+      return nullptr;
+    }
+
+    // setting status back -> should be enough
+    currentPos = 0;
+    resultOfEnter = "test";
+    computeStartEndVisible();
+    bltOver.inputActive = false;
+
+    if (accessReact)
+    {
+      // ignore return
+      accessReact(true, header);
+    }
+
+    return lastMenu->access(true);
+  }
+
+
+  void SortableListMenu::computeStartEndVisible()
+  {
+    if (menuCon.size() <= 1)
+    {
+      startEndVisible = { 0, 0 };
+      return;
+    }
+
+    size_t maxVisible{ (std::min)(menuCon.size() - 1, 4u) };  // hardcodedy
+    startEndVisible = { 0, maxVisible };
+  }
+
+
+  void SortableListMenu::move(MenuAction direction)
+  {
+    bool change{ false };
+
+    switch (direction)
+    {
+    case MenuAction::UP:
+    {
+      if (currentPos > 0)
+      {
+        --currentPos;
+        if (currentPos < startEndVisible.first)
+        {
+          --startEndVisible.first;
+          --startEndVisible.second;
+        }
+
+        if (moving)
+        {
+          menuCon.splice(std::prev(currentElement), menuCon, currentElement);
+        }
+        else
+        {
+          currentElement = std::prev(currentElement);
+        }
+
+        change = true;
+      }
+      break;
+    }
+    case MenuAction::DOWN:
+    {
+      if (currentPos < menuCon.size() - 1)
+      {
+        ++currentPos;
+        if (currentPos > startEndVisible.second)
+        {
+          ++startEndVisible.first;
+          ++startEndVisible.second;
+        }
+
+        if (moving)
+        {
+          // needs to move two iterators up to get element to be placed before
+          menuCon.splice(std::next(currentElement, 2), menuCon, currentElement);
+        }
+        else
+        {
+          currentElement = std::next(currentElement);
+        }
+
+        change = true;
+      }
+      break;
+    }
+    case MenuAction::LEFT:
+    case MenuAction::RIGHT:
+    {
+      std::get<1>(*currentElement) = !std::get<1>(*currentElement);
+      if (actiReact && !actiReact(*currentElement, resultOfEnter))
+      {
+        std::get<1>(*currentElement) = !std::get<1>(*currentElement);
+      }
+      else
+      {
+        change = true;
+      }
+
+      break;
+    }
+
+    default:
+      break;
+    }
+
+    if (change)
+    {
+      draw();
+    }
+  }
+
+
+  SortableListMenu::SortableListMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+                                     SortMenuContainer&& sortMenuCon, SortChangeReact&& sortChangeReactFunc, ActivationReact&& actiReactFunc)
+                                    : MenuBase(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc)),
+                                      menuCon(std::move(sortMenuCon)), sortChangeReact(std::move(sortChangeReactFunc)),
+                                      actiReact(std::move(actiReactFunc))
+  {
+    computeStartEndVisible();
+    currentElement = menuCon.begin();
+  }
+
+  SortableListMenu::SortableListMenu(BltOverlay& overlay, std::string&& headerString, HeaderReact&& accessReactFunc,
+                                     SortMenuContainer&& sortMenuCon, SortChangeReact&& sortChangeReactFunc,
+                                     ActivationReact&& actiReactFunc, SortableListMenuPointer* ptrCon)
+                                    : SortableListMenu(overlay, std::forward<std::string>(headerString), std::forward<HeaderReact>(accessReactFunc),
+                                      std::forward<SortMenuContainer>(sortMenuCon), std::forward<SortChangeReact>(sortChangeReactFunc),
+                                      std::forward<ActivationReact>(actiReactFunc))
+  {
+    if (ptrCon)
+    {
+      ptrCon->thisMenu = this;
+      ptrCon->header = &header;
+      ptrCon->currentPos = &currentPos;
+      ptrCon->currentElement = &currentElement;
+      ptrCon->originalElementPos = &originalElementPos;
+      ptrCon->originalPos = &originalPos;
+      ptrCon->moving = &moving;
+      ptrCon->startEndVisible = &startEndVisible;
+      ptrCon->menuCon = &menuCon;
+      ptrCon->resultOfEnter = &resultOfEnter;
+    }
+  }
 }
