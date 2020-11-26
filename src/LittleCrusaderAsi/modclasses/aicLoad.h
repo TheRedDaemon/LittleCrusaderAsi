@@ -30,6 +30,9 @@ namespace modclasses
     // stores a copy of the original values for quick swaps
     std::array<int32_t, 2704> vanillaAIC{};
 
+    // stores the current situation AIC
+    std::array<int32_t, 2704> customAIC{};
+
     // config data safe:
     
     // start state
@@ -37,6 +40,7 @@ namespace modclasses
 
     // store keyboard shortcuts
     Json keysActivate;
+    Json keysApply;
     Json keysReloadMain;
     Json keysReloadAll;
 
@@ -120,7 +124,11 @@ namespace modclasses
 
     /**keyboard functions**/
 
+    // keyboard function
+
     void activateAICs(const HWND window, const bool keyUp, const bool repeat);
+
+    void applyAICs(const HWND window, const bool keyUp, const bool repeat);
 
     void reloadMainAIC(const HWND window, const bool keyUp, const bool repeat);
 
@@ -138,7 +146,6 @@ namespace modclasses
     // if size_t == 0, value ignored
     std::unique_ptr<std::unordered_map<int32_t, int32_t>> loadAICFile(const std::string &name,
       const bool fileRelativeToMod, const size_t mapInitSize) const;
-    void applyAICs();
 
     // returns if the value is valid, at the same time it fills an int32_t with the right value
     // this is necessary for some fields that use enum values
@@ -153,6 +160,15 @@ namespace modclasses
     // returns intPtr to static structure, should be ok
     const int32_t* getReactionNumber(AICEnum field) const;
 
+    // switch between default and current custom values
+    void setCustomAICs(bool status);
+
+    // takes the current file setup and loads it into the customAIC (with vanilla as base)
+    // without reset -> reset to false
+    // if reset is true, only applies vanilla values instead
+    void applyAICs();
+    void applyAICs(bool reset);
+
     // menu creation
 
     void createMenu();
@@ -160,8 +176,8 @@ namespace modclasses
     template<typename T>
     void createEnumMenuHelper(AINameEnum aiName, AICEnum field, MenuBase& charMenu);
 
-    // save current AIC status in file
-    std::string saveAIC(const std::string& fileName, const bool fileRelativeToMod);
+    // save current !custom! AIC status in file
+    std::string saveCustomAIC(const std::string& fileName, const bool fileRelativeToMod);
 
     // to safe space in the menu definition
     template<typename PseudoEnumClass>

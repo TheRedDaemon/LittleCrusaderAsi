@@ -584,6 +584,8 @@ namespace modclasses
       case el::Level::Info:
         LOG(INFO) << msg;
         break;
+      case el::Level::Unknown: // just ignored
+        break;
       default:
         LOG(WARNING) << "BltOverlay: Requested not supported log level for 'sendToConsole'.";
         break;

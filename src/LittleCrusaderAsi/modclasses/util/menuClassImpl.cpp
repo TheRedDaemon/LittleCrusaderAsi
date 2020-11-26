@@ -809,7 +809,11 @@ namespace modclasses
     bltOver.inputOffSurf->BltFast(boxPos.first, boxPos.second, bltOver.compSurf, rect, DDBLTFAST_NOCOLORKEY);
     bltOver.fntHandler.drawText(bltOver.inputOffSurf, FontTypeEnum::SMALL, text, 165, yPos, 186, true, true, true, nullptr);
 
-    if (!enabled)
+    if (enabled)
+    {
+      bltOver.inputOffSurf->BltFast(boxPos.first + 218, boxPos.second, bltOver.compSurf, &bltOver.menuRects.okBox, DDBLTFAST_NOCOLORKEY);
+    }
+    else
     {
       bltOver.inputOffSurf->BltFast(boxPos.first + 218, boxPos.second, bltOver.compSurf, &bltOver.menuRects.cancelBox, DDBLTFAST_NOCOLORKEY);
     }

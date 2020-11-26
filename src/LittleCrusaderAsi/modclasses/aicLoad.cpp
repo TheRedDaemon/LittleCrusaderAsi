@@ -65,6 +65,17 @@ namespace modclasses
         LOG(WARNING) << "AICLoad: 'keyConfig': No 'activate' found. AIC load status can not be changed using only this mod and the keyboard.";
       }
 
+      keyIt = confIt.value().find("applyAICFiles");
+      if (keyIt != confIt.value().end())
+      {
+        keysApply = keyIt.value();
+      }
+      else
+      {
+        LOG(WARNING) << "AICLoad: 'keyConfig': No 'applyAICFiles' found. The file AICs can not be applied using only this mod and the keyboard. "
+          "However, should BltOverlay not exist, 'reloadMain' and 'reloadAll' will also do this.";
+      }
+
       keyIt = confIt.value().find("reloadMain");
       if (keyIt != confIt.value().end())
       {
@@ -139,6 +150,17 @@ namespace modclasses
       }
     }
 
+    if (!keysApply.empty())
+    {
+      std::function<void(const HWND, const bool, const bool)> func =
+        [this](const HWND hw, const bool keyUp, const bool repeat) { this->applyAICs(hw, keyUp, repeat); };
+
+      if (!keyInterceptor->registerFunction<true>(func, keysApply))
+      {
+        BltOverlay::sendToConsole("AICLoad: ApplyAICFiles: At least one key combination was not registered.", el::Level::Warning);
+      }
+    }
+
     if (!keysReloadMain.empty())
     {
       std::function<void(const HWND, const bool, const bool)> func =
@@ -185,6 +207,8 @@ namespace modclasses
     {
       // save vanilla values
       std::copy(std::begin(*aicMemoryPtr), std::end(*aicMemoryPtr), vanillaAIC.begin());
+      // default custom values
+      std::copy(vanillaAIC.begin(), vanillaAIC.end(), customAIC.begin());
 
       if (vanillaAIC.at(0) != 12)
       {
@@ -195,10 +219,13 @@ namespace modclasses
       // add menu
       createMenu();
 
+      // load customAICs (file in this case)
+      applyAICs(false);
+
       // if aics are requested at start, load them in
       if (isChanged)
       {
-        applyAICs();
+        setCustomAICs(true);
         BltOverlay::sendToConsole("Activated AICs on start.", el::Level::Info);
       }
 
@@ -223,7 +250,12 @@ namespace modclasses
     if (isValidPersonalityValue(field, value, newValue))
     {
       // support for versions with only 8 KIs would need extra handling here
-      (*aicMemoryPtr)[getAICFieldIndex(aiName, field)] = newValue;
+      int32_t index{ getAICFieldIndex(aiName, field) };
+      this->customAIC[index] = newValue;
+      if (isChanged)  // only apply if custom active
+      {
+        (*aicMemoryPtr)[index] = newValue;
+      }
       return true;
     }
 
@@ -239,7 +271,12 @@ namespace modclasses
     }
     
     // support for versions with only 8 KIs would need extra handling here
-    (*aicMemoryPtr)[getAICFieldIndex(aiName, field)] = value;
+    int32_t index{ getAICFieldIndex(aiName, field) };
+    this->customAIC[index] = value;
+    if (isChanged)  // only apply if custom active
+    {
+      (*aicMemoryPtr)[index] = value;
+    }
     return true;
   }
 
@@ -253,27 +290,24 @@ namespace modclasses
       return;
     }
 
-    if (isChanged)
-    {
-      // back to vanilla
-      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr));
-    }
-    else
-    {
-      // load in aics
-      applyAICs();
-    }
-
-    isChanged = !isChanged;
-
-    std::string msg{ isChanged ? "true" : "false" };
-    BltOverlay::sendToConsole("Changed load status of file AICs to: " + msg, el::Level::Info);
+    setCustomAICs(!isChanged);
 
     if (activationPtr.thisMenu)
     {
       *(activationPtr.header) = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
       activationPtr.thisMenu->draw(true, false);
     }
+  }
+
+
+  void AICLoad::applyAICs(const HWND, const bool keyUp, const bool repeat)
+  {
+    if (keyUp || repeat)
+    {
+      return;
+    }
+
+    applyAICs();
   }
 
 
@@ -285,8 +319,9 @@ namespace modclasses
       return;
     }
 
-    // loadList is currently unchangeable, so doing this should be ok for now
-    std::string &mainName = loadList[0];
+    std::string& mainName{
+      sortMenuPtr.thisMenu ? std::get<0>(sortMenuPtr.menuCon->front()) : loadList[0]
+    };
     size_t mainSize{ loadedAICValues.find(mainName) != loadedAICValues.end() ? loadedAICValues[mainName]->size() : 0 }; // in case it does not exist
 
     auto changedMain{ loadAICFile(mainName, false, mainSize) };
@@ -299,11 +334,15 @@ namespace modclasses
     // swaps maps -> old should be deleted after this function
     loadedAICValues[mainName].swap(changedMain);
 
-    if (isChanged)
+    // without the menu, these functions also applies the new AIC (and auto loads it) (else not)
+    if (!sortMenuPtr.thisMenu)
     {
-      // bit expensive here...
-      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr)); // reset to vanilla
-      applyAICs();
+      applyAICs(false);
+
+      if (isChanged)
+      {
+        setCustomAICs(true);
+      }
     }
 
     BltOverlay::sendToConsole("Reloaded main AIC: " + mainName, el::Level::Info);
@@ -330,11 +369,15 @@ namespace modclasses
       }
     }
 
-    if (isChanged)
+    // without the menu, these functions also applies the new AIC (and auto loads it) (else not)
+    if (!sortMenuPtr.thisMenu)
     {
-      // bit expensive here...
-      std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr)); // reset to vanilla
-      applyAICs();
+      applyAICs(false);
+
+      if (isChanged)
+      {
+        setCustomAICs(true);
+      }
     }
 
     BltOverlay::sendToConsole("Reloaded all AICs.", el::Level::Info);
@@ -344,19 +387,105 @@ namespace modclasses
   // private functions
 
 
+  void AICLoad::setCustomAICs(bool status)
+  {
+    if (status == true) // apply them always (for applying changes)
+    {
+      std::copy(customAIC.begin(), customAIC.end(), std::begin(*aicMemoryPtr));
+    }
+
+    // only message if status changed
+    if (isChanged != status)
+    {
+      if (status == false)  // apply vanilla values only in this case
+      {
+        std::copy(vanillaAIC.begin(), vanillaAIC.end(), std::begin(*aicMemoryPtr));
+      }
+
+      isChanged = status;
+      BltOverlay::sendToConsole("Changed apply status of AICs to: " + std::string(isChanged ? "true" : "false"), el::Level::Info);
+    }
+  }
+
+
   void AICLoad::applyAICs()
   {
-    for (auto it = loadList.rbegin(); it != loadList.rend(); ++it)
+    applyAICs(false);
+  }
+
+
+  void AICLoad::applyAICs(bool reset)
+  {
+    if (reset)
     {
-      // silently ignore missing AIC files -> warnings should already be in log file
-      if (loadedAICValues.find(*it) != loadedAICValues.end())
+      std::copy(vanillaAIC.begin(), vanillaAIC.end(), customAIC.begin());
+      BltOverlay::sendToConsole("Loaded default AICs into custom AIC values.", el::Level::Info);
+      return;
+    }
+
+    // lambda to find stuff -> static, does not need extern
+    // return pointer to value (or nullptr)
+    static auto findValue{ [](const std::string& name, size_t fieldIndex,
+      const std::unordered_map<std::string, std::unique_ptr<std::unordered_map<int32_t, int32_t>>>& aicMaps) -> int32_t*
+    {
+      if (auto nameIt{ aicMaps.find(name) }; nameIt != aicMaps.end())
       {
-        for (auto& valuePair : *(loadedAICValues[*it]))
+        auto& fields{ *(nameIt->second) };
+        if (auto fieldIt{ fields.find(fieldIndex) }; fieldIt != fields.end())
         {
-          (*aicMemoryPtr)[valuePair.first] = valuePair.second;
+          return &(fieldIt->second);
         }
       }
+
+      return nullptr;
+    }};
+
+    // runs in the following order: over every value index -> for every aic in importance order ( + vanilla)
+    for (size_t i = 0; i < vanillaAIC.size(); i++)
+    {
+      int32_t* valuePtr{ nullptr };
+      
+      if (sortMenuPtr.thisMenu)
+      {
+        for (auto& curr : *(sortMenuPtr.menuCon))
+        {
+          // if not active -> skip
+          if (!std::get<1>(curr))
+          {
+            continue;
+          }
+
+          valuePtr = findValue(std::get<0>(curr), i, loadedAICValues);
+
+          if (valuePtr) // end fast
+          {
+            break;
+          }
+        }
+      }
+      else
+      {
+        // if menu does not work, use load list order
+        for (auto& curr : loadList)
+        {
+          valuePtr = findValue(curr, i, loadedAICValues);
+
+          if (valuePtr) // end fast
+          {
+            break;
+          }
+        }
+      }
+
+      if (!valuePtr)
+      {
+        valuePtr = &(vanillaAIC[i]);
+      }
+
+      customAIC[i] = *valuePtr;
     }
+
+    BltOverlay::sendToConsole("Loaded file AICs into custom AIC values.", el::Level::Info);
   }
 
 
@@ -647,7 +776,7 @@ namespace modclasses
   }
 
 
-  std::string AICLoad::saveAIC(const std::string& fileName, const bool fileRelativeToMod)
+  std::string AICLoad::saveCustomAIC(const std::string& fileName, const bool fileRelativeToMod)
   {
     if (fileName.empty())
     {
@@ -731,7 +860,7 @@ namespace modclasses
           }
 
           OrderedJson& jsonField{ personality[aicName] };
-          int32_t value{ (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)] };
+          int32_t value{ this->customAIC[this->getAICFieldIndex(nameEnum, aicEnum)] };
 
           switch (*reactNum)
           {
@@ -1035,7 +1164,7 @@ namespace modclasses
       {
         if (onlyUpdateCurrent)
         {
-          currentValue = this->getNameOrNULL<T>((*(this->aicMemoryPtr))[this->getAICFieldIndex(aiName, field)]);
+          currentValue = this->getNameOrNULL<T>(this->customAIC[this->getAICFieldIndex(aiName, field)]);
           return false;
         }
 
@@ -1077,30 +1206,124 @@ namespace modclasses
       )
     };
 
-    // create basic menus and get ref to editor menu
-    MenuBase& editorMenu{
-      // NOTE -> Main Menu is descendable, but child will be hidden by func
-      // they could be added though
-      aicMenu.createMenu<MainMenu, false>(
-        "File AIC active: " + std::string(this->isChanged ? "true" : "false"),
-        [this](bool, std::string& header)
+    aicMenu.createMenu<MainMenu, false>(
+      "File AIC Active: " + std::string(this->isChanged ? "True" : "False"),
+      [this](bool, std::string& header)
+      {
+        this->setCustomAICs(!(this->isChanged));
+        header = "File AIC Active: " + std::string(this->isChanged ? "True" : "False");
+        return false;
+      },
+      false,
+      &activationPtr
+    );
+
+    aicMenu.createMenu<MainMenu, false>(
+      "Apply File AICs",
+      [this](bool, std::string&)
+      {
+        this->applyAICs();
+        if (this->isChanged)
         {
-          this->activateAICs(0, false, false);
-          header = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
-          return false;
-        },
-        true,
-        &activationPtr
-      )
-      .createMenu<MainMenu, false>(
-        "Reload All Files",
-        [this](bool, std::string&)
+          this->setCustomAICs(true);  // reload if active
+        }
+        return false;
+      },
+      false
+    );
+
+
+    // init reload vector
+    std::vector<std::pair<std::string, int32_t>> initialAICList{};
+    for (size_t i = 0; i < loadList.size(); i++)
+    {
+      initialAICList.emplace_back(loadList[i], i);  // save index
+    }
+
+    // init load order sort container
+    SortableListMenu::SortMenuContainer sortInitCon{};
+    for (auto& aic : loadList)
+    {
+      sortInitCon.emplace_back(aic, true, 0); // value not important
+    }
+
+    // load menu
+    aicMenu.createMenu<MainMenu, true>(
+      "AIC File Load Menu",
+      nullptr,
+      true
+    )
+      // load new AIC menu
+      .createMenu<FreeInputMenu, false>(
+        "Load New AIC",
+        nullptr,
+        false,
+        [this](const std::string& fileName, std::string& resultMessage)
         {
-          this->reloadAllAIC(0, false, false);
-          return false;
-        },
-        true
+          if (this->loadedAICValues.find(fileName) != this->loadedAICValues.end())
+          {
+            resultMessage = "Exists. Use reload.";
+            return;
+          }
+
+          auto newFile{ this->loadAICFile(fileName, false) };
+          if (!newFile)
+          {
+            resultMessage = "Failed. See log.";
+            return;
+          }
+
+          this->loadedAICValues[fileName].swap(newFile);  // add new
+          if (this->sortMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
+          {
+            this->sortMenuPtr.menuCon->emplace_back(fileName, true, 0); // default active
+          }
+          this->loadList.push_back(fileName);
+          if (this->reloadMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
+          {
+            this->reloadMenuPtr.choicePairs->emplace_back(this->loadList.back(), this->loadList.size() - 1);
+          }
+
+          resultMessage = "Loaded.";
+        }
       )
+      // reload menu
+      .createMenu<ChoiceInputMenu, false>(
+        "Reload AIC",
+        nullptr,
+        std::move(initialAICList),
+        [this](int32_t value, std::string& resultMessage)
+        {
+          std::string& aicName{ loadList[value] };
+          auto it{ loadedAICValues.find(aicName) };
+          if (it == loadedAICValues.end())
+          {
+            resultMessage = "Not loaded.";  // should not really happen
+            return;
+          }
+
+          auto changedMain{ loadAICFile(aicName, false, loadedAICValues[aicName]->size()) };
+          if (!changedMain)
+          {
+            resultMessage = "Failed. See log.";
+            return;
+          }
+
+          // swaps maps -> old should be deleted after this function
+          loadedAICValues[aicName].swap(changedMain);
+          resultMessage = "Loaded.";
+        },
+        &reloadMenuPtr
+      )
+      // create sort menu for AIC load
+      .createMenu<SortableListMenu, false>(
+        "File Apply Order",
+        nullptr,
+        std::move(sortInitCon),
+        nullptr,
+        nullptr,
+        &sortMenuPtr
+      )  
       .createMenu<MainMenu, false>(
         "Reload Main File",
         [this](bool, std::string&)
@@ -1110,7 +1333,34 @@ namespace modclasses
         },
         true
       )
-      .createMenu<MainMenu, true>(
+      .createMenu<MainMenu, false>(
+        "Reload All Files",
+        [this](bool, std::string&)
+        {
+          this->reloadAllAIC(0, false, false);
+          return false;
+        },
+        true
+      );
+
+    aicMenu.createMenu<MainMenu, false>(
+      "Custom Values To Default",
+      [this](bool, std::string&)
+      {
+        this->applyAICs(true);
+        if (this->isChanged)
+        {
+          this->setCustomAICs(true);  // reload if active
+        }
+        return false;
+      },
+      false
+    );
+
+
+    // create basic menus and get ref to editor menu
+    MenuBase& editorMenu{
+      aicMenu.createMenu<MainMenu, true>(
         "Editor",
         nullptr,
         true
@@ -1206,7 +1456,7 @@ namespace modclasses
                 }
 
                 currentValue = std::to_string(
-                  (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)]);
+                  this->customAIC[this->getAICFieldIndex(nameEnum, aicEnum)]);
               }
             );
 
@@ -1248,7 +1498,7 @@ namespace modclasses
               {
                 if (onlyUpdateCurrent)
                 {
-                  currentValue = (*(this->aicMemoryPtr))[this->getAICFieldIndex(nameEnum, aicEnum)] ? "true" : "false";
+                  currentValue = this->customAIC[this->getAICFieldIndex(nameEnum, aicEnum)] ? "true" : "false";
                   return false;
                 }
 
@@ -1292,7 +1542,7 @@ namespace modclasses
 
     MenuBase& saveMenu{
       aicMenu.createMenu<MainMenu, true>(
-        "Save AIC",
+        "Save Custom AIC",
         nullptr,
         true
       )
@@ -1333,96 +1583,7 @@ namespace modclasses
       false,
       [this](const std::string& fileName, std::string& resultMessage)
       {
-        resultMessage = std::move(this->saveAIC(fileName, false));
-      }
-    );
-
-    // reload menu
-
-    std::vector<std::pair<std::string, int32_t>> initialAICList{};
-    for (size_t i = 0; i < loadList.size(); i++)
-    {
-      initialAICList.emplace_back(loadList[i], i);  // save index
-    }
-
-    aicMenu.createMenu<ChoiceInputMenu, false>(
-      "Reload AIC",
-      nullptr,
-      std::move(initialAICList),
-      [this](int32_t value, std::string& resultMessage)
-      {
-        std::string& aicName{ loadList[value] };
-        auto it{ loadedAICValues.find(aicName) };
-        if (it == loadedAICValues.end())
-        {
-          resultMessage = "Not loaded.";  // should not really happen
-          return;
-        }
-
-        auto changedMain{ loadAICFile(aicName, false, loadedAICValues[aicName]->size()) };
-        if (!changedMain)
-        {
-          resultMessage = "Failed. See log.";
-          return;
-        }
-
-        // swaps maps -> old should be deleted after this function
-        loadedAICValues[aicName].swap(changedMain);
-        resultMessage = "Loaded.";
-      },
-      &reloadMenuPtr
-    );
-
-    // create sort menu for AIC load
-
-    SortableListMenu::SortMenuContainer sortInitCon{};
-    for (auto& aic : loadList)
-    {
-      sortInitCon.emplace_back(aic, true, 0); // value not important
-    }
-
-    aicMenu.createMenu<SortableListMenu, false>(
-      "Load Order",
-      nullptr,
-      std::move(sortInitCon),
-      nullptr,
-      nullptr,
-      &sortMenuPtr
-    );
-
-    // load new AIC menu
-
-    aicMenu.createMenu<FreeInputMenu, false>(
-      "Load New AIC",
-      nullptr,
-      false,
-      [this](const std::string& fileName, std::string& resultMessage)
-      {
-        if (this->loadedAICValues.find(fileName) != this->loadedAICValues.end())
-        {
-          resultMessage = "Exists. Use reload.";
-          return;
-        }
-
-        auto newFile{ this->loadAICFile(fileName, false) };
-        if (!newFile)
-        {
-          resultMessage = "Failed. See log.";
-          return;
-        }
-
-        this->loadedAICValues[fileName].swap(newFile);  // add new
-        if (this->sortMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
-        {
-          (*(this->sortMenuPtr.menuCon)).emplace_back(fileName, true, 0); // default active
-        }
-        this->loadList.push_back(fileName);
-        if (this->reloadMenuPtr.thisMenu) // if exists -> I do not know how needed this is, since it can not fail, only break
-        {
-          (*(this->reloadMenuPtr.choicePairs)).emplace_back(this->loadList.back(), this->loadList.size() - 1);
-        }
-
-        resultMessage = "Loaded.";
+        resultMessage = std::move(this->saveCustomAIC(fileName, false));
       }
     );
   }
