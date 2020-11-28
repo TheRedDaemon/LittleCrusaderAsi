@@ -202,7 +202,7 @@ namespace modclasses
     // if yes, forceDrawThisAndParent() will be executed on the currentMenu
     // -> will draw two menus, but keep right visuals
     // NOTE: everything a bit hacky, since it relies heavy on the current structure
-    // would need visibility stuff...-> to much, currently
+    // would need visibility stuff...-> too much, currently
     void draw(bool drawParent, bool checkIfParent) const;
     
 
@@ -657,7 +657,7 @@ namespace modclasses
     // menu ptr;
     std::unique_ptr<MainMenu> mainMenu{}; // mostly for reference -> will own every menu part at the end
     MenuBase* currentMenu{ nullptr };  // current menu will receive all inputs if active
-
+    MainMenu::MainMenuPointer consoleActivePtr;
 
     // needed to give the address resolver the right infos
     // can be static, I don't assume changes
@@ -737,6 +737,9 @@ namespace modclasses
     // redraws console based on msg queue
     void updateConsole();
 
+    // create simple menu for overlay
+    void createMenu();
+
     // keyboard:
 
     void switchConsole(const HWND window, const bool keyUp, const bool repeat);
@@ -747,7 +750,7 @@ namespace modclasses
     bool controlMenu(const HWND window, const bool keyUp, const bool repeat, const VK key);
 
     // can be called by the input fields -> enables and disabled char receive, if possible
-    // note, if already set, will also return false -> keep memory of status
+    // NOTE: if already set, will also return false -> keep memory of status
     bool enableCharReceive(bool enable);
 
     // takes the send input chars

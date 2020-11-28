@@ -56,6 +56,7 @@ namespace modclasses
   {
     overPtr->bltMainDDOffSurfs();
 
+    // NOTE -> the primary surface is received to flip, not the backbuffer
     return that->Flip(surf7, flags);
   }
 
@@ -244,6 +245,10 @@ namespace modclasses
 
       mainMenu = std::make_unique<MainMenu>(*this, "Mod Menu", nullptr, true);
       currentMenu = mainMenu.get();
+
+      // creates BltOverlayMenu
+      createMenu();
+
       initialized = true;
     }
 
@@ -360,6 +365,12 @@ namespace modclasses
     }
 
     textActive = !textActive;
+
+    if (consoleActivePtr.thisMenu)
+    {
+      *(consoleActivePtr.header) = "Console Visible: " + std::string(textActive ? "True" : "False");
+      consoleActivePtr.thisMenu->draw(true, false);
+    }
   }
 
 
@@ -478,20 +489,18 @@ namespace modclasses
     if (res != DD_OK)
     {
       LOG(WARNING) << "BltOverlay: Did not get backbuffer. Overlay will not work.";
+      dd7BackbufferPtr->Release();  // do not know if this is good -> ref count will become zero...
       dd7BackbufferPtr = nullptr;
     }
 
     bool mainSurfOk{ true };
     mainSurfOk = mainSurfOk && createOffSurface(&menuOffSurf, menuRect.right, menuRect.bottom, 0);
     mainSurfOk = mainSurfOk && createOffSurface(&textOffSurf, textRect.right, textRect.bottom, 0);
-    // leaking here for test -> clipper (at least without config? not enough
-    // IDirectDrawClipper* clip;
-    // dd7InterfacePtr->CreateClipper(0, &clip, 0);
-    // textOffSurf->SetClipper(clip);
     mainSurfOk = mainSurfOk && createOffSurface(&inputOffSurf, inputRect.right, inputRect.bottom, 0);
     if (!mainSurfOk)
     {
       LOG(ERROR) << "BltOverlay: At least one overlay surface could not get created. Removing backbuffer pointer to prevent crashes.";
+      dd7BackbufferPtr->Release();  // do not know if this is good -> ref count will become zero...
       dd7BackbufferPtr = nullptr;
     }
 
@@ -507,6 +516,7 @@ namespace modclasses
     if (!menuCompOk)
     {
       LOG(ERROR) << "BltOverlay: Creation of component surface caused problems.";
+      dd7BackbufferPtr->Release();  // do not know if this is good -> ref count will become zero...
       dd7BackbufferPtr = nullptr;
     }
     
@@ -713,6 +723,7 @@ namespace modclasses
     return ret;
   }
 
+
   void BltOverlay::receiveChar(char chr)
   {
     std::string s{ chr };
@@ -721,6 +732,54 @@ namespace modclasses
       currentMenu->executeAction(chr);
     }
   }
+
+
+  // some simply options
+  void BltOverlay::createMenu()
+  {
+    if (!mainMenu)
+    {
+      return;
+    }
+      
+    mainMenu->createMenu<MainMenu, true>(
+      "Overlay",
+      nullptr,
+      true
+    )
+      .createMenu<MainMenu, false>(
+        "Menu Indicator: " + std::string(this->menuIndicator ? "True" : "False"),
+        [this](bool, std::string& header)
+        {
+          this->menuIndicator = !(this->menuIndicator);
+          header = "Menu Indicator: " + std::string(this->menuIndicator ? "True" : "False");
+          return false;
+        },
+        false
+      )
+      .createMenu<MainMenu, false>(
+        "Console Visible: " + std::string(this->textActive ? "True" : "False"),
+        [this](bool, std::string& header)
+        {
+          this->textActive = !(this->textActive);
+          header = "Console Visible: " + std::string(this->textActive ? "True" : "False");
+          return false;
+        },
+        false,
+        &consoleActivePtr
+      )
+      .createMenu<MainMenu, false>(
+        "Close Menu",
+        [this](bool, std::string&)
+        {
+          // no switch needed -> just close
+          this->menuActive = false;
+          return false;
+        },
+        false
+      );
+  }
+
 
   std::vector<AddressRequest> BltOverlay::usedAddresses{
     {Address::DD_MainSurfaceCreate, {{Version::NONE, 5}}, true, AddressRisk::CRITICAL},

@@ -294,7 +294,7 @@ namespace modclasses
 
     if (activationPtr.thisMenu)
     {
-      *(activationPtr.header) = "File AIC active: " + std::string(this->isChanged ? "true" : "false");
+      *(activationPtr.header) = "File AIC Active: " + std::string(isChanged ? "True" : "False");
       activationPtr.thisMenu->draw(true, false);
     }
   }
