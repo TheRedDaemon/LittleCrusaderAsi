@@ -1,3 +1,5 @@
+### NOTE: Outdated. Will try to update it after the v0.2 release.
+
 # Implementation Concepts
 
 ## Table of contents
