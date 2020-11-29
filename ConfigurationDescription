@@ -1,0 +1,166 @@
+# This example file will use hash (#) to indicate comment text.
+# Note that JSON does not support comments by design, so this file is invalid and can not be parsed.
+
+{
+    # The first level are the individual mods. Every mod that receives an object here will be created.
+    # If a mod depends on another and no config for them is given, it will be created regardless, using the default configuration.
+    
+    # The "addressResolver" is more relevant for implementation. Addresses in the LittleCrusaderAsi are/can be managed, if used properly by the mod author.
+    # The reject level is used in case of address overlaps. This config can safely be ignored and is more for development.
+    
+    "addressResolver": {
+        
+        # In case of an overlap, address requests of mods marked with the same or an higher level are rejected.
+        "rejectLevel": "warning" # possible values: "safe", "warning", "function warning", "critical"; default: "critical"
+    
+    },
+    
+    # The "keyboardInterceptor" is used to handle keyboard input. It can redirect keys and provide keyboard calls for other mods. Note that one combination only allows for one function. Following requests for that place are rejected.
+    # Since there are a lot of keys, the following lines will list all usable. There are three types, which will be used in other comments to indicate the possible keys.
+    # activation keys:    "home", "delete", "pgup", "pgdown"
+    # modification keys:  "leftshift", "rightshift", "leftalt", "rightalt", "leftctrl", "rightctrl"
+    # changeable keys:    "pause", "space", "left", "up", "right", "down", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "num0", "num1", "num2", "num3", "num4", "num5", "num6", "num7", "num8", "num9", "nummul", "numadd", "numsep", "numsup", "numdec", "numdiv", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "oemplus", "oemcomma", "oemminus", "oemperiod"
+    
+    "keyboardInterceptor":{
+    
+        # Currently the only place where an activation key is used. This key will activate and deactivate the keyboard interceptor.
+        "activationKey": "pgdown", # possible values: activation keys; default: "home"
+        
+        # Allows to redefine keys. As long as the keyboard interceptor is active, presses on these keys will send the other key. Only single keys are allowed.
+        "keyRedefines":{
+            "numadd":[ # the key that should be pressed instead; possible values: changeable keys
+                ["oemplus"] # The keys that should invoke the other instead. It is possible to define multiple by using the form: [...], [...],...; possible values: changeable keys
+		
+            ],
+            "numsup":[
+                ["oemminus"]
+            ]
+        }
+    },
+    
+    # The "buildRangeChanger", true to its name, changes the castle build range for the different map sizes .
+    
+    "buildRangeChanger":{
+    
+        # The start state indicates if the new values should be used at the start of the game.
+        "startState": false, # possible values: false, true; default: false
+	
+        # The new ranges for the individual map sizes.
+        "newRanges":{
+	
+            # possible values: "160", "200", "300", "400"
+            "400": 40 # the range can be set to a number of type int32
+        },
+
+        # Define one or multiple shortcuts to switch between active and inactive.
+        "keyShortcut":[
+            ["leftshift", "oemplus"] # the form is similar to the redefines, however, only the forms [modification key, changeable key] and [modification key, modification key, changeable key] are allowed
+        ]
+    },
+    
+    # The "aicLoad" handles all AIC loads... yep.
+    
+    "aicLoad":{
+    
+        # (a little bit clunky currently) needs to know in which folder the LittleCrusaderAsi lies, the keyword AIC load might not work otherwise
+        "modFolderRelToStronghold": "plugins", # defaults to "", indicating that the mod is in the games root
+	
+        # the folder in which to search for the files defined in loadList
+        "aicFolder": "aics", # defaults to "", indicating that the files are in the mod folder
+	
+        # the list of AICs that should be loaded. The values are applied (and mixed) in order, so be careful to not accidently create weird value combinations
+        "loadList":[
+            "ratWolf.json", # the first is the "main"-AIC. These values have priority.
+            "wolfRat.json",
+            "vanilla.json"
+        ],
+        # the order can be changed in the overlay menu
+	
+        # The start state indicates if the new values should be used at the start of the game.
+        "startState": false, # possible values: false, true; default: false
+        
+        # Define one or multiple shortcuts.
+        # The form is similar to the redefines, however, only the forms [modification key, changeable key] and [modification key, modification key, changeable key] are allowed.
+        "keyConfig":{
+	
+            # Switch between active and inactive.
+            "activate":[
+                ["leftshift", "oemcomma"]
+            ],
+            
+            # Reload alone does not apply the AIC values. This function does.
+            "applyAICFiles":[
+            ],
+	    
+            # Reloads the main AIC.
+            "reloadMain":[
+                ["leftctrl", "oemperiod"]
+            ],
+	    
+            # Reloads all AICs.
+            "reloadAll":[
+                ["leftshift", "oemperiod"]
+            ]
+        }
+    },
+    
+    # The "bltOverlay" is responsible for the overlay menus. At least the controls need to be defined, otherwise it is not possible to use it.
+    
+    "bltOverlay":{
+    
+        # Currently, the reference to the DirectDraw object is incremented properly after it is intercepted, and released if the window re-initializes.
+        # This causes at least issues when the game is run with a ddraw to "other" wrapper.
+        # Should the game close or lose window controls after "Alt+Tab" or losing focus, set this to "true".
+        "doNotKeepDD7Interface": false, # possible values: false, true; default: false
+        
+        # Will always show a menu header in the upper left corner, even when it is closed.
+        "menuIndicator": true, # possible values: false, true; default: false
+        
+        # Menu will be open after the start.
+        "menuActiveAtStart": false,
+        
+        # Text console will be open after the start.
+        "consoleActiveAtStart": false,
+        
+        # Configuration for the used fonts.
+        # The "bltOverlay" currently uses four different fonts.
+        # It is perfectly fine to use the default values. The log warnings are more a hint.
+        "fontConfigs":{
+            "normal":{ # Font to configure. possible values: normal, normalBold, small, smallBold
+            
+                # All changeable font attributes
+                "name": "Times New Roman",
+                "height": 14,
+                "weight": 400,
+                "italic": false,
+                "underlined": false,
+                "strikeout": false
+            }
+        },
+        
+        # Define the keyboard shortcuts.
+        "keyConfig":{
+        
+            # Toggle the menu and the text console On/Off.
+            # These two work the like the other shortcut definitions. Only the forms [modification key, changeable key] and [modification key, modification key, changeable key] are allowed.
+            "menu":[
+                ["leftctrl", "numdiv"]
+            ],
+            "console":[
+                ["leftctrl", "nummul"]
+            ],
+            
+            # Define the menu controls.
+            # Unlike other shortcut definitions, only one changeable key is possible per action.
+            # To properly control the menu, all need to be defined.
+            "menuControl":{
+                "action": "num5",
+                "back": "num0",
+                "up": "num8",
+                "down": "num2",
+                "left": "num4",
+                "right": "num6"
+            }
+        }
+    }
+}
